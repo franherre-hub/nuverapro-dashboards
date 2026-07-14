@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reconectar WhatsApp — NuveraPRO</title>
+<style>
+  :root { --verde:#25D366; --tinta:#0b141a; --gris:#667781; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+         background:#f0f2f5; color:var(--tinta); display:flex; min-height:100vh; align-items:center; justify-content:center; padding:24px; }
+  .card { background:#fff; max-width:480px; width:100%; border-radius:16px; padding:32px; box-shadow:0 6px 24px rgba(0,0,0,.08); }
+  h1 { font-size:20px; margin:0 0 8px; }
+  p { color:var(--gris); font-size:14px; line-height:1.5; margin:0 0 16px; }
+  .num { font-weight:600; color:var(--tinta); }
+  button { background:var(--verde); color:#fff; border:0; border-radius:10px; padding:14px 20px;
+           font-size:15px; font-weight:600; width:100%; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  ol { color:var(--gris); font-size:13px; line-height:1.6; padding-left:18px; }
+  pre { background:#f6f8fa; border:1px solid #e4e7eb; border-radius:8px; padding:12px; font-size:12px;
+        white-space:pre-wrap; word-break:break-word; margin-top:16px; max-height:220px; overflow:auto; }
+  .warn { background:#fff7e6; border:1px solid #ffe1a8; border-radius:8px; padding:10px 12px; font-size:12px; color:#8a5a00; margin-bottom:16px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Reconectar WhatsApp NuveraPRO</h1>
+    <p>Conecta el número <span class="num">+56 9 5332 8289</span> (ya activo en la app WhatsApp Business) a la Plataforma de WhatsApp Business, vía coexistencia.</p>
+
+    <div class="warn" id="cfg-warn">⚠️ Falta pegar el <b>CONFIG_ID</b> del Embedded Signup en el código antes de usar.</div>
+
+    <button id="wa-connect" disabled>Conectar WhatsApp</button>
+
+    <ol>
+      <li>Toca <b>Conectar WhatsApp</b>.</li>
+      <li>Inicia sesión con la cuenta que administra NuveraPRO (Marcelo).</li>
+      <li>Elige el negocio, el WABA <b>NuveraPRO</b> y el número existentes — <b>no crear nuevos</b>.</li>
+      <li>Aparecerá un <b>QR</b>: escanéalo desde WhatsApp Business → Dispositivos vinculados.</li>
+    </ol>
+
+    <pre id="out">Estado: esperando SDK de Meta…</pre>
+  </div>
+
+<script>
+  const FB_APP_ID    = "1324814399816623";
+  const ES_CONFIG_ID = "1472455227969151";
+  const GRAPH_VERSION = "v23.0";
+
+  const out = document.getElementById("out");
+  const btn = document.getElementById("wa-connect");
+  const log = (m) => { out.textContent += "\n" + m; };
+
+  window.fbAsyncInit = function () {
+    FB.init({ appId: FB_APP_ID, autoLogAppEvents: true, xfbml: true, version: GRAPH_VERSION });
+    out.textContent = "SDK listo.";
+    if (ES_CONFIG_ID !== "PEGAR_CONFIG_ID_AQUI") {
+      btn.disabled = false;
+      document.getElementById("cfg-warn").style.display = "none";
+    }
+  };
+
+  window.addEventListener("message", (event) => {
+    if (typeof event.origin !== "string" || !event.origin.endsWith("facebook.com")) return;
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === "WA_EMBEDDED_SIGNUP") log("ES -> " + JSON.stringify(data.data || data));
+    } catch (e) {}
+  });
+
+  function launch() {
+    FB.login((response) => {
+      if (response.authResponse && response.authResponse.code) {
+        log("CODE recibido: " + response.authResponse.code);
+        log("(canjear por token en el servidor / n8n para cerrar la conexion)");
+      } else {
+        log("Flujo cerrado sin code.");
+      }
+    }, {
+      config_id: ES_CONFIG_ID,
+      response_type: "code",
+      override_default_response_type: true,
+      extras: {
+        setup: {},
+        featureType: "whatsapp_business_app_onboarding"
+      }
+    });
+  }
+
+  btn.addEventListener("click", () => {
+    if (typeof FB === "undefined") { alert("El SDK aun carga, espera un segundo."); return; }
+    out.textContent = "Abriendo flujo de Meta...";
+    launch();
+  });
+</script>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/es_LA/sdk.js"></script>
+</body>
+</html>
