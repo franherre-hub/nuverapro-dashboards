@@ -38,7 +38,7 @@
       <li>Aparecerá un <b>QR</b>: escanéalo desde WhatsApp Business → Dispositivos vinculados.</li>
     </ol>
 
-    <pre id="out">Estado: esperando SDK de Meta…</pre>
+    <pre id="out">Estado: cargando…</pre>
   </div>
 
 <script>
@@ -50,13 +50,19 @@
   const btn = document.getElementById("wa-connect");
   const log = (m) => { out.textContent += "\n" + m; };
 
+  function aplicarConfig() {
+    if (ES_CONFIG_ID && ES_CONFIG_ID !== "PEGAR_CONFIG_ID_AQUI") {
+      btn.disabled = false;
+      var w = document.getElementById("cfg-warn");
+      if (w) w.style.display = "none";
+      out.textContent = "Config lista (config_id " + ES_CONFIG_ID + "). Cargando SDK de Meta...";
+    }
+  }
+  aplicarConfig();
+
   window.fbAsyncInit = function () {
     FB.init({ appId: FB_APP_ID, autoLogAppEvents: true, xfbml: true, version: GRAPH_VERSION });
-    out.textContent = "SDK listo.";
-    if (ES_CONFIG_ID !== "PEGAR_CONFIG_ID_AQUI") {
-      btn.disabled = false;
-      document.getElementById("cfg-warn").style.display = "none";
-    }
+    log("SDK de Meta listo. Toca Conectar WhatsApp.");
   };
 
   window.addEventListener("message", (event) => {
