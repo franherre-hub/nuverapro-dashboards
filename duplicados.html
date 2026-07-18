@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antifraude — Duplicados NuveraPRO</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0f172a;color:#e2e8f0}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+h1{font-size:20px;margin:0 0 4px} .sub{color:#94a3b8;font-size:13px;margin-bottom:16px}
+.bar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.pill{background:#1e293b;border:1px solid #334155;border-radius:999px;padding:6px 12px;font-size:13px}
+.pill b{color:#38bdf8}
+input[type=search]{background:#1e293b;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px;max-width:340px;width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:#1e293b;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;user-select:none}
+.chip.on{background:#0ea5e9;border-color:#0ea5e9;color:#fff;font-weight:600}
+.card{background:#131f38;border:1px solid #24324d;border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.card.done{opacity:.35}
+.chead{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:6px}
+.tag.rut{background:#7c2d12;color:#fed7aa} .tag.correo{background:#134e4a;color:#99f6e4}
+.tag.telefono{background:#3730a3;color:#c7d2fe} .tag.nombre{background:#4c1d95;color:#ddd6fe}
+.tval{font-size:13px;color:#e2e8f0;font-weight:600} .tval.warn{color:#fca5a5}
+.accts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+@media(max-width:640px){.accts{grid-template-columns:1fr}}
+.acct{background:#0f172a;border:1px solid #24324d;border-radius:9px;padding:9px 11px}
+.acct .nom{font-weight:600;font-size:13px;margin-bottom:3px}
+.acct .m{color:#94a3b8;font-size:12px;line-height:1.5;word-break:break-word}
+.acct a.nt{display:inline-block;margin-top:5px;color:#38bdf8;font-size:12px;text-decoration:none}
+.acct a.nt:hover{text-decoration:underline}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+button{border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:600}
+.bad{background:#b91c1c;color:#fff} .bad:hover{background:#991b1b}
+.ok{background:#334155;color:#cbd5e1} .ok:hover{background:#3f4d63}
+.empty{text-align:center;color:#94a3b8;padding:40px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.show{opacity:1}
+.link{color:#64748b;font-size:12px;cursor:pointer;text-decoration:underline;margin-left:auto}
+</style></head>
+<body><div class="wrap">
+<h1>&#128737; Antifraude &mdash; cuentas duplicadas</h1>
+<div class="sub">Casos donde <b>2 o m&aacute;s cuentas comparten</b> RUT, correo, tel&eacute;fono o tienen nombres muy parecidos &mdash; se&ntilde;al de un mismo carpintero abriendo cuentas nuevas para reusar los 15 d&iacute;as gratis. <b>No se fusiona ni borra nada autom&aacute;ticamente</b>: revisas caso a caso y decides. Al marcar una decisi&oacute;n el caso se archiva de esta lista (queda en este navegador).</div>
+<div class="bar">
+  <span class="pill">Pendientes: <b id="cnt">0</b></span>
+  <input type="search" id="filtro" placeholder="Filtrar por nombre, correo, RUT o tel&eacute;fono...">
+  <span class="pill" id="status">cargando...</span>
+  <span class="link" id="reset">Restaurar archivados</span>
+</div>
+<div class="chips" id="chips"></div>
+<div id="list"></div>
+<div id="empty" class="empty" style="display:none">&#9989; No quedan casos pendientes de revisar.</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var LSKEY="nvp_reviewed_dups";
+var CASOS=[], FILTRO_TIPO="todos";
+var TIPOS={rut:"RUT repetido",correo:"Correo repetido",telefono:"Tel&eacute;fono repetido",nombre:"Nombre parecido"};
+function reviewed(){try{return JSON.parse(localStorage.getItem(LSKEY)||"{}")}catch(e){return{}}}
+function markReviewed(id,dec){var r=reviewed();r[id]={d:dec,t:Date.now()};localStorage.setItem(LSKEY,JSON.stringify(r))}
+function unmark(id){var r=reviewed();delete r[id];localStorage.setItem(LSKEY,JSON.stringify(r))}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1800)}
+function ntUrl(pid){return "https://www.notion.so/"+String(pid||"").split("-").join("")}
+function pendientes(){var r=reviewed();return CASOS.filter(function(c){return !r[c.id]})}
+function matchFiltro(c,q){
+  if(FILTRO_TIPO!=="todos" && c.tipo!==FILTRO_TIPO) return false;
+  if(!q) return true;
+  var hay=c.val+" ";
+  c.cuentas.forEach(function(a){hay+=(a.n||"")+" "+(a.c||"")+" "+(a.rut||"")+" "+(a.tel||"")+" "+(a.i||"")+" "});
+  return hay.toLowerCase().indexOf(q)>=0;
+}
+function renderChips(){
+  var counts={todos:0,rut:0,correo:0,telefono:0,nombre:0}, pend=pendientes();
+  pend.forEach(function(c){counts.todos++;counts[c.tipo]=(counts[c.tipo]||0)+1});
+  var defs=[["todos","Todos"],["rut","RUT"],["correo","Correo"],["telefono","Tel&eacute;fono"],["nombre","Nombre"]];
+  var h="";
+  defs.forEach(function(d){var on=FILTRO_TIPO===d[0]?" on":"";h+="<span class='chip"+on+"' data-t='"+d[0]+"'>"+d[1]+" ("+(counts[d[0]]||0)+")</span>"});
+  var chips=document.getElementById("chips");chips.innerHTML=h;
+  [].forEach.call(chips.querySelectorAll(".chip"),function(el){el.addEventListener("click",function(){FILTRO_TIPO=el.getAttribute("data-t");render()})});
+}
+function render(){
+  renderChips();
+  var q=(document.getElementById("filtro").value||"").toLowerCase(), r=reviewed();
+  var rows=CASOS.filter(function(c){return !r[c.id]}).filter(function(c){return matchFiltro(c,q)});
+  document.getElementById("cnt").textContent=pendientes().length;
+  document.getElementById("empty").style.display=pendientes().length?"none":"block";
+  var list=document.getElementById("list");list.innerHTML="";
+  rows.forEach(function(c){
+    var card=document.createElement("div");card.className="card";
+    var warn=(c.tipo==="rut"||c.tipo==="correo")?" warn":"";
+    var head="<div class='chead'><span class='tag "+c.tipo+"'>"+TIPOS[c.tipo]+"</span>";
+    if(c.val) head+="<span class='tval"+warn+"'>"+esc(c.val)+"</span>";
+    head+="<span class='pill' style='margin-left:auto'>"+c.cuentas.length+" cuentas</span></div>";
+    var accts="<div class='accts'>";
+    c.cuentas.forEach(function(a){
+      var meta=[];
+      if(a.c) meta.push(esc(a.c));
+      if(a.tel) meta.push(esc(a.tel));
+      if(a.rut) meta.push("RUT "+esc(a.rut));
+      if(a.i) meta.push("ID "+esc(a.i));
+      accts+="<div class='acct'><div class='nom'>"+esc(a.n||"(sin nombre)")+"</div>"+
+        "<div class='m'>"+meta.join("<br>")+"</div>"+
+        (a.p?"<a class='nt' href='"+ntUrl(a.p)+"' target='_blank' rel='noopener'>Abrir en Notion &#8599;</a>":"")+"</div>";
+    });
+    accts+="</div>";
+    var acts="<div class='acts'><button class='bad'>Mismo carpintero (fraude)</button><button class='ok'>Cuentas distintas</button></div>";
+    card.innerHTML=head+accts+acts;
+    var btns=card.querySelectorAll("button");
+    btns[0].addEventListener("click",function(){decide(c,"fraude",card)});
+    btns[1].addEventListener("click",function(){decide(c,"distintas",card)});
+    list.appendChild(card);
+  });
+}
+function decide(c,dec,card){
+  markReviewed(c.id,dec);
+  card.classList.add("done");
+  toast(dec==="fraude"?"Marcado como mismo carpintero":"Marcado como cuentas distintas");
+  setTimeout(render,350);
+}
+document.getElementById("reset").addEventListener("click",function(){
+  if(!Object.keys(reviewed()).length){toast("No hay casos archivados");return}
+  localStorage.removeItem(LSKEY);toast("Casos restaurados");render();
+});
+document.getElementById("filtro").addEventListener("input",render);
+fetch("data/duplicados.json?v="+Date.now()).then(function(r){return r.json()}).then(function(d){
+  CASOS=d;
+  var tot=0;CASOS.forEach(function(c){tot+=c.cuentas.length});
+  document.getElementById("status").textContent=CASOS.length+" casos · "+tot+" cuentas";
+  render();
+}).catch(function(e){document.getElementById("status").textContent="Error cargando datos"});
+</script></body></html>
