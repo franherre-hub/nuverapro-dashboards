@@ -45,7 +45,7 @@ var LSKEY="nvp_resolved_caps";
 var LEADS=[], TICKETS=[], MAP={};
 function resolved(){try{return JSON.parse(localStorage.getItem(LSKEY)||"[]")}catch(e){return[]}}
 function markResolved(id){var r=resolved();if(r.indexOf(id)<0){r.push(id);localStorage.setItem(LSKEY,JSON.stringify(r))}}
-function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c]})}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1800)}
 function pending(){var r=resolved();return TICKETS.filter(function(t){return r.indexOf(t.e)<0})}
 function render(){
@@ -82,7 +82,7 @@ Promise.all([
 ]).then(function(res){
   LEADS=res[0]; TICKETS=res[1];
   var dl=document.getElementById("leadsdl"), opts="";
-  LEADS.forEach(function(l){var label=(l.i?l.i+" - ":"")+l.n; MAP[label]=l.p; opts+="<option value=\\""+esc(label)+"\\">"});
+  LEADS.forEach(function(l){var label=(l.i?l.i+" - ":"")+l.n; MAP[label]=l.p; opts+="<option value='"+esc(label)+"'>"});
   dl.innerHTML=opts;
   document.getElementById("status").textContent=LEADS.length+" leads cargados";
   render();
