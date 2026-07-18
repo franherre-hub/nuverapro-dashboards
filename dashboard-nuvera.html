@@ -2,31 +2,41 @@
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard NuveraPRO — Trabajo y Rendimientos</title>
 <style>
-*{box-sizing:border-box} html,body{margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
 body{display:flex;flex-direction:column;height:100vh;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0f172a;color:#e2e8f0}
-.top{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:10px 16px;background:#0b1220;border-bottom:1px solid #1e293b}
-.top h1{font-size:15px;margin:0 14px 0 0;font-weight:700;white-space:nowrap}
-.tab{background:transparent;color:#94a3b8;border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer}
-.tab:hover{color:#e2e8f0;background:#131f38}
-.tab.active{color:#fff;background:#1e293b;border-color:#334155}
-.frame{flex:1 1 auto;width:100%;border:0;display:none;background:#0f172a}
+.top{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:10px 14px;background:#0b1327;border-bottom:1px solid #1e293b;overflow-x:auto}
+.brand{font-weight:700;font-size:14px;color:#e2e8f0;margin-right:10px;white-space:nowrap}
+.brand span{color:#38bdf8}
+.tab{background:#1e293b;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:7px 15px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:600}
+.tab:hover{background:#24324d}
+.tab.active{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
+.frame{flex:1 1 auto;width:100%;border:0;display:none}
 .frame.active{display:block}
 </style></head>
 <body>
 <div class="top">
-  <h1>&#128202; Dashboard NuveraPRO</h1>
+  <div class="brand">NuveraPRO <span>&middot; Dashboard</span></div>
   <button class="tab active" data-t="r">Rendimientos &middot; Cuentas creadas</button>
   <button class="tab" data-t="w">Trabajo &middot; Vincular capacitaciones</button>
+  <button class="tab" data-t="a">Antifraude &middot; Duplicados</button>
 </div>
 <iframe id="fr" class="frame active" src="cuentas-prueba.html"></iframe>
 <iframe id="fw" class="frame" src="vincular-capacitaciones.html"></iframe>
+<iframe id="fa" class="frame" src="duplicados.html"></iframe>
 <script>
+var MAP={r:"fr",w:"fw",a:"fa"};
 var tabs=document.querySelectorAll(".tab");
-tabs.forEach(function(b){ b.addEventListener("click",function(){
-  tabs.forEach(function(x){x.classList.remove("active")}); b.classList.add("active");
-  var t=b.getAttribute("data-t");
-  document.getElementById("fr").classList.toggle("active", t==="r");
-  document.getElementById("fw").classList.toggle("active", t==="w");
-});});
+[].forEach.call(tabs,function(btn){
+  btn.addEventListener("click",function(){
+    [].forEach.call(tabs,function(b){b.classList.remove("active")});
+    btn.classList.add("active");
+    var want=MAP[btn.getAttribute("data-t")];
+    ["fr","fw","fa"].forEach(function(id){
+      var f=document.getElementById(id);
+      if(id===want)f.classList.add("active");else f.classList.remove("active");
+    });
+  });
+});
 </script>
 </body></html>
