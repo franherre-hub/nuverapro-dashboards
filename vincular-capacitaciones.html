@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vincular Capacitaciones — NuveraPRO</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0f172a;color:#e2e8f0}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+h1{font-size:20px;margin:0 0 4px} .sub{color:#94a3b8;font-size:13px;margin-bottom:16px}
+.bar{display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.pill{background:#1e293b;border:1px solid #334155;border-radius:999px;padding:6px 12px;font-size:13px}
+.pill b{color:#38bdf8}
+input[type=search],input.lead{background:#1e293b;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px;width:100%}
+input.lead:focus{outline:none;border-color:#38bdf8}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 8px;text-align:left;border-bottom:1px solid #1e293b;vertical-align:top}
+th{color:#94a3b8;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+tr:hover td{background:#131f38}
+.tom{font-weight:600} .meta{color:#94a3b8;font-size:12px}
+.col-lead{width:320px} .col-act{width:120px}
+button.ok{background:#334155;color:#64748b;border:none;border-radius:8px;padding:8px 12px;font-size:13px;cursor:not-allowed;width:100%}
+button.ok.on{background:#16a34a;color:#fff;cursor:pointer}
+button.ok.on:hover{background:#15803d}
+.done{opacity:.4}
+.empty{text-align:center;color:#94a3b8;padding:40px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+</style></head>
+<body><div class="wrap">
+<h1>&#128279; Vincular capacitaciones sin lead</h1>
+<div class="sub">Capacitaciones del calendario 2026 que no se pudieron asociar automaticamente. Elige el lead correcto (busca por nombre o ID externo) y confirma: se escribe la <b>Fecha capacitacion</b> en ese lead.</div>
+<div class="bar">
+  <span class="pill">Pendientes: <b id="cnt">0</b></span>
+  <input type="search" id="filtro" placeholder="Filtrar por tomador, correo o titulo..." style="max-width:340px">
+  <span class="pill" id="status">cargando...</span>
+</div>
+<table><thead><tr>
+<th>Fecha</th><th>Tomador / contacto</th><th>Titulo evento</th><th class="col-lead">Lead correcto</th><th class="col-act">Accion</th>
+</tr></thead><tbody id="tb"></tbody></table>
+<div id="empty" class="empty" style="display:none">&#9989; No quedan capacitaciones pendientes de vincular.</div>
+</div>
+<datalist id="leadsdl"></datalist>
+<div class="toast" id="toast"></div>
+<script>
+var WEBHOOK="https://n8n.entrenemos.cl/webhook/resolver-vinculo-cap";
+var LSKEY="nvp_resolved_caps";
+var LEADS=[], TICKETS=[], MAP={};
+function resolved(){try{return JSON.parse(localStorage.getItem(LSKEY)||"[]")}catch(e){return[]}}
+function markResolved(id){var r=resolved();if(r.indexOf(id)<0){r.push(id);localStorage.setItem(LSKEY,JSON.stringify(r))}}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c]})}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1800)}
+function pending(){var r=resolved();return TICKETS.filter(function(t){return r.indexOf(t.e)<0})}
+function render(){
+  var r=resolved(), filt=(document.getElementById("filtro").value||"").toLowerCase();
+  var rows=TICKETS.filter(function(t){return r.indexOf(t.e)<0}).filter(function(t){
+    if(!filt)return true; return ((t.to||"")+" "+(t.c||"")+" "+(t.t||"")).toLowerCase().indexOf(filt)>=0;
+  });
+  document.getElementById("cnt").textContent=pending().length;
+  document.getElementById("empty").style.display=pending().length?"none":"block";
+  var tb=document.getElementById("tb"); tb.innerHTML="";
+  rows.forEach(function(t){
+    var tr=document.createElement("tr");
+    var contact=[t.c,t.tel].filter(Boolean).join("  &middot;  ");
+    tr.innerHTML="<td>"+t.f+"</td>"+
+      "<td><div class='tom'>"+esc(t.to||"-")+"</div><div class='meta'>"+contact+"</div></td>"+
+      "<td><span class='meta'>"+esc(t.t)+"</span></td>"+
+      "<td class='col-lead'><input class='lead' list='leadsdl' placeholder='Escribe nombre o ID externo...'></td>"+
+      "<td class='col-act'><button class='ok'>Vincular</button></td>";
+    var inp=tr.querySelector("input"), btn=tr.querySelector("button");
+    inp.addEventListener("input",function(){ if(MAP[inp.value]){btn.classList.add("on")}else{btn.classList.remove("on")} });
+    btn.addEventListener("click",function(){
+      var pid=MAP[inp.value]; if(!pid)return;
+      btn.disabled=true; btn.textContent="...";
+      try{ fetch(WEBHOOK,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({leadPageId:pid,fecha:t.f,eventId:t.e,tomador:t.to})}) }catch(e){}
+      markResolved(t.e); tr.classList.add("done"); toast("Vinculado: "+inp.value+" ("+t.f+")");
+      setTimeout(render,300);
+    });
+    tb.appendChild(tr);
+  });
+}
+Promise.all([
+  fetch("data/leads-index.json").then(function(r){return r.json()}),
+  fetch("data/tickets.json").then(function(r){return r.json()})
+]).then(function(res){
+  LEADS=res[0]; TICKETS=res[1];
+  var dl=document.getElementById("leadsdl"), opts="";
+  LEADS.forEach(function(l){var label=(l.i?l.i+" - ":"")+l.n; MAP[label]=l.p; opts+="<option value=\\""+esc(label)+"\\">"});
+  dl.innerHTML=opts;
+  document.getElementById("status").textContent=LEADS.length+" leads cargados";
+  render();
+}).catch(function(e){ document.getElementById("status").textContent="Error cargando datos"; });
+document.getElementById("filtro").addEventListener("input",render);
+</script></body></html>
