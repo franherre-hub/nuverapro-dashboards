@@ -18,21 +18,23 @@ body{display:flex;flex-direction:column;height:100vh;font-family:-apple-system,S
 <div class="top">
   <div class="brand">NuveraPRO <span>&middot; Dashboard</span></div>
   <button class="tab active" data-t="r">Rendimientos &middot; Cuentas creadas</button>
+  <button class="tab" data-t="c">Conversión &middot; KPIs</button>
   <button class="tab" data-t="w">Trabajo &middot; Vincular capacitaciones</button>
   <button class="tab" data-t="a">Antifraude &middot; Duplicados</button>
 </div>
 <iframe id="fr" class="frame active" src="cuentas-prueba.html"></iframe>
+<iframe id="fc" class="frame" src="conversion.html"></iframe>
 <iframe id="fw" class="frame" src="vincular-capacitaciones.html"></iframe>
 <iframe id="fa" class="frame" src="duplicados.html"></iframe>
 <script>
-var MAP={r:"fr",w:"fw",a:"fa"};
+var MAP={r:"fr",c:"fc",w:"fw",a:"fa"};
 var tabs=document.querySelectorAll(".tab");
 [].forEach.call(tabs,function(btn){
   btn.addEventListener("click",function(){
     [].forEach.call(tabs,function(b){b.classList.remove("active")});
     btn.classList.add("active");
     var want=MAP[btn.getAttribute("data-t")];
-    ["fr","fw","fa"].forEach(function(id){
+    ["fr","fc","fw","fa"].forEach(function(id){
       var f=document.getElementById(id);
       if(id===want)f.classList.add("active");else f.classList.remove("active");
     });
