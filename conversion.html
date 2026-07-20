@@ -1,0 +1,77 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NuveraPRO — Conversión & KPIs</title><style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f5f7fa;color:#0b2545;margin:0;padding:24px}
+.wrap{max-width:1040px;margin:0 auto}
+h1{margin:0 0 4px;font-size:24px}
+h2{font-size:15px;color:#334155;margin:26px 0 10px}
+.sub{color:#64748b;margin:0 0 20px;font-size:14px}
+.kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.kpi{background:#fff;border-radius:12px;padding:16px 20px;flex:1;min-width:150px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.kpi .n{font-size:30px;font-weight:700}
+.kpi .l{font-size:12px;color:#64748b;margin-top:2px}
+.card{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.fn{margin:6px 0}
+.fn .row{display:flex;align-items:center;gap:10px;margin:7px 0}
+.fn .lab{width:230px;font-size:13px;flex:0 0 auto}
+.fn .bar{flex:1;background:#eef2f7;border-radius:8px;height:26px;position:relative;overflow:hidden}
+.fn .fill{height:100%;border-radius:8px;display:flex;align-items:center;padding:0 10px;color:#fff;font-size:12px;font-weight:700;white-space:nowrap}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+th{background:#0b2545;color:#fff;text-align:left;padding:10px;font-size:13px}
+td{padding:10px;border-top:1px solid #eef2f7;font-size:14px}
+.badge{color:#fff;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.note{background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;border-radius:12px;padding:14px 18px;font-size:13px;margin-top:14px;line-height:1.5}
+.note b{color:#9a3412}
+.mini{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.mini span{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;font-size:13px}
+.foot{color:#94a3b8;font-size:12px;margin-top:20px;text-align:center}
+</style></head><body><div class="wrap">
+<h1>Conversión &amp; KPIs — NuveraPRO</h1>
+<p class="sub">Metas del negocio vs realidad · base 1.851 cuentas · datos BDD 18-07-2026</p>
+
+<div class="kpis">
+  <div class="kpi"><div class="n">1.851</div><div class="l">cuentas en base</div></div>
+  <div class="kpi"><div class="n" style="color:#16a34a">453</div><div class="l">clientes activos (pagando este mes)</div></div>
+  <div class="kpi"><div class="n" style="color:#0ea5e9">53</div><div class="l">en prueba ahora</div></div>
+  <div class="kpi"><div class="n" style="color:#dc2626">1.000</div><div class="l">nunca cotizaron (54%)</div></div>
+</div>
+
+<h2>Embudo de la base</h2>
+<div class="card fn">
+  <div class="row"><div class="lab">Cuentas creadas (base)</div><div class="bar"><div class="fill" style="width:100%;background:#334155">1.851 · 100%</div></div></div>
+  <div class="row"><div class="lab">Cotizó alguna vez (borrador u oficial)</div><div class="bar"><div class="fill" style="width:46%;background:#0ea5e9">851 · 46%</div></div></div>
+  <div class="row"><div class="lab">Entregó PDF oficial (COTI C/N)</div><div class="bar"><div class="fill" style="width:38%;background:#6366f1">698 · 38%</div></div></div>
+  <div class="row"><div class="lab">Cliente activo (paga este mes)</div><div class="bar"><div class="fill" style="width:24%;background:#16a34a">453 · 24%</div></div></div>
+</div>
+
+<h2>Scorecard vs metas (del plan 2026)</h2>
+<table><thead><tr><th>Indicador</th><th>Hoy</th><th>Meta</th><th>Estado</th></tr></thead><tbody>
+<tr><td>Uso: entregó PDF oficial (de las 53 en prueba)</td><td>49% (26/53)</td><td>&gt; 80% al día 14</td><td><span class="badge" style="background:#dc2626">Bajo meta</span></td></tr>
+<tr><td>Uso: entregó PDF oficial (base completa)</td><td>38%</td><td>referencia</td><td><span class="badge" style="background:#eab308">Referencia</span></td></tr>
+<tr><td>Conversión a cliente activo (base histórica)</td><td>24%</td><td>&gt; 30% trial→pago</td><td><span class="badge" style="background:#eab308">En calibración</span></td></tr>
+<tr><td>CPCP (costo por cliente pagante)</td><td>—</td><td>&lt; $10.000 CLP</td><td><span class="badge" style="background:#64748b">Vista privada</span></td></tr>
+</tbody></table>
+
+<h2>Días desde la última cotización <span style="font-weight:400;color:#64748b;font-size:13px">(de las 851 que sí cotizan)</span></h2>
+<div class="mini">
+  <span>&lt; 7 días: <b>332</b></span>
+  <span>7–14 días: <b>100</b></span>
+  <span>15–30 días: <b>63</b></span>
+  <span>&gt; 30 días: <b>354</b></span>
+  <span style="color:#dc2626">nunca cotizó: <b>1.000</b></span>
+</div>
+
+<h2>Origen por país</h2>
+<div class="mini">
+  <span>🇨🇱 Chile: <b>1.504</b></span>
+  <span>🇦🇷 Argentina: <b>132</b></span>
+  <span>🇬🇹 Guatemala: <b>76</b></span>
+  <span>🇵🇪 Perú: <b>60</b></span>
+  <span>🇭🇳 Honduras: <b>26</b></span>
+  <span>🇧🇴 Bolivia: <b>13</b></span>
+</div>
+
+<div class="note">
+<b>Notas de lectura.</b> El <b>CPCP</b> (métrica maestra) no aparece acá porque involucra montos de plata → va a la vista <b>privada</b>, y además falta conectar el gasto de Meta. La <b>conversión trial→pago</b> queda "en calibración": la base mezcla clientes históricos (desde 2021) con trials nuevos, y hay <b>dos señales de pago que no cuadran</b> (Fecha Último Pago = 851 vs Monto &gt; 0 = 636); acá se usa la Fecha, que es la que ya usa la automatización de Estado CRM. Para una tasa trial→pago limpia hay que cerrar esa señal y medir por cohorte de activación. El dato más sólido y accionable hoy: <b>1.000 cuentas (54%) nunca cotizaron</b> — ahí está la fuga.
+</div>
+
+<p class="foot">Línea base estática · generada 20-07-2026 · pendiente automatizar vía n8n (lectura diaria desde Notion)</p>
+</div></body></html>
