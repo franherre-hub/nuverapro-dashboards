@@ -38,6 +38,7 @@ button{border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:poin
 <body><div class="wrap">
 <h1>&#128737; Antifraude &mdash; cuentas duplicadas</h1>
 <div class="sub">Casos donde <b>2 o m&aacute;s cuentas comparten</b> RUT, correo, tel&eacute;fono o tienen nombres muy parecidos &mdash; se&ntilde;al de un mismo carpintero abriendo cuentas nuevas para reusar los 15 d&iacute;as gratis. <b>No se fusiona ni borra nada autom&aacute;ticamente</b>: revisas caso a caso y decides. Al marcar una decisi&oacute;n el caso se archiva de esta lista (queda en este navegador).</div>
+<div id="ultima" style="border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:14px;background:#1e293b;border:1px solid #334155">Cargando &uacute;ltima cuenta revisada&hellip;</div>
 <div class="bar">
   <span class="pill">Pendientes: <b id="cnt">0</b></span>
   <input type="search" id="filtro" placeholder="Filtrar por nombre, correo, RUT o tel&eacute;fono...">
@@ -120,6 +121,19 @@ document.getElementById("reset").addEventListener("click",function(){
   localStorage.removeItem(LSKEY);toast("Casos restaurados");render();
 });
 document.getElementById("filtro").addEventListener("input",render);
+fetch("data/ultima-cuenta.json?v="+Date.now()).then(function(r){return r.json()}).then(function(u){
+  var el=document.getElementById("ultima");
+  if(u.estado==="OK"){
+    el.style.background="#0b2c1a";el.style.borderColor="#14532d";
+    el.innerHTML="&#9989; <b>&Uacute;ltima cuenta revisada OK:</b> "+esc(u.nombre)+" &mdash; sin coincidencias &middot; <span style='color:#94a3b8'>"+esc(u.hora)+"</span>";
+  } else if(u.estado==="duplicado"){
+    el.style.background="#3a1212";el.style.borderColor="#7f1d1d";
+    var con=(u.coincidencias||[]).map(function(c){return esc(c.nombre)+" ("+((c.reasons||[]).join(", "))+")"}).join("; ");
+    el.innerHTML="&#9888;&#65039; <b>&Uacute;ltima cuenta con posible duplicado:</b> "+esc(u.nombre)+" &mdash; choca con "+con+" &middot; <span style='color:#94a3b8'>"+esc(u.hora)+"</span>";
+  } else {
+    el.innerHTML="<span style='color:#94a3b8'>Chequeo antifraude activo &mdash; la pr&oacute;xima cuenta nueva aparece ac&aacute; con su estado y hora.</span>";
+  }
+}).catch(function(e){document.getElementById("ultima").innerHTML="<span style='color:#94a3b8'>A&uacute;n sin datos de &uacute;ltima cuenta (se llena con la pr&oacute;xima cuenta nueva).</span>";});
 fetch("data/duplicados.json?v="+Date.now()).then(function(r){return r.json()}).then(function(d){
   CASOS=d;
   var tot=0;CASOS.forEach(function(c){tot+=c.cuentas.length});
