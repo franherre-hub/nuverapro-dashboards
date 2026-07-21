@@ -23,6 +23,7 @@ button.ok.on:hover{background:#15803d}
 .empty{text-align:center;color:#94a3b8;padding:40px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
+@media(max-width:640px){.wrap{padding:14px}h1{font-size:18px}table,thead,tbody,tr,td{display:block}thead{display:none}tr{background:#131f38;border:1px solid #1e293b;border-radius:12px;padding:10px 12px;margin-bottom:12px}tr:hover td{background:transparent}td{border:none;padding:5px 0}.col-lead,.col-act{width:auto}td[data-l]::before{content:attr(data-l);display:block;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}}
 </style></head>
 <body><div class="wrap">
 <h1>&#128279; Vincular capacitaciones sin lead</h1>
@@ -59,10 +60,10 @@ function render(){
   rows.forEach(function(t){
     var tr=document.createElement("tr");
     var contact=[t.c,t.tel].filter(Boolean).join("  &middot;  ");
-    tr.innerHTML="<td>"+t.f+"</td>"+
-      "<td><div class='tom'>"+esc(t.to||"-")+"</div><div class='meta'>"+contact+"</div></td>"+
-      "<td><span class='meta'>"+esc(t.t)+"</span></td>"+
-      "<td class='col-lead'><input class='lead' list='leadsdl' placeholder='Escribe nombre o ID externo...'></td>"+
+    tr.innerHTML="<td data-l='Fecha'>"+t.f+"</td>"+
+      "<td data-l='Tomador / contacto'><div class='tom'>"+esc(t.to||"-")+"</div><div class='meta'>"+contact+"</div></td>"+
+      "<td data-l='Titulo evento'><span class='meta'>"+esc(t.t)+"</span></td>"+
+      "<td class='col-lead' data-l='Lead correcto'><input class='lead' list='leadsdl' placeholder='Escribe nombre o ID externo...'></td>"+
       "<td class='col-act'><button class='ok'>Vincular</button></td>";
     var inp=tr.querySelector("input"), btn=tr.querySelector("button");
     inp.addEventListener("input",function(){ if(MAP[inp.value]){btn.classList.add("on")}else{btn.classList.remove("on")} });
