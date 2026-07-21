@@ -18,24 +18,26 @@ body{display:flex;flex-direction:column;height:100vh;font-family:-apple-system,S
 <body>
 <div class="top">
   <div class="brand">NuveraPRO <span>&middot; Dashboard</span></div>
-  <button class="tab active" data-t="r">Rendimientos<span class="d"> &middot; Cuentas creadas</span></button>
+  <button class="tab active" data-t="l">Llamadas<span class="d"> &middot; Hoy</span></button>
+  <button class="tab" data-t="r">Rendimientos<span class="d"> &middot; Cuentas creadas</span></button>
   <button class="tab" data-t="c">Conversión<span class="d"> &middot; KPIs</span></button>
   <button class="tab" data-t="w">Trabajo<span class="d"> &middot; Vincular capacitaciones</span></button>
   <button class="tab" data-t="a">Antifraude<span class="d"> &middot; Duplicados</span></button>
 </div>
-<iframe id="fr" class="frame active" src="cuentas-prueba.html"></iframe>
+<iframe id="fl" class="frame active" src="llamadas.html"></iframe>
+<iframe id="fr" class="frame" src="cuentas-prueba.html"></iframe>
 <iframe id="fc" class="frame" src="conversion.html"></iframe>
 <iframe id="fw" class="frame" src="vincular-capacitaciones.html"></iframe>
 <iframe id="fa" class="frame" src="duplicados.html"></iframe>
 <script>
-var MAP={r:"fr",c:"fc",w:"fw",a:"fa"};
+var MAP={l:"fl",r:"fr",c:"fc",w:"fw",a:"fa"};
 var tabs=document.querySelectorAll(".tab");
 [].forEach.call(tabs,function(btn){
   btn.addEventListener("click",function(){
     [].forEach.call(tabs,function(b){b.classList.remove("active")});
     btn.classList.add("active");
     var want=MAP[btn.getAttribute("data-t")];
-    ["fr","fc","fw","fa"].forEach(function(id){
+    ["fl","fr","fc","fw","fa"].forEach(function(id){
       var f=document.getElementById(id);
       if(id===want)f.classList.add("active");else f.classList.remove("active");
     });
