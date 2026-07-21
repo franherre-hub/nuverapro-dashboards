@@ -13,14 +13,15 @@ body{display:flex;flex-direction:column;height:100vh;font-family:-apple-system,S
 .tab.active{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
 .frame{flex:1 1 auto;width:100%;border:0;display:none}
 .frame.active{display:block}
+@media(max-width:560px){.top{padding:8px 10px;gap:5px}.brand{margin-right:4px;font-size:13px}.brand span{display:none}.tab{padding:7px 12px;font-size:12px}.tab .d{display:none}}
 </style></head>
 <body>
 <div class="top">
   <div class="brand">NuveraPRO <span>&middot; Dashboard</span></div>
-  <button class="tab active" data-t="r">Rendimientos &middot; Cuentas creadas</button>
-  <button class="tab" data-t="c">Conversión &middot; KPIs</button>
-  <button class="tab" data-t="w">Trabajo &middot; Vincular capacitaciones</button>
-  <button class="tab" data-t="a">Antifraude &middot; Duplicados</button>
+  <button class="tab active" data-t="r">Rendimientos<span class="d"> &middot; Cuentas creadas</span></button>
+  <button class="tab" data-t="c">Conversión<span class="d"> &middot; KPIs</span></button>
+  <button class="tab" data-t="w">Trabajo<span class="d"> &middot; Vincular capacitaciones</span></button>
+  <button class="tab" data-t="a">Antifraude<span class="d"> &middot; Duplicados</span></button>
 </div>
 <iframe id="fr" class="frame active" src="cuentas-prueba.html"></iframe>
 <iframe id="fc" class="frame" src="conversion.html"></iframe>
