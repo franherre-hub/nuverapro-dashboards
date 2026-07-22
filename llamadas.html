@@ -53,11 +53,18 @@ function pending(){var s=calledSet();return allItems().filter(function(it){retur
 function sortRows(rows){
   rows.sort(function(a,b){
     if(SORT==="activacion"){
+      var ia=(a.idExt==null)?NaN:+a.idExt, ib=(b.idExt==null)?NaN:+b.idExt;
+      var na=isNaN(ia), nb=isNaN(ib);
+      if(!na||!nb){
+        if(na)return 1;
+        if(nb)return -1;
+        if(ia!==ib)return (ia-ib)*SDIR;
+      }
       var ta=a.fAct?Date.parse(a.fAct):NaN, tb=b.fAct?Date.parse(b.fAct):NaN;
-      var na=isNaN(ta), nb=isNaN(tb);
-      if(na&&nb)return (a._ord-b._ord);
-      if(na)return 1;
-      if(nb)return -1;
+      var fa=isNaN(ta), fb=isNaN(tb);
+      if(fa&&fb)return (a._ord-b._ord);
+      if(fa)return 1;
+      if(fb)return -1;
       return (ta-tb)*SDIR;
     }
     return (a._ord-b._ord)*SDIR;
