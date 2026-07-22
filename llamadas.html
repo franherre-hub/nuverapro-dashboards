@@ -1,1 +1,189 @@
-__PLACEHOLDER__
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Llamadas de hoy — NuveraPRO</title><style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f5f7fa;color:#0b2545;margin:0;padding:14px}
+.wrap{max-width:680px;margin:0 auto}
+h1{margin:0 0 2px;font-size:20px}
+.sub{color:#64748b;margin:0 0 12px;font-size:13px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{background:#fff;border:1px solid #e2e8f0;color:#475569;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.chip.on{background:#0b2545;border-color:#0b2545;color:#fff}
+.sortbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.sortbar .sl{font-size:12px;color:#64748b;margin-right:2px}
+.sb{background:#fff;border:1px solid #e2e8f0;color:#475569;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.sb.active{background:#0b2545;border-color:#0b2545;color:#fff}
+.sb .ar{font-size:11px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:13px 14px;margin-bottom:10px;border-left:4px solid var(--c)}
+.card.done{opacity:.4}
+.top{display:flex;align-items:center;gap:8px}
+.nm{font-weight:700;font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#fff;background:var(--c);padding:2px 7px;border-radius:999px;flex:0 0 auto}
+.chev{flex:0 0 auto;border:1px solid #e2e8f0;background:#fff;color:#0b2545;border-radius:8px;width:32px;height:30px;font-size:19px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+.chev:active{background:#f1f5f9}
+.sub2{color:#475569;font-size:13px;margin:5px 0 2px}
+.prev{color:#94a3b8;font-size:12px}
+.call{display:flex;align-items:center;justify-content:center;gap:8px;background:#16a34a;color:#fff;text-decoration:none;font-weight:700;padding:12px;border-radius:10px;margin-top:10px;font-size:15px}
+.call:active{background:#15803d}
+.acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
+.acts button{border:1px solid #e2e8f0;background:#fff;border-radius:9px;padding:9px 4px;font-size:12px;font-weight:600;cursor:pointer;color:#334155}
+.acts button:active{background:#f1f5f9}
+.empty{text-align:center;color:#94a3b8;padding:30px;font-size:14px}
+.foot{color:#94a3b8;font-size:12px;margin-top:14px;text-align:center;line-height:1.5}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:40}
+.toast.show{opacity:1}
+.sheet{position:fixed;inset:0;background:#f5f7fa;z-index:30;overflow-y:auto;display:none}
+.sheet.open{display:block}
+.sheetwrap{max-width:680px;margin:0 auto;padding:14px;width:100%;box-sizing:border-box}
+.shead{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.back{border:1px solid #e2e8f0;background:#fff;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer;color:#334155;font-size:14px;flex:0 0 auto}
+.shname{font-weight:800;font-size:18px;flex:1;min-width:0}
+.btns2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 8px}
+.wa{display:flex;align-items:center;justify-content:center;gap:8px;background:#25d366;color:#fff;text-decoration:none;font-weight:700;padding:12px;border-radius:10px;font-size:15px}
+.wa:active{background:#1eb257}
+.srow{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #eef2f7;font-size:14px}
+.srow .k{color:#64748b;flex:0 0 auto}
+.srow .v{font-weight:600;text-align:right;word-break:break-word}
+.secttl{font-weight:700;font-size:14px;margin:16px 0 6px}
+.notesbox{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px}
+.noteshist{white-space:pre-wrap;font-size:13px;color:#334155;line-height:1.5;max-height:240px;overflow:auto;margin-bottom:10px}
+.noteshist .empty2{color:#94a3b8}
+textarea.nota{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font-size:14px;font-family:inherit;min-height:84px;resize:vertical}
+.save{background:#0b2545;color:#fff;border:none;border-radius:9px;padding:12px 14px;font-weight:700;font-size:14px;cursor:pointer;margin-top:8px;width:100%}
+.save:active{background:#123457}
+.notionlink{display:inline-block;margin-top:14px;color:#2563eb;font-size:13px;text-decoration:none}
+</style></head><body><div class="wrap">
+<h1>&#128222; Llamadas de hoy</h1>
+<p class="sub" id="sub">Cargando&hellip;</p>
+<div class="chips" id="chips"></div>
+<div class="sortbar" id="sortbar"></div>
+<div id="list"></div>
+<div id="empty" class="empty" style="display:none">&#9989; No quedan llamadas pendientes por ahora.</div>
+<p class="foot" id="foot">&mdash;</p>
+</div>
+<div class="sheet" id="sheet"><div class="sheetwrap" id="sheetwrap"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+var WEBHOOK="https://n8n.entrenemos.cl/webhook/marcar-llamado";
+var NOTAWEBHOOK="https://n8n.entrenemos.cl/webhook/guardar-nota-lead";
+var COLORS={atencion:"#ea580c",nuevas:"#2563eb",riesgo:"#dc2626",prueba:"#16a34a"};
+var ICON={atencion:"⚠️",nuevas:"🆕",riesgo:"🔴",prueba:"🟢"};
+var DATA=null, FILT="todas";
+var SORT="activacion", SDIR=-1, DEFDIR={activacion:-1,prioridad:1};
+var SHEET_IT=null;
+function lskey(){var d=new Date();return "nvp_called_"+d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
+function calledSet(){try{return JSON.parse(localStorage.getItem(lskey())||"{}")}catch(e){return{}}}
+function markCalled(id){var s=calledSet();s[id]=1;localStorage.setItem(lskey(),JSON.stringify(s));}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1600)}
+function allItems(){var out=[];if(!DATA)return out;var k=0;DATA.buckets.forEach(function(b){b.items.forEach(function(it){out.push(Object.assign({bucket:b.key,label:b.label,_ord:k++},it))})});return out;}
+function pending(){var s=calledSet();return allItems().filter(function(it){return !s[it.id]})}
+function sortRows(rows){
+  rows.sort(function(a,b){
+    if(SORT==="activacion"){
+      var ia=(a.idExt==null)?NaN:+a.idExt, ib=(b.idExt==null)?NaN:+b.idExt;
+      var na=isNaN(ia), nb=isNaN(ib);
+      if(!na||!nb){
+        if(na)return 1;
+        if(nb)return -1;
+        if(ia!==ib)return (ia-ib)*SDIR;
+      }
+      var ta=a.fAct?Date.parse(a.fAct):NaN, tb=b.fAct?Date.parse(b.fAct):NaN;
+      var fa=isNaN(ta), fb=isNaN(tb);
+      if(fa&&fb)return (a._ord-b._ord);
+      if(fa)return 1;
+      if(fb)return -1;
+      return (ta-tb)*SDIR;
+    }
+    return (a._ord-b._ord)*SDIR;
+  });
+  return rows;
+}
+function renderChips(){
+  var s=calledSet();var counts={todas:0,atencion:0,nuevas:0,riesgo:0,prueba:0};
+  allItems().forEach(function(it){if(s[it.id])return;counts.todas++;counts[it.bucket]=(counts[it.bucket]||0)+1;});
+  var defs=[["todas","Todas"],["atencion","Atención"],["nuevas","Nuevas"],["riesgo","Riesgo"],["prueba","Activas"]];
+  var h="";defs.forEach(function(d){var on=FILT===d[0]?" on":"";var ic=d[0]==="todas"?"":ICON[d[0]]+" ";h+="<span class='chip"+on+"' data-f='"+d[0]+"'>"+ic+d[1]+" ("+(counts[d[0]]||0)+")</span>";});
+  var el=document.getElementById("chips");el.innerHTML=h;
+  [].forEach.call(el.querySelectorAll(".chip"),function(c){c.addEventListener("click",function(){FILT=c.getAttribute("data-f");render();});});
+}
+function renderSort(){
+  var defs=[["activacion","Activación"],["prioridad","Prioridad"]];
+  var h="<span class='sl'>Ordenar:</span>";
+  defs.forEach(function(d){var on=SORT===d[0]?" active":"";var ar=SORT===d[0]?(SDIR===1?" ↑":" ↓"):"";h+="<button class='sb"+on+"' data-s='"+d[0]+"'>"+d[1]+"<span class='ar'>"+ar+"</span></button>";});
+  var el=document.getElementById("sortbar");el.innerHTML=h;
+  [].forEach.call(el.querySelectorAll(".sb"),function(b){b.addEventListener("click",function(){var k=b.getAttribute("data-s");if(k===SORT){SDIR=-SDIR;}else{SORT=k;SDIR=DEFDIR[k];}render();});});
+}
+function render(){
+  renderChips();renderSort();
+  var rows=pending().filter(function(it){return FILT==="todas"||it.bucket===FILT});
+  sortRows(rows);
+  document.getElementById("empty").style.display=pending().length?"none":"block";
+  var list=document.getElementById("list");list.innerHTML="";
+  rows.forEach(function(it){
+    var card=document.createElement("div");card.className="card";card.style.setProperty("--c",COLORS[it.bucket]||"#64748b");
+    var prev=it.resPrev?"<div class='prev'>Última: "+esc(it.resPrev)+"</div>":"";
+    var call=it.telH?"<a class='call' href='tel:"+esc(it.telH)+"'>&#128222; Llamar "+esc(it.tel)+"</a>":"<div class='prev' style='text-align:center;margin-top:8px'>Sin teléfono registrado</div>";
+    card.innerHTML="<div class='top'><span class='nm'>"+it.flag+" "+esc(it.n)+"</span><span class='tag'>"+esc(it.tag)+"</span><button class='chev' title='Abrir ficha'>→</button></div>"+
+      "<div class='sub2'>"+esc(it.sub)+"</div>"+prev+call+
+      "<div class='acts'><button data-r='Contactado'>&#9989; Contactado</button><button data-r='No contestó'>&#128245; No contestó</button><button data-r='Reagendar'>&#128197; Reagendar</button></div>";
+    card.querySelector(".chev").addEventListener("click",function(){openSheet(it);});
+    var btns=card.querySelectorAll(".acts button");
+    [].forEach.call(btns,function(b){b.addEventListener("click",function(){marcar(it,b.getAttribute("data-r"),card);});});
+    list.appendChild(card);
+  });
+}
+function marcar(it,resultado,card){
+  try{fetch(WEBHOOK,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:it.id,resultado:resultado,nombre:it.n})});}catch(e){}
+  markCalled(it.id);if(card)card.classList.add("done");toast(esc(it.n)+": "+resultado);
+  setTimeout(render,450);
+}
+function waHref(it){var d=String(it.telH||it.tel||"").replace(/[^0-9]/g,"");return d?("https://wa.me/"+d):"";}
+function notaStamp(){try{return new Date().toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","");}catch(e){var d=new Date();return d.getDate()+"-"+(d.getMonth()+1)+" "+d.getHours()+":"+("0"+d.getMinutes()).slice(-2);}}
+function usoTxt(it){if(it.cotiCN>=1)return "Usando · "+it.cotiCN+" PDF oficial"+(it.cotiSN?" + "+it.cotiSN+" borradores":"");if(it.cotiSN>=1)return "Explorando · "+it.cotiSN+" borrador"+(it.cotiSN>1?"es":"");return "Sin cotizar";}
+function openSheet(it){SHEET_IT=it;renderSheet();document.getElementById("sheet").classList.add("open");document.body.style.overflow="hidden";document.getElementById("sheet").scrollTop=0;}
+function closeSheet(){document.getElementById("sheet").classList.remove("open");document.body.style.overflow="";SHEET_IT=null;}
+function renderSheet(){
+  var it=SHEET_IT;if(!it)return;
+  var wa=waHref(it);
+  var call=it.telH?"<a class='call' style='margin-top:0' href='tel:"+esc(it.telH)+"'>&#128222; Llamar</a>":"<span></span>";
+  var waB=wa?"<a class='wa' href='"+wa+"' target='_blank' rel='noopener'>&#128172; WhatsApp</a>":"<span></span>";
+  var diaTxt=(it.dia!=null?("día "+it.dia+"/15"):"—");
+  var notasHtml=it.notas?esc(it.notas):"<span class='empty2'>Sin anotaciones todavía.</span>";
+  var notionUrl="https://www.notion.so/"+String(it.id).replace(/-/g,"");
+  var h="";
+  h+="<div class='shead'><button class='back' id='backBtn'>← Volver</button><span class='shname'>"+it.flag+" "+esc(it.n)+"</span><span class='tag' style='background:"+(COLORS[it.bucket]||"#64748b")+"'>"+esc(it.tag)+"</span></div>";
+  h+="<div class='btns2'>"+call+waB+"</div>";
+  h+="<div class='srow'><span class='k'>Estado</span><span class='v'>"+esc(it.sub)+"</span></div>";
+  h+="<div class='srow'><span class='k'>Días de prueba</span><span class='v'>"+diaTxt+"</span></div>";
+  h+="<div class='srow'><span class='k'>Uso</span><span class='v'>"+esc(usoTxt(it))+"</span></div>";
+  h+="<div class='srow'><span class='k'>País</span><span class='v'>"+(it.pais?esc(it.pais):(it.flag||"—"))+"</span></div>";
+  h+="<div class='srow'><span class='k'>Correo</span><span class='v'>"+(it.correo?esc(it.correo):"—")+"</span></div>";
+  h+="<div class='srow'><span class='k'>Teléfono</span><span class='v'>"+(it.tel?esc(it.tel):"—")+"</span></div>";
+  h+="<div class='srow'><span class='k'>Última llamada</span><span class='v'>"+(it.resPrev?esc(it.resPrev):"—")+"</span></div>";
+  h+="<div class='secttl'>📝 Anotaciones</div>";
+  h+="<div class='notesbox'><div class='noteshist' id='noteshist'>"+notasHtml+"</div><textarea class='nota' id='notaInput' placeholder='Escribe una anotación sobre este cliente…'></textarea><button class='save' id='saveNota'>&#128190; Guardar nota</button></div>";
+  h+="<div class='acts' style='margin-top:12px'><button data-r='Contactado'>&#9989; Contactado</button><button data-r='No contestó'>&#128245; No contestó</button><button data-r='Reagendar'>&#128197; Reagendar</button></div>";
+  h+="<a class='notionlink' href='"+notionUrl+"' target='_blank' rel='noopener'>Ver ficha completa en Notion ↗</a>";
+  var w=document.getElementById("sheetwrap");w.innerHTML=h;
+  document.getElementById("backBtn").addEventListener("click",closeSheet);
+  document.getElementById("saveNota").addEventListener("click",saveNota);
+  var acts=w.querySelectorAll(".acts button");
+  [].forEach.call(acts,function(b){b.addEventListener("click",function(){var r=b.getAttribute("data-r");marcar(it,r);closeSheet();});});
+}
+function saveNota(){
+  var it=SHEET_IT;if(!it)return;
+  var ta=document.getElementById("notaInput");var txt=(ta.value||"").trim();
+  if(!txt){toast("Escribe algo primero");return;}
+  var linea="["+notaStamp()+"] "+txt;
+  var nuevo=(it.notas?it.notas+"\n":"")+linea;
+  if(nuevo.length>1900)nuevo=nuevo.slice(nuevo.length-1900);
+  it.notas=nuevo;
+  try{fetch(NOTAWEBHOOK,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:it.id,notas:nuevo,nombre:it.n})});}catch(e){}
+  document.getElementById("noteshist").innerHTML=esc(it.notas);
+  ta.value="";toast("Nota guardada");
+}
+fetch("data/llamadas.json?v="+Date.now()).then(function(r){return r.json()}).then(function(d){
+  DATA=d;
+  document.getElementById("sub").textContent=pending().length+" llamadas pendientes · actualizado "+d.generado;
+  document.getElementById("foot").textContent="Tocá la flecha → de cada empresa para abrir su ficha y dejar anotaciones (se guardan en Notion). Las llamadas marcadas hoy se ocultan en este navegador.";
+  render();
+}).catch(function(e){document.getElementById("sub").textContent="No se pudo cargar la cola ("+e+")";});
+</script></body></html>
