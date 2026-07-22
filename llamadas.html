@@ -3,9 +3,14 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
 .wrap{max-width:680px;margin:0 auto}
 h1{margin:0 0 2px;font-size:20px}
 .sub{color:#64748b;margin:0 0 12px;font-size:13px}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .chip{background:#fff;border:1px solid #e2e8f0;color:#475569;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
 .chip.on{background:#0b2545;border-color:#0b2545;color:#fff}
+.sortbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.sortbar .sl{font-size:12px;color:#64748b;margin-right:2px}
+.sb{background:#fff;border:1px solid #e2e8f0;color:#475569;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.sb.active{background:#0b2545;border-color:#0b2545;color:#fff}
+.sb .ar{font-size:11px}
 .card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:13px 14px;margin-bottom:10px;border-left:4px solid var(--c)}
 .card.done{opacity:.4}
 .top{display:flex;align-items:baseline;gap:8px}
@@ -26,6 +31,7 @@ h1{margin:0 0 2px;font-size:20px}
 <h1>&#128222; Llamadas de hoy</h1>
 <p class="sub" id="sub">Cargando&hellip;</p>
 <div class="chips" id="chips"></div>
+<div class="sortbar" id="sortbar"></div>
 <div id="list"></div>
 <div id="empty" class="empty" style="display:none">&#9989; No quedan llamadas pendientes por ahora.</div>
 <p class="foot" id="foot">&mdash;</p>
@@ -36,13 +42,28 @@ var WEBHOOK="https://n8n.entrenemos.cl/webhook/marcar-llamado";
 var COLORS={atencion:"#ea580c",nuevas:"#2563eb",riesgo:"#dc2626",prueba:"#16a34a"};
 var ICON={atencion:"⚠️",nuevas:"🆕",riesgo:"🔴",prueba:"🟢"};
 var DATA=null, FILT="todas";
+var SORT="activacion", SDIR=-1, DEFDIR={activacion:-1,prioridad:1};
 function lskey(){var d=new Date();return "nvp_called_"+d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
 function calledSet(){try{return JSON.parse(localStorage.getItem(lskey())||"{}")}catch(e){return{}}}
 function markCalled(id){var s=calledSet();s[id]=1;localStorage.setItem(lskey(),JSON.stringify(s));}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1600)}
-function allItems(){var out=[];if(!DATA)return out;DATA.buckets.forEach(function(b){b.items.forEach(function(it){out.push(Object.assign({bucket:b.key,label:b.label},it))})});return out;}
+function allItems(){var out=[];if(!DATA)return out;var k=0;DATA.buckets.forEach(function(b){b.items.forEach(function(it){out.push(Object.assign({bucket:b.key,label:b.label,_ord:k++},it))})});return out;}
 function pending(){var s=calledSet();return allItems().filter(function(it){return !s[it.id]})}
+function sortRows(rows){
+  rows.sort(function(a,b){
+    if(SORT==="activacion"){
+      var ta=a.fAct?Date.parse(a.fAct):NaN, tb=b.fAct?Date.parse(b.fAct):NaN;
+      var na=isNaN(ta), nb=isNaN(tb);
+      if(na&&nb)return (a._ord-b._ord);
+      if(na)return 1;
+      if(nb)return -1;
+      return (ta-tb)*SDIR;
+    }
+    return (a._ord-b._ord)*SDIR;
+  });
+  return rows;
+}
 function renderChips(){
   var s=calledSet();var counts={todas:0,atencion:0,nuevas:0,riesgo:0,prueba:0};
   allItems().forEach(function(it){if(s[it.id])return;counts.todas++;counts[it.bucket]=(counts[it.bucket]||0)+1;});
@@ -51,9 +72,17 @@ function renderChips(){
   var el=document.getElementById("chips");el.innerHTML=h;
   [].forEach.call(el.querySelectorAll(".chip"),function(c){c.addEventListener("click",function(){FILT=c.getAttribute("data-f");render();});});
 }
+function renderSort(){
+  var defs=[["activacion","Activación"],["prioridad","Prioridad"]];
+  var h="<span class='sl'>Ordenar:</span>";
+  defs.forEach(function(d){var on=SORT===d[0]?" active":"";var ar=SORT===d[0]?(SDIR===1?" ↑":" ↓"):"";h+="<button class='sb"+on+"' data-s='"+d[0]+"'>"+d[1]+"<span class='ar'>"+ar+"</span></button>";});
+  var el=document.getElementById("sortbar");el.innerHTML=h;
+  [].forEach.call(el.querySelectorAll(".sb"),function(b){b.addEventListener("click",function(){var k=b.getAttribute("data-s");if(k===SORT){SDIR=-SDIR;}else{SORT=k;SDIR=DEFDIR[k];}render();});});
+}
 function render(){
-  renderChips();
+  renderChips();renderSort();
   var rows=pending().filter(function(it){return FILT==="todas"||it.bucket===FILT});
+  sortRows(rows);
   document.getElementById("empty").style.display=pending().length?"none":"block";
   var list=document.getElementById("list");list.innerHTML="";
   rows.forEach(function(it){
