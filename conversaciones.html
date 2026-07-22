@@ -26,6 +26,8 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
 .chead .cn span{color:#64748b;font-size:12px}
 .pausebtn{border:1px solid #e2e8f0;background:#fff;border-radius:9px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;color:#334155}
 .pausebtn.on{background:#fff7ed;border-color:#fdba74;color:#c2410c}
+.delbtn{border:1px solid #fecaca;background:#fff;color:#b91c1c;border-radius:9px;padding:8px 11px;font-size:15px;cursor:pointer;flex:0 0 auto}
+.delbtn:hover{background:#fef2f2}
 .thread{flex:1;overflow-y:auto;min-height:0;padding:16px;background:#f5f7fa;display:flex;flex-direction:column;gap:8px}
 .b{max-width:74%;padding:9px 12px;border-radius:12px;font-size:14px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
 .b .bt{display:block;font-size:10px;color:#94a3b8;margin-top:4px}
@@ -65,7 +67,8 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
 <script>
 var PAUSAR="https://n8n.entrenemos.cl/webhook/conversacion-pausar";
 var RESPONDER="https://n8n.entrenemos.cl/webhook/conversacion-responder";
-var DATA=null, SEL=null, Q="";
+var ELIMINAR="https://n8n.entrenemos.cl/webhook/conversacion-eliminar";
+var DATA=null, SEL=null, Q="", DELWAIT=false;
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1600)}
 function initials(n){n=String(n||"?").trim();var d=n.replace(/[^0-9]/g,"");if(d.length>=2)return d.slice(-2);return n.slice(0,2).toUpperCase();}
@@ -85,15 +88,18 @@ function renderList(){
     h+="<div class='it"+sel+"' data-id='"+c.id+"'><div class='av'>"+esc(initials(c.nombre))+"</div><div class='mid'><div class='nm'>"+esc(c.nombre)+" "+pb+"</div><div class='pv'>"+esc(c.prev||"")+"</div></div><div class='tm'>"+timeShort(c.ult)+"</div></div>";
   });
   el.innerHTML=h||"<div class='note' style='padding:20px'>Sin conversaciones.</div>";
-  [].forEach.call(el.querySelectorAll(".it"),function(n){n.addEventListener("click",function(){SEL=n.getAttribute("data-id");document.body.classList.add("chatopen");render();});});
+  [].forEach.call(el.querySelectorAll(".it"),function(n){n.addEventListener("click",function(){SEL=n.getAttribute("data-id");DELWAIT=false;document.body.classList.add("chatopen");render();});});
 }
 function renderChat(){
   var inner=document.getElementById("chatinner");
   var c=chatById(SEL);
   if(!c){inner.innerHTML="<div class='empty'>Elegí una conversación de la izquierda para ver el hilo.</div>";return;}
   var pausedTxt=c.pausada?"⏸ Bot pausado":"▶ Bot activo";
+  var acts;
+  if(DELWAIT){acts="<span style='font-size:12px;color:#b91c1c;margin-right:4px;font-weight:700'>¿Eliminar?</span><button class='pausebtn' id='delYes' style='color:#fff;background:#dc2626;border-color:#dc2626'>Sí, eliminar</button><button class='pausebtn' id='delNo'>No</button>";}
+  else{acts="<button class='pausebtn"+(c.pausada?" on":"")+"' id='pauseBtn'>"+pausedTxt+"</button><button class='delbtn' id='delBtn' title='Eliminar conversación'>🗑</button>";}
   var h="";
-  h+="<div class='chead'><button class='back' id='backBtn'>←</button><div class='av'>"+esc(initials(c.nombre))+"</div><div class='cn'><b>"+esc(c.nombre)+"</b><span>"+esc(c.wa||"")+"</span></div><button class='pausebtn"+(c.pausada?" on":"")+"' id='pauseBtn'>"+pausedTxt+"</button></div>";
+  h+="<div class='chead'><button class='back' id='backBtn'>←</button><div class='av'>"+esc(initials(c.nombre))+"</div><div class='cn'><b>"+esc(c.nombre)+"</b><span>"+esc(c.wa||"")+"</span></div>"+acts+"</div>";
   h+="<div class='thread' id='thread'></div>";
   h+="<div class='composer'><textarea id='ta' rows='1' placeholder='Escribe una respuesta…'></textarea><button class='send' id='sendBtn'>Enviar</button></div>";
   h+="<div class='note'>Al enviar una respuesta manual, el bot queda en pausa para que no responda encima. Reactívalo con el botón de arriba.</div>";
@@ -107,13 +113,26 @@ function renderChat(){
   });
   th.innerHTML=mh;
   th.scrollTop=th.scrollHeight;
-  var bb=document.getElementById("backBtn");if(bb)bb.addEventListener("click",function(){document.body.classList.remove("chatopen");SEL=null;render();});
-  document.getElementById("pauseBtn").addEventListener("click",function(){togglePausa(c);});
+  var bb=document.getElementById("backBtn");if(bb)bb.addEventListener("click",function(){document.body.classList.remove("chatopen");SEL=null;DELWAIT=false;render();});
+  if(DELWAIT){
+    document.getElementById("delYes").addEventListener("click",function(){eliminarChat(c);});
+    document.getElementById("delNo").addEventListener("click",function(){DELWAIT=false;render();});
+  }else{
+    document.getElementById("pauseBtn").addEventListener("click",function(){togglePausa(c);});
+    document.getElementById("delBtn").addEventListener("click",function(){DELWAIT=true;render();});
+  }
   var ta=document.getElementById("ta");
   ta.addEventListener("input",function(){ta.style.height="40px";ta.style.height=Math.min(120,ta.scrollHeight)+"px";});
   document.getElementById("sendBtn").addEventListener("click",function(){enviar(c);});
 }
 function render(){renderList();renderChat();}
+function eliminarChat(c){
+  DELWAIT=false;
+  try{fetch(ELIMINAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id})});}catch(e){}
+  if(DATA&&DATA.chats)DATA.chats=DATA.chats.filter(function(x){return x.id!==c.id});
+  SEL=null;document.body.classList.remove("chatopen");
+  toast("Conversación eliminada");render();
+}
 function togglePausa(c){
   var nueva=!c.pausada;c.pausada=nueva;
   try{fetch(PAUSAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,pausada:nueva})});}catch(e){}
