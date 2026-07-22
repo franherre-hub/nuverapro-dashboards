@@ -1,0 +1,147 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Conversaciones — NuveraPRO</title><style>
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f5f7fa;color:#0b2545;margin:0;height:100vh;overflow:hidden}
+.app{display:flex;height:100vh}
+.list{width:340px;flex:0 0 340px;border-right:1px solid #e2e8f0;background:#fff;display:flex;flex-direction:column;min-height:0}
+.lhead{padding:12px 14px;border-bottom:1px solid #eef2f7}
+.lhead h1{margin:0;font-size:17px}
+.lhead .sub{color:#64748b;font-size:12px;margin-top:2px}
+.search{margin:8px 14px 4px;position:relative}
+.search input{width:100%;border:1px solid #e2e8f0;border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit}
+.items{overflow-y:auto;flex:1;min-height:0}
+.it{padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.it:hover{background:#f8fafc}
+.it.sel{background:#eef4ff}
+.av{flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:#0b2545;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.it .mid{flex:1;min-width:0}
+.it .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.it .pv{color:#64748b;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.it .tm{flex:0 0 auto;color:#94a3b8;font-size:11px;white-space:nowrap}
+.pausebadge{font-size:9px;font-weight:700;color:#fff;background:#ea580c;border-radius:999px;padding:1px 6px;text-transform:uppercase;letter-spacing:.03em}
+.chat{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+.chead{padding:11px 16px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;gap:10px}
+.chead .back{display:none;border:1px solid #e2e8f0;background:#fff;border-radius:8px;padding:6px 10px;font-weight:700;cursor:pointer;font-size:14px}
+.chead .cn{flex:1;min-width:0}
+.chead .cn b{font-size:15px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chead .cn span{color:#64748b;font-size:12px}
+.pausebtn{border:1px solid #e2e8f0;background:#fff;border-radius:9px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;color:#334155}
+.pausebtn.on{background:#fff7ed;border-color:#fdba74;color:#c2410c}
+.thread{flex:1;overflow-y:auto;min-height:0;padding:16px;background:#f5f7fa;display:flex;flex-direction:column;gap:8px}
+.b{max-width:74%;padding:9px 12px;border-radius:12px;font-size:14px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
+.b .bt{display:block;font-size:10px;color:#94a3b8;margin-top:4px}
+.b.cli{align-self:flex-start;background:#fff;border:1px solid #e2e8f0;border-bottom-left-radius:4px}
+.b.age{align-self:flex-end;background:#dcf8c6;border-bottom-right-radius:4px}
+.b.man .bt::after{content:' · manual'}
+.composer{border-top:1px solid #e2e8f0;background:#fff;padding:10px 12px;display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;border:1px solid #cbd5e1;border-radius:10px;padding:9px 11px;font-size:14px;font-family:inherit;resize:none;max-height:120px;min-height:40px}
+.composer .send{background:#16a34a;color:#fff;border:none;border-radius:10px;padding:0 16px;height:40px;font-weight:700;cursor:pointer;font-size:14px}
+.composer .send:disabled{opacity:.5;cursor:default}
+.empty{flex:1;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;padding:20px;text-align:center}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+.note{font-size:11px;color:#94a3b8;padding:0 12px 8px;text-align:center}
+@media(max-width:720px){
+  .list{width:100%;flex:1 1 auto}
+  .chat{display:none;position:fixed;inset:0;z-index:10;background:#f5f7fa}
+  body.chatopen .list{display:none}
+  body.chatopen .chat{display:flex}
+  .chead .back{display:block}
+}
+</style></head><body>
+<div class="app">
+  <div class="list">
+    <div class="lhead"><h1>💬 Conversaciones</h1><div class="sub" id="sub">Cargando…</div>
+      <div class="search"><input id="q" placeholder="Buscar por número o texto…" autocomplete="off"></div>
+    </div>
+    <div class="items" id="items"></div>
+  </div>
+  <div class="chat">
+    <div id="chatinner" style="display:flex;flex-direction:column;height:100%">
+      <div class="empty" id="empty">Elegí una conversación de la izquierda para ver el hilo.</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var PAUSAR="https://n8n.entrenemos.cl/webhook/conversacion-pausar";
+var RESPONDER="https://n8n.entrenemos.cl/webhook/conversacion-responder";
+var DATA=null, SEL=null, Q="";
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1600)}
+function initials(n){n=String(n||"?").trim();var d=n.replace(/[^0-9]/g,"");if(d.length>=2)return d.slice(-2);return n.slice(0,2).toUpperCase();}
+function timeShort(iso){if(!iso)return "";try{var d=new Date(iso);return d.toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","");}catch(e){return ""}}
+function chatById(id){if(!DATA)return null;for(var i=0;i<DATA.chats.length;i++)if(DATA.chats[i].id===id)return DATA.chats[i];return null;}
+function renderList(){
+  var el=document.getElementById("items");
+  var chats=(DATA?DATA.chats:[]).filter(function(c){
+    if(!Q)return true;var q=Q.toLowerCase();
+    if((c.nombre||"").toLowerCase().indexOf(q)>=0||(c.wa||"").indexOf(q)>=0)return true;
+    return (c.msgs||[]).some(function(m){return (m.texto||"").toLowerCase().indexOf(q)>=0});
+  });
+  var h="";
+  chats.forEach(function(c){
+    var sel=c.id===SEL?" sel":"";
+    var pb=c.pausada?"<span class='pausebadge'>Pausado</span>":"";
+    h+="<div class='it"+sel+"' data-id='"+c.id+"'><div class='av'>"+esc(initials(c.nombre))+"</div><div class='mid'><div class='nm'>"+esc(c.nombre)+" "+pb+"</div><div class='pv'>"+esc(c.prev||"")+"</div></div><div class='tm'>"+timeShort(c.ult)+"</div></div>";
+  });
+  el.innerHTML=h||"<div class='note' style='padding:20px'>Sin conversaciones.</div>";
+  [].forEach.call(el.querySelectorAll(".it"),function(n){n.addEventListener("click",function(){SEL=n.getAttribute("data-id");document.body.classList.add("chatopen");render();});});
+}
+function renderChat(){
+  var inner=document.getElementById("chatinner");
+  var c=chatById(SEL);
+  if(!c){inner.innerHTML="<div class='empty'>Elegí una conversación de la izquierda para ver el hilo.</div>";return;}
+  var pausedTxt=c.pausada?"⏸ Bot pausado":"▶ Bot activo";
+  var h="";
+  h+="<div class='chead'><button class='back' id='backBtn'>←</button><div class='av'>"+esc(initials(c.nombre))+"</div><div class='cn'><b>"+esc(c.nombre)+"</b><span>"+esc(c.wa||"")+"</span></div><button class='pausebtn"+(c.pausada?" on":"")+"' id='pauseBtn'>"+pausedTxt+"</button></div>";
+  h+="<div class='thread' id='thread'></div>";
+  h+="<div class='composer'><textarea id='ta' rows='1' placeholder='Escribe una respuesta…'></textarea><button class='send' id='sendBtn'>Enviar</button></div>";
+  h+="<div class='note'>Al enviar una respuesta manual, el bot queda en pausa para que no responda encima. Reactívalo con el botón de arriba.</div>";
+  inner.innerHTML=h;
+  var th=document.getElementById("thread");
+  var mh="";
+  (c.msgs||[]).forEach(function(m){
+    var cls=m.quien==="cliente"?"cli":"age";
+    var man=/manual/i.test(m.quien)?" man":"";
+    mh+="<div class='b "+cls+man+"'>"+esc(m.texto)+"<span class='bt'>"+esc(m.ts||"")+"</span></div>";
+  });
+  th.innerHTML=mh;
+  th.scrollTop=th.scrollHeight;
+  var bb=document.getElementById("backBtn");if(bb)bb.addEventListener("click",function(){document.body.classList.remove("chatopen");SEL=null;render();});
+  document.getElementById("pauseBtn").addEventListener("click",function(){togglePausa(c);});
+  var ta=document.getElementById("ta");
+  ta.addEventListener("input",function(){ta.style.height="40px";ta.style.height=Math.min(120,ta.scrollHeight)+"px";});
+  document.getElementById("sendBtn").addEventListener("click",function(){enviar(c);});
+}
+function render(){renderList();renderChat();}
+function togglePausa(c){
+  var nueva=!c.pausada;c.pausada=nueva;
+  try{fetch(PAUSAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,pausada:nueva})});}catch(e){}
+  toast(nueva?"Bot pausado":"Bot reactivado");render();
+}
+function enviar(c){
+  var ta=document.getElementById("ta");var txt=(ta.value||"").trim();if(!txt){return;}
+  var now=new Date().toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","");
+  c.msgs.push({ts:now,quien:"agente-manual",texto:txt});c.pausada=true;c.ult=new Date().toISOString();
+  try{fetch(RESPONDER,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,wa:c.wa,texto:txt})});}catch(e){}
+  ta.value="";ta.style.height="40px";toast("Enviado");render();
+}
+function load(){
+  fetch("data/conversaciones.json?v="+Date.now()).then(function(r){return r.json()}).then(function(d){
+    DATA=d;
+    document.getElementById("sub").textContent=(d.total||0)+" conversaciones · "+d.generado;
+    render();
+  }).catch(function(e){document.getElementById("sub").textContent="No se pudo cargar ("+e+")";});
+}
+document.getElementById("q").addEventListener("input",function(e){Q=e.target.value;renderList();});
+load();
+setInterval(function(){
+  var th=document.getElementById("thread");var atBottom=th?(th.scrollTop+th.clientHeight>=th.scrollHeight-40):true;
+  var ta=document.getElementById("ta");var typing=ta&&document.activeElement===ta&&ta.value;
+  if(typing)return;
+  fetch("data/conversaciones.json?v="+Date.now()).then(function(r){return r.json()}).then(function(d){
+    DATA=d;document.getElementById("sub").textContent=(d.total||0)+" conversaciones · "+d.generado;render();
+    var th2=document.getElementById("thread");if(th2&&atBottom)th2.scrollTop=th2.scrollHeight;
+  }).catch(function(){});
+},20000);
+</script></body></html>
