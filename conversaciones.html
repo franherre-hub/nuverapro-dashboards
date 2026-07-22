@@ -12,10 +12,16 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
 .filt button{flex:1;border:1px solid #e2e8f0;background:#fff;color:#475569;border-radius:8px;padding:6px 4px;font-size:12px;font-weight:700;cursor:pointer}
 .filt button.on{background:#0b2545;color:#fff;border-color:#0b2545}
 .items{overflow-y:auto;flex:1;min-height:0}
-.it{padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.it{padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;gap:10px;align-items:flex-start;user-select:none;-webkit-user-select:none}
 .it:hover{background:#f8fafc}
 .it.sel{background:#eef4ff}
 .it.cerrada{opacity:.62}
+.it.confirmrow{padding:0;cursor:default}
+.rowconfirm{display:flex;align-items:center;gap:8px;width:100%;background:#eef4ff;border-top:1px solid #c7d2fe;border-bottom:1px solid #c7d2fe;padding:11px 14px}
+.rowconfirm .rcq{flex:1;font-weight:700;font-size:13px;color:#1e3a8a;min-width:0}
+.rcbtn{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.rcbtn.yes{background:#0b2545;color:#fff;border-color:#0b2545}
+.rcbtn.no{color:#475569}
 .av{flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:#0b2545;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
 .it.cerrada .av{background:#94a3b8}
 .it .mid{flex:1;min-width:0}
@@ -81,7 +87,7 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
 var PAUSAR="https://n8n.entrenemos.cl/webhook/conversacion-pausar";
 var RESPONDER="https://n8n.entrenemos.cl/webhook/conversacion-responder";
 var CERRAR="https://n8n.entrenemos.cl/webhook/conversacion-eliminar";
-var DATA=null, SEL=null, Q="", FILTER="abiertas", DELWAIT=false;
+var DATA=null, SEL=null, Q="", FILTER="abiertas", DELWAIT=false, CONFIRMROW=null, CLICKT=null;
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1600)}
 function initials(n){n=String(n||"?").trim();var d=n.replace(/[^0-9]/g,"");if(d.length>=2)return d.slice(-2);return n.slice(0,2).toUpperCase();}
@@ -102,6 +108,10 @@ function renderList(){
   var chats=visibles();
   var h="";
   chats.forEach(function(c){
+    if(c.id===CONFIRMROW && !c.cerrada){
+      h+="<div class='it confirmrow' data-id='"+c.id+"'><div class='rowconfirm'><span class='rcq'>¿Cerrar esta conversación?</span><button class='rcbtn yes'>Sí, cerrar</button><button class='rcbtn no'>No</button></div></div>";
+      return;
+    }
     var sel=c.id===SEL?" sel":"";
     var cc=c.cerrada?" cerrada":"";
     var pb=c.pausada&&!c.cerrada?"<span class='pausebadge'>Pausado</span>":"";
@@ -109,7 +119,24 @@ function renderList(){
     h+="<div class='it"+sel+cc+"' data-id='"+c.id+"'><div class='av'>"+esc(initials(c.nombre))+"</div><div class='mid'><div class='nm'>"+esc(c.nombre)+" "+pb+cb+"</div><div class='pv'>"+esc(c.prev||"")+"</div></div><div class='tm'>"+timeShort(c.ult)+"</div></div>";
   });
   el.innerHTML=h||"<div class='note' style='padding:20px'>Sin conversaciones en esta vista.</div>";
-  [].forEach.call(el.querySelectorAll(".it"),function(n){n.addEventListener("click",function(){SEL=n.getAttribute("data-id");DELWAIT=false;document.body.classList.add("chatopen");render();});});
+  [].forEach.call(el.querySelectorAll(".it"),function(n){
+    var id=n.getAttribute("data-id");
+    if(n.classList.contains("confirmrow")){
+      var yb=n.querySelector(".yes"), nb=n.querySelector(".no");
+      if(yb)yb.addEventListener("click",function(e){e.stopPropagation();CONFIRMROW=null;var c=chatById(id);if(c)cerrarChat(c);});
+      if(nb)nb.addEventListener("click",function(e){e.stopPropagation();CONFIRMROW=null;render();});
+      return;
+    }
+    n.addEventListener("click",function(){
+      if(CLICKT){clearTimeout(CLICKT);CLICKT=null;}
+      CLICKT=setTimeout(function(){CLICKT=null;SEL=id;DELWAIT=false;CONFIRMROW=null;document.body.classList.add("chatopen");render();},220);
+    });
+    n.addEventListener("dblclick",function(){
+      if(CLICKT){clearTimeout(CLICKT);CLICKT=null;}
+      var c=chatById(id);
+      if(c&&!c.cerrada){CONFIRMROW=id;render();}
+    });
+  });
 }
 function renderChat(){
   var inner=document.getElementById("chatinner");
