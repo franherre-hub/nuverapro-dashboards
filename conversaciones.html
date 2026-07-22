@@ -8,16 +8,22 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
 .lhead .sub{color:#64748b;font-size:12px;margin-top:2px}
 .search{margin:8px 14px 4px;position:relative}
 .search input{width:100%;border:1px solid #e2e8f0;border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit}
+.filt{display:flex;gap:6px;margin:6px 14px 2px}
+.filt button{flex:1;border:1px solid #e2e8f0;background:#fff;color:#475569;border-radius:8px;padding:6px 4px;font-size:12px;font-weight:700;cursor:pointer}
+.filt button.on{background:#0b2545;color:#fff;border-color:#0b2545}
 .items{overflow-y:auto;flex:1;min-height:0}
 .it{padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
 .it:hover{background:#f8fafc}
 .it.sel{background:#eef4ff}
+.it.cerrada{opacity:.62}
 .av{flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:#0b2545;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.it.cerrada .av{background:#94a3b8}
 .it .mid{flex:1;min-width:0}
 .it .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
 .it .pv{color:#64748b;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .it .tm{flex:0 0 auto;color:#94a3b8;font-size:11px;white-space:nowrap}
 .pausebadge{font-size:9px;font-weight:700;color:#fff;background:#ea580c;border-radius:999px;padding:1px 6px;text-transform:uppercase;letter-spacing:.03em}
+.cerrbadge{font-size:9px;font-weight:700;color:#fff;background:#64748b;border-radius:999px;padding:1px 6px;text-transform:uppercase;letter-spacing:.03em}
 .chat{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
 .chead{padding:11px 16px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;gap:10px}
 .chead .back{display:none;border:1px solid #e2e8f0;background:#fff;border-radius:8px;padding:6px 10px;font-weight:700;cursor:pointer;font-size:14px}
@@ -26,9 +32,11 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
 .chead .cn span{color:#64748b;font-size:12px}
 .pausebtn{border:1px solid #e2e8f0;background:#fff;border-radius:9px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;color:#334155}
 .pausebtn.on{background:#fff7ed;border-color:#fdba74;color:#c2410c}
-.delbtn{border:1px solid #fecaca;background:#fff;color:#b91c1c;border-radius:9px;padding:8px 11px;font-size:15px;cursor:pointer;flex:0 0 auto}
-.delbtn:hover{background:#fef2f2}
+.closebtn{border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:9px;padding:8px 11px;font-size:13px;font-weight:700;cursor:pointer;flex:0 0 auto;white-space:nowrap}
+.closebtn:hover{background:#f1f5f9}
+.reopenbtn{border:1px solid #86efac;background:#f0fdf4;color:#15803d;border-radius:9px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;flex:0 0 auto;white-space:nowrap}
 .thread{flex:1;overflow-y:auto;min-height:0;padding:16px;background:#f5f7fa;display:flex;flex-direction:column;gap:8px}
+.cerrbanner{align-self:center;background:#e2e8f0;color:#475569;font-size:11px;font-weight:700;border-radius:999px;padding:3px 12px;margin-bottom:4px}
 .b{max-width:74%;padding:9px 12px;border-radius:12px;font-size:14px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
 .b .bt{display:block;font-size:10px;color:#94a3b8;margin-top:4px}
 .b.cli{align-self:flex-start;background:#fff;border:1px solid #e2e8f0;border-bottom-left-radius:4px}
@@ -54,6 +62,11 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
   <div class="list">
     <div class="lhead"><h1>💬 Conversaciones</h1><div class="sub" id="sub">Cargando…</div>
       <div class="search"><input id="q" placeholder="Buscar por número o texto…" autocomplete="off"></div>
+      <div class="filt">
+        <button data-f="abiertas" class="on" id="fAb">Abiertas</button>
+        <button data-f="cerradas" id="fCe">Cerradas</button>
+        <button data-f="todas" id="fTo">Todas</button>
+      </div>
     </div>
     <div class="items" id="items"></div>
   </div>
@@ -67,45 +80,63 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
 <script>
 var PAUSAR="https://n8n.entrenemos.cl/webhook/conversacion-pausar";
 var RESPONDER="https://n8n.entrenemos.cl/webhook/conversacion-responder";
-var ELIMINAR="https://n8n.entrenemos.cl/webhook/conversacion-eliminar";
-var DATA=null, SEL=null, Q="", DELWAIT=false;
+var CERRAR="https://n8n.entrenemos.cl/webhook/conversacion-eliminar";
+var DATA=null, SEL=null, Q="", FILTER="abiertas", DELWAIT=false;
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1600)}
 function initials(n){n=String(n||"?").trim();var d=n.replace(/[^0-9]/g,"");if(d.length>=2)return d.slice(-2);return n.slice(0,2).toUpperCase();}
 function timeShort(iso){if(!iso)return "";try{var d=new Date(iso);return d.toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","");}catch(e){return ""}}
 function chatById(id){if(!DATA)return null;for(var i=0;i<DATA.chats.length;i++)if(DATA.chats[i].id===id)return DATA.chats[i];return null;}
-function renderList(){
-  var el=document.getElementById("items");
-  var chats=(DATA?DATA.chats:[]).filter(function(c){
+function visibles(){
+  var chats=(DATA?DATA.chats:[]);
+  return chats.filter(function(c){
+    if(FILTER==="abiertas"&&c.cerrada)return false;
+    if(FILTER==="cerradas"&&!c.cerrada)return false;
     if(!Q)return true;var q=Q.toLowerCase();
     if((c.nombre||"").toLowerCase().indexOf(q)>=0||(c.wa||"").indexOf(q)>=0)return true;
     return (c.msgs||[]).some(function(m){return (m.texto||"").toLowerCase().indexOf(q)>=0});
   });
+}
+function renderList(){
+  var el=document.getElementById("items");
+  var chats=visibles();
   var h="";
   chats.forEach(function(c){
     var sel=c.id===SEL?" sel":"";
-    var pb=c.pausada?"<span class='pausebadge'>Pausado</span>":"";
-    h+="<div class='it"+sel+"' data-id='"+c.id+"'><div class='av'>"+esc(initials(c.nombre))+"</div><div class='mid'><div class='nm'>"+esc(c.nombre)+" "+pb+"</div><div class='pv'>"+esc(c.prev||"")+"</div></div><div class='tm'>"+timeShort(c.ult)+"</div></div>";
+    var cc=c.cerrada?" cerrada":"";
+    var pb=c.pausada&&!c.cerrada?"<span class='pausebadge'>Pausado</span>":"";
+    var cb=c.cerrada?"<span class='cerrbadge'>Cerrada</span>":"";
+    h+="<div class='it"+sel+cc+"' data-id='"+c.id+"'><div class='av'>"+esc(initials(c.nombre))+"</div><div class='mid'><div class='nm'>"+esc(c.nombre)+" "+pb+cb+"</div><div class='pv'>"+esc(c.prev||"")+"</div></div><div class='tm'>"+timeShort(c.ult)+"</div></div>";
   });
-  el.innerHTML=h||"<div class='note' style='padding:20px'>Sin conversaciones.</div>";
+  el.innerHTML=h||"<div class='note' style='padding:20px'>Sin conversaciones en esta vista.</div>";
   [].forEach.call(el.querySelectorAll(".it"),function(n){n.addEventListener("click",function(){SEL=n.getAttribute("data-id");DELWAIT=false;document.body.classList.add("chatopen");render();});});
 }
 function renderChat(){
   var inner=document.getElementById("chatinner");
   var c=chatById(SEL);
   if(!c){inner.innerHTML="<div class='empty'>Elegí una conversación de la izquierda para ver el hilo.</div>";return;}
-  var pausedTxt=c.pausada?"⏸ Bot pausado":"▶ Bot activo";
   var acts;
-  if(DELWAIT){acts="<span style='font-size:12px;color:#b91c1c;margin-right:4px;font-weight:700'>¿Eliminar?</span><button class='pausebtn' id='delYes' style='color:#fff;background:#dc2626;border-color:#dc2626'>Sí, eliminar</button><button class='pausebtn' id='delNo'>No</button>";}
-  else{acts="<button class='pausebtn"+(c.pausada?" on":"")+"' id='pauseBtn'>"+pausedTxt+"</button><button class='delbtn' id='delBtn' title='Eliminar conversación'>🗑</button>";}
+  if(c.cerrada){
+    acts="<button class='reopenbtn' id='reopenBtn'>↩ Reabrir</button>";
+  }else if(DELWAIT){
+    acts="<span style='font-size:12px;color:#475569;margin-right:4px;font-weight:700'>¿Cerrar?</span><button class='pausebtn' id='delYes' style='color:#fff;background:#0b2545;border-color:#0b2545'>Sí, cerrar</button><button class='pausebtn' id='delNo'>No</button>";
+  }else{
+    var pausedTxt=c.pausada?"⏸ Bot pausado":"▶ Bot activo";
+    acts="<button class='pausebtn"+(c.pausada?" on":"")+"' id='pauseBtn'>"+pausedTxt+"</button><button class='closebtn' id='delBtn' title='Cerrar conversación'>✓ Cerrar</button>";
+  }
   var h="";
   h+="<div class='chead'><button class='back' id='backBtn'>←</button><div class='av'>"+esc(initials(c.nombre))+"</div><div class='cn'><b>"+esc(c.nombre)+"</b><span>"+esc(c.wa||"")+"</span></div>"+acts+"</div>";
   h+="<div class='thread' id='thread'></div>";
-  h+="<div class='composer'><textarea id='ta' rows='1' placeholder='Escribe una respuesta…'></textarea><button class='send' id='sendBtn'>Enviar</button></div>";
-  h+="<div class='note'>Al enviar una respuesta manual, el bot queda en pausa para que no responda encima. Reactívalo con el botón de arriba.</div>";
+  if(c.cerrada){
+    h+="<div class='note' style='padding:12px'>Conversación cerrada. El registro queda guardado en Notion. Podés reabrirla arriba si el cliente vuelve a escribir.</div>";
+  }else{
+    h+="<div class='composer'><textarea id='ta' rows='1' placeholder='Escribe una respuesta…'></textarea><button class='send' id='sendBtn'>Enviar</button></div>";
+    h+="<div class='note'>Al enviar una respuesta manual, el bot queda en pausa para que no responda encima. Reactívalo con el botón de arriba.</div>";
+  }
   inner.innerHTML=h;
   var th=document.getElementById("thread");
   var mh="";
+  if(c.cerrada)mh+="<div class='cerrbanner'>— Conversación cerrada —</div>";
   (c.msgs||[]).forEach(function(m){
     var cls=m.quien==="cliente"?"cli":"age";
     var man=/manual/i.test(m.quien)?" man":"";
@@ -114,24 +145,30 @@ function renderChat(){
   th.innerHTML=mh;
   th.scrollTop=th.scrollHeight;
   var bb=document.getElementById("backBtn");if(bb)bb.addEventListener("click",function(){document.body.classList.remove("chatopen");SEL=null;DELWAIT=false;render();});
-  if(DELWAIT){
-    document.getElementById("delYes").addEventListener("click",function(){eliminarChat(c);});
+  if(c.cerrada){
+    document.getElementById("reopenBtn").addEventListener("click",function(){reabrirChat(c);});
+  }else if(DELWAIT){
+    document.getElementById("delYes").addEventListener("click",function(){cerrarChat(c);});
     document.getElementById("delNo").addEventListener("click",function(){DELWAIT=false;render();});
   }else{
     document.getElementById("pauseBtn").addEventListener("click",function(){togglePausa(c);});
     document.getElementById("delBtn").addEventListener("click",function(){DELWAIT=true;render();});
+    var ta=document.getElementById("ta");
+    ta.addEventListener("input",function(){ta.style.height="40px";ta.style.height=Math.min(120,ta.scrollHeight)+"px";});
+    document.getElementById("sendBtn").addEventListener("click",function(){enviar(c);});
   }
-  var ta=document.getElementById("ta");
-  ta.addEventListener("input",function(){ta.style.height="40px";ta.style.height=Math.min(120,ta.scrollHeight)+"px";});
-  document.getElementById("sendBtn").addEventListener("click",function(){enviar(c);});
 }
-function render(){renderList();renderChat();}
-function eliminarChat(c){
-  DELWAIT=false;
-  try{fetch(ELIMINAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id})});}catch(e){}
-  if(DATA&&DATA.chats)DATA.chats=DATA.chats.filter(function(x){return x.id!==c.id});
-  SEL=null;document.body.classList.remove("chatopen");
-  toast("Conversación eliminada");render();
+function render(){renderList();renderChat();updateSub();}
+function cerrarChat(c){
+  DELWAIT=false;c.cerrada=true;c.pausada=true;
+  try{fetch(CERRAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,cerrada:true})});}catch(e){}
+  if(FILTER==="abiertas"){SEL=null;document.body.classList.remove("chatopen");}
+  toast("Conversación cerrada — registro guardado en Notion");render();
+}
+function reabrirChat(c){
+  c.cerrada=false;
+  try{fetch(CERRAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,cerrada:false})});}catch(e){}
+  toast("Conversación reabierta");render();
 }
 function togglePausa(c){
   var nueva=!c.pausada;c.pausada=nueva;
@@ -145,21 +182,34 @@ function enviar(c){
   try{fetch(RESPONDER,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,wa:c.wa,texto:txt})});}catch(e){}
   ta.value="";ta.style.height="40px";toast("Enviado");render();
 }
+function updateSub(){
+  if(!DATA){return;}
+  var ab=0,ce=0;(DATA.chats||[]).forEach(function(c){if(c.cerrada)ce++;else ab++;});
+  document.getElementById("sub").textContent=ab+" abiertas · "+ce+" cerradas · "+DATA.generado;
+}
 function load(){
   fetch("data/conversaciones.json?v="+Date.now()).then(function(r){return r.json()}).then(function(d){
-    DATA=d;
-    document.getElementById("sub").textContent=(d.total||0)+" conversaciones · "+d.generado;
-    render();
+    DATA=d;render();
   }).catch(function(e){document.getElementById("sub").textContent="No se pudo cargar ("+e+")";});
 }
 document.getElementById("q").addEventListener("input",function(e){Q=e.target.value;renderList();});
+[].forEach.call(document.querySelectorAll(".filt button"),function(b){
+  b.addEventListener("click",function(){
+    FILTER=b.getAttribute("data-f");
+    [].forEach.call(document.querySelectorAll(".filt button"),function(x){x.classList.remove("on")});
+    b.classList.add("on");
+    var c=chatById(SEL);
+    if(SEL&&c){if((FILTER==="abiertas"&&c.cerrada)||(FILTER==="cerradas"&&!c.cerrada)){SEL=null;document.body.classList.remove("chatopen");}}
+    render();
+  });
+});
 load();
 setInterval(function(){
   var th=document.getElementById("thread");var atBottom=th?(th.scrollTop+th.clientHeight>=th.scrollHeight-40):true;
   var ta=document.getElementById("ta");var typing=ta&&document.activeElement===ta&&ta.value;
   if(typing)return;
   fetch("data/conversaciones.json?v="+Date.now()).then(function(r){return r.json()}).then(function(d){
-    DATA=d;document.getElementById("sub").textContent=(d.total||0)+" conversaciones · "+d.generado;render();
+    DATA=d;render();
     var th2=document.getElementById("thread");if(th2&&atBottom)th2.scrollTop=th2.scrollHeight;
   }).catch(function(){});
 },20000);
