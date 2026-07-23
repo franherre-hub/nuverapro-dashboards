@@ -45,6 +45,13 @@ body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;backgr
 .chip.dias{background:#fff7ed;color:#9a3412}
 .crmmeta{font-size:12px;color:#475569;display:flex;flex-wrap:wrap;gap:10px}
 .crmmeta a{color:#0369a1;text-decoration:none}
+.iabox{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:9px 11px;margin-top:2px}
+.iahead{font-size:12px;font-weight:800;color:#5b21b6;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chip.iaest{background:#ede9fe;color:#5b21b6}
+.iares{font-size:13px;color:#334155;margin-top:5px;line-height:1.35}
+.iaprox{font-size:13px;color:#166534;background:#f0fdf4;border-radius:8px;padding:5px 8px;margin-top:6px;font-weight:600}
+.iabtn{width:100%;border:1px solid #ddd6fe;background:#fff;color:#5b21b6;border-radius:10px;padding:9px;font-size:13px;font-weight:800;cursor:pointer;margin-top:6px}
+.iabtn:active{background:#f5f3ff}
 .actions{display:flex;gap:8px;padding:10px 14px;background:#fff;border-bottom:1px solid #e2e8f0;flex-wrap:wrap}
 .act{flex:1;min-width:96px;border:none;border-radius:12px;padding:12px 8px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
 .act.call{background:#16a34a;color:#fff}
@@ -101,6 +108,7 @@ body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;backgr
 var PAUSAR="https://n8n.entrenemos.cl/webhook/conversacion-pausar";
 var RESPONDER="https://n8n.entrenemos.cl/webhook/conversacion-responder";
 var CERRAR="https://n8n.entrenemos.cl/webhook/conversacion-eliminar";
+var ANALIZAR="https://n8n.entrenemos.cl/webhook/analizar-conversacion";
 var DATA=null, SEL=null, Q="", FILTER="abiertas", CONFIRMROW=null, CLICKT=null, PENDING_WA=null;
 var FLAGS={"Chile":"🇨🇱","Argentina":"🇦🇷","México":"🇲🇽","Mexico":"🇲🇽","Colombia":"🇨🇴","Perú":"🇵🇪","Peru":"🇵🇪","Costa Rica":"🇨🇷","Honduras":"🇭🇳","Guatemala":"🇬🇹","El Salvador":"🇸🇻"};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -172,7 +180,15 @@ function crmCard(c){
   var h="<div class='crm'>";
   h+="<div class='crmrow'>"+((fl?"<span class='chip'>"+fl+" "+esc(crm.pais)+"</span>":"")+chips || "<span class='chip'>Sin datos de CRM aún</span>")+"</div>";
   if(meta.length)h+="<div class='crmmeta'>"+meta.join("")+"</div>";
-  h+="</div>";
+  var ia="";
+  if(crm.estadoIA||crm.resumenIA){
+    ia+="<div class='iabox'><div class='iahead'>🧠 Análisis IA"+(crm.estadoIA?" <span class='chip iaest'>"+esc(crm.estadoIA)+"</span>":"")+"</div>";
+    if(crm.resumenIA)ia+="<div class='iares'>"+esc(crm.resumenIA)+"</div>";
+    if(crm.proximoIA)ia+="<div class='iaprox'>→ "+esc(crm.proximoIA)+"</div>";
+    ia+="</div>";
+  }
+  ia+="<button class='iabtn' id='iaBtn'>🧠 "+((crm.estadoIA||crm.resumenIA)?"Re-analizar con IA":"Analizar con IA")+"</button>";
+  h+=ia+"</div>";
   return h;
 }
 function renderChat(){
@@ -216,6 +232,7 @@ function renderChat(){
   });
   th.innerHTML=mh;th.scrollTop=th.scrollHeight;
   var bb=document.getElementById("backBtn");if(bb)bb.addEventListener("click",function(){document.body.classList.remove("chatopen");SEL=null;render();});
+  var ib=document.getElementById("iaBtn");if(ib)ib.addEventListener("click",function(){analizarIA(c);});
   if(c.cerrada){
     document.getElementById("reopenBtn").addEventListener("click",function(){reabrirChat(c);});
   }else{
@@ -237,6 +254,10 @@ function reabrirChat(c){
   c.cerrada=false;
   try{fetch(CERRAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,cerrada:false})});}catch(e){}
   toast("Conversación reabierta");render();
+}
+function analizarIA(c){
+  try{fetch(ANALIZAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({wa:c.wa})});}catch(e){}
+  toast("Analizando con IA… en unos segundos aparece");
 }
 function togglePausa(c){
   var nueva=!c.pausada;c.pausada=nueva;
