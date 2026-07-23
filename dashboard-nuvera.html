@@ -33,17 +33,21 @@ body{display:flex;flex-direction:column;height:100vh;font-family:-apple-system,S
 <iframe id="fa" class="frame" src="duplicados.html"></iframe>
 <script>
 var MAP={l:"fl",cv:"fcv",r:"fr",c:"fc",w:"fw",a:"fa"};
+var IDS=["fl","fcv","fr","fc","fw","fa"];
 var tabs=document.querySelectorAll(".tab");
+function activarTab(t){
+  [].forEach.call(tabs,function(b){b.classList.toggle("active",b.getAttribute("data-t")===t);});
+  var want=MAP[t];
+  IDS.forEach(function(id){var f=document.getElementById(id);if(id===want)f.classList.add("active");else f.classList.remove("active");});
+}
 [].forEach.call(tabs,function(btn){
-  btn.addEventListener("click",function(){
-    [].forEach.call(tabs,function(b){b.classList.remove("active")});
-    btn.classList.add("active");
-    var want=MAP[btn.getAttribute("data-t")];
-    ["fl","fcv","fr","fc","fw","fa"].forEach(function(id){
-      var f=document.getElementById(id);
-      if(id===want)f.classList.add("active");else f.classList.remove("active");
-    });
-  });
+  btn.addEventListener("click",function(){activarTab(btn.getAttribute("data-t"));});
+});
+window.addEventListener("message",function(ev){
+  var d=ev.data;if(!d||d.type!=="openConv")return;
+  activarTab("cv");
+  var f=document.getElementById("fcv");
+  try{f.contentWindow.postMessage({type:"openConv",wa:d.wa},"*");}catch(e){}
 });
 </script>
 </body></html>
