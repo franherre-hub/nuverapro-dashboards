@@ -136,6 +136,7 @@ function marcar(it,resultado,card){
   setTimeout(render,450);
 }
 function waHref(it){var d=String(it.telH||it.tel||"").replace(/[^0-9]/g,"");return d?("https://wa.me/"+d):"";}
+function abrirConv(it){var d=String(it.telH||it.tel||"").replace(/[^0-9]/g,"");try{window.parent.postMessage({type:"openConv",wa:d},"*");}catch(e){}}
 function notaStamp(){try{return new Date().toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","");}catch(e){var d=new Date();return d.getDate()+"-"+(d.getMonth()+1)+" "+d.getHours()+":"+("0"+d.getMinutes()).slice(-2);}}
 function usoTxt(it){if(it.cotiCN>=1)return "Usando · "+it.cotiCN+" PDF oficial"+(it.cotiSN?" + "+it.cotiSN+" borradores":"");if(it.cotiSN>=1)return "Explorando · "+it.cotiSN+" borrador"+(it.cotiSN>1?"es":"");return "Sin cotizar";}
 function openSheet(it){SHEET_IT=it;renderSheet();document.getElementById("sheet").classList.add("open");document.body.style.overflow="hidden";document.getElementById("sheet").scrollTop=0;}
@@ -144,7 +145,7 @@ function renderSheet(){
   var it=SHEET_IT;if(!it)return;
   var wa=waHref(it);
   var call=it.telH?"<a class='call' style='margin-top:0' href='tel:"+esc(it.telH)+"'>&#128222; Llamar</a>":"<span></span>";
-  var waB=wa?"<a class='wa' href='"+wa+"' target='_blank' rel='noopener'>&#128172; WhatsApp</a>":"<span></span>";
+  var waB=(it.telH||it.tel)?"<button class='wa' id='waBtn' style='border:none;font-family:inherit;cursor:pointer'>&#128172; WhatsApp</button>":"<span></span>";
   var diaTxt=(it.dia!=null?("día "+it.dia+"/15"):"—");
   var notasHtml=it.notas?esc(it.notas):"<span class='empty2'>Sin anotaciones todavía.</span>";
   var notionUrl="https://www.notion.so/"+String(it.id).replace(/-/g,"");
@@ -165,6 +166,7 @@ function renderSheet(){
   var w=document.getElementById("sheetwrap");w.innerHTML=h;
   document.getElementById("backBtn").addEventListener("click",closeSheet);
   document.getElementById("saveNota").addEventListener("click",saveNota);
+  var _wb=document.getElementById("waBtn");if(_wb)_wb.addEventListener("click",function(){abrirConv(it);});
   var acts=w.querySelectorAll(".acts button");
   [].forEach.call(acts,function(b){b.addEventListener("click",function(){var r=b.getAttribute("data-r");marcar(it,r);closeSheet();});});
 }
