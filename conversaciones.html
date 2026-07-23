@@ -11,6 +11,22 @@ body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;backgr
 .filt{display:flex;gap:6px;margin:6px 0 2px}
 .filt button{flex:1;border:1px solid #e2e8f0;background:#fff;color:#475569;border-radius:8px;padding:7px 4px;font-size:12px;font-weight:700;cursor:pointer}
 .filt button.on{background:#0b2545;color:#fff;border-color:#0b2545}
+.opbar{display:flex;align-items:center;gap:8px;margin:8px 0 2px;padding:7px 9px;background:#0b2545;border-radius:10px;cursor:pointer}
+.opbar .opav{width:26px;height:26px;border-radius:50%;flex:0 0 auto;background:#1e3a8a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;overflow:hidden}
+.opbar .opav img{width:100%;height:100%;object-fit:cover}
+.opbar .opn{flex:1;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opbar .opc{font-size:11px;color:#7dd3fc;font-weight:800;text-transform:uppercase}
+.opmodal{position:fixed;inset:0;background:rgba(11,37,69,.55);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.opmodal.open{display:flex}
+.opsheet{background:#fff;width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:16px 14px calc(16px + env(safe-area-inset-bottom));max-height:80vh;overflow:auto}
+.opsheet h3{margin:2px 0 12px;font-size:16px}
+.oprow{display:flex;align-items:center;gap:10px;padding:9px;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px;cursor:pointer}
+.oprow.sel{border-color:#0ea5e9;background:#f0f9ff}
+.oprow .oav{width:42px;height:42px;border-radius:50%;flex:0 0 auto;background:#0b2545;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;overflow:hidden}
+.oprow .oav img{width:100%;height:100%;object-fit:cover}
+.oprow .onm{flex:1;font-weight:700;font-size:15px}
+.oprow .ofoto{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;color:#334155;cursor:pointer}
+.opclose{width:100%;border:none;background:#0b2545;color:#fff;border-radius:10px;padding:12px;font-weight:800;font-size:15px;cursor:pointer;margin-top:4px}
 .items{overflow-y:auto;flex:1;min-height:0}
 .it{padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;gap:10px;align-items:flex-start;user-select:none;-webkit-user-select:none}
 .it:active{background:#eef4ff}
@@ -74,7 +90,7 @@ body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;backgr
 .composer textarea{flex:1;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;font-size:16px;font-family:inherit;resize:none;max-height:120px;min-height:44px}
 .composer .send{background:#16a34a;color:#fff;border:none;border-radius:12px;padding:0 18px;height:44px;font-weight:800;cursor:pointer;font-size:15px}
 .empty{flex:1;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;padding:20px;text-align:center}
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:60}
 .toast.show{opacity:1}
 .note{font-size:11px;color:#94a3b8;padding:0 12px 8px;text-align:center}
 @media(max-width:720px){
@@ -94,6 +110,7 @@ body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;backgr
         <button data-f="cerradas" id="fCe">Cerradas</button>
         <button data-f="todas" id="fTo">Todas</button>
       </div>
+      <div class="opbar" id="opbar"></div>
     </div>
     <div class="items" id="items"></div>
   </div>
@@ -104,12 +121,30 @@ body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;backgr
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="opmodal" id="opmodal"><div class="opsheet" id="opsheet"></div></div>
 <script>
 var PAUSAR="https://n8n.entrenemos.cl/webhook/conversacion-pausar";
 var RESPONDER="https://n8n.entrenemos.cl/webhook/conversacion-responder";
 var CERRAR="https://n8n.entrenemos.cl/webhook/conversacion-eliminar";
 var ANALIZAR="https://n8n.entrenemos.cl/webhook/analizar-conversacion";
 var DATA=null, SEL=null, Q="", FILTER="abiertas", CONFIRMROW=null, CLICKT=null, PENDING_WA=null;
+var OPS_DEF=[{k:"francisco",n:"Francisco"},{k:"matias",n:"Matías"},{k:"cristina",n:"Cristina"},{k:"marcelo",n:"Marcelo"}];
+var OP=null, OPPHOTOS={};
+function opLoad(){try{OPPHOTOS=JSON.parse(localStorage.getItem("nvp_op_photos")||"{}");}catch(e){OPPHOTOS={};}var c=localStorage.getItem("nvp_op_cur");var d=OPS_DEF.filter(function(o){return o.k===c})[0];if(d)OP={k:d.k,n:d.n};}
+function opAvHtml(k,n){var ph=OPPHOTOS[k];if(ph)return "<img src='"+ph+"' alt=''>";return esc((n||"?").slice(0,1).toUpperCase());}
+function renderOpBar(){var el=document.getElementById("opbar");if(!el)return;if(OP){el.innerHTML="<div class='opav'>"+opAvHtml(OP.k,OP.n)+"</div><div class='opn'>Respondés como "+esc(OP.n)+"</div><div class='opc'>cambiar</div>";}else{el.innerHTML="<div class='opav'>NP</div><div class='opn'>Elegí quién sos para contestar</div><div class='opc'>elegir</div>";}}
+function openOpModal(){var s=document.getElementById("opsheet");var h="<h3>¿Quién está contestando?</h3>";OPS_DEF.forEach(function(o){var sel=(OP&&OP.k===o.k)?" sel":"";h+="<div class='oprow"+sel+"' data-k='"+o.k+"'><div class='oav'>"+opAvHtml(o.k,o.n)+"</div><div class='onm'>"+esc(o.n)+"</div><button class='ofoto' data-foto='"+o.k+"'>📷 Foto</button><input type='file' accept='image/*' id='file_"+o.k+"' style='display:none'></div>";});h+="<button class='opclose' id='opCloseBtn'>Listo</button>";s.innerHTML=h;document.getElementById("opmodal").classList.add("open");
+  OPS_DEF.forEach(function(o){
+    var row=s.querySelector(".oprow[data-k='"+o.k+"']");
+    var fbtn=s.querySelector(".ofoto[data-foto='"+o.k+"']");
+    var finput=document.getElementById("file_"+o.k);
+    row.addEventListener("click",function(ev){if(ev.target.classList.contains("ofoto"))return;OP={k:o.k,n:o.n};try{localStorage.setItem("nvp_op_cur",o.k);}catch(e){}renderOpBar();closeOpModal();toast("Ahora respondés como "+o.n);});
+    fbtn.addEventListener("click",function(ev){ev.stopPropagation();finput.click();});
+    finput.addEventListener("change",function(){var f=finput.files&&finput.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){var img=new Image();img.onload=function(){var cv=document.createElement("canvas");var S=96;cv.width=S;cv.height=S;var ctx=cv.getContext("2d");var m=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);OPPHOTOS[o.k]=cv.toDataURL("image/jpeg",0.82);try{localStorage.setItem("nvp_op_photos",JSON.stringify(OPPHOTOS));}catch(e){toast("No se pudo guardar la foto");}openOpModal();renderOpBar();};img.src=rd.result;};rd.readAsDataURL(f);});
+  });
+  document.getElementById("opCloseBtn").addEventListener("click",closeOpModal);
+}
+function closeOpModal(){document.getElementById("opmodal").classList.remove("open");}
 var FLAGS={"Chile":"🇨🇱","Argentina":"🇦🇷","México":"🇲🇽","Mexico":"🇲🇽","Colombia":"🇨🇴","Perú":"🇵🇪","Peru":"🇵🇪","Costa Rica":"🇨🇷","Honduras":"🇭🇳","Guatemala":"🇬🇹","El Salvador":"🇸🇻"};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1700)}
@@ -266,10 +301,12 @@ function togglePausa(c){
 }
 function enviar(c){
   var ta=document.getElementById("ta");var txt=(ta.value||"").trim();if(!txt){return;}
+  if(!OP){toast("Primero elegí quién sos");openOpModal();return;}
   var now=new Date().toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","");
-  c.msgs.push({ts:now,quien:"agente-manual",texto:txt});c.pausada=true;c.ult=new Date().toISOString();
-  try{fetch(RESPONDER,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,wa:c.wa,texto:txt})});}catch(e){}
-  ta.value="";ta.style.height="44px";toast("Enviado");render();
+  var firmado=txt+"\n\n— "+OP.n;
+  c.msgs.push({ts:now,quien:"agente-manual",texto:firmado});c.pausada=true;c.ult=new Date().toISOString();
+  try{fetch(RESPONDER,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,wa:c.wa,texto:txt,operador:OP.n})});}catch(e){}
+  ta.value="";ta.style.height="44px";toast("Enviado como "+OP.n);render();
 }
 function updateSub(){
   if(!DATA){return;}
@@ -305,6 +342,8 @@ document.getElementById("q").addEventListener("input",function(e){Q=e.target.val
     render();
   });
 });
+opLoad();renderOpBar();
+var _ob=document.getElementById("opbar");if(_ob)_ob.addEventListener("click",openOpModal);
 load();
 setInterval(function(){
   var th=document.getElementById("thread");var atBottom=th?(th.scrollTop+th.clientHeight>=th.scrollHeight-40):true;
