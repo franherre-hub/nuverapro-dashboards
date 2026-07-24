@@ -122,7 +122,8 @@ body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;backgr
 </div>
 <div class="toast" id="toast"></div>
 <div class="opmodal" id="opmodal"><div class="opsheet" id="opsheet"></div></div>
-<script>
+<script>var N8N_LIVE="https://n8n.entrenemos.cl/webhook/conversaciones-live";function fetchConv(){return fetch(N8N_LIVE,{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r;}).catch(function(){return fetch("data/conversaciones.json?v="+Date.now());});}
+
 var PAUSAR="https://n8n.entrenemos.cl/webhook/conversacion-pausar";
 var RESPONDER="https://n8n.entrenemos.cl/webhook/conversacion-responder";
 var CERRAR="https://n8n.entrenemos.cl/webhook/conversacion-eliminar";
@@ -331,7 +332,7 @@ window.addEventListener("message",function(ev){var m=ev.data;if(m&&m.type==="ope
 try{var _h=(location.hash||"").match(/wa=(\d+)/);if(_h)PENDING_WA=_h[1];}catch(e){}
 function mergeOutbox(){if(!DATA||!DATA.chats)return;var now=Date.now();for(var k in OUTBOX){var pend=(OUTBOX[k]||[]).filter(function(m){return now-m.t<180000;});OUTBOX[k]=pend;if(!pend.length)continue;var chat=null;for(var i=0;i<DATA.chats.length;i++){if(String(DATA.chats[i].wa||"").replace(/[^0-9]/g,"")===k){chat=DATA.chats[i];break;}}if(!chat)continue;var have=(chat.msgs||[]).map(function(m){return String(m.texto||"").trim();});var still=[];pend.forEach(function(m){if(have.indexOf(String(m.texto||"").trim())>=0)return;chat.msgs.push({ts:m.ts,quien:m.quien,texto:m.texto});chat.ult=new Date().toISOString();still.push(m);});OUTBOX[k]=still;}}
 function load(){
-  fetch("data/conversaciones.json?v="+Date.now()).then(function(r){return r.json()}).then(function(d){DATA=d;mergeOutbox();render();applyPending();}).catch(function(e){document.getElementById("sub").textContent="No se pudo cargar ("+e+")";});
+  fetchConv().then(function(r){return r.json()}).then(function(d){DATA=d;mergeOutbox();render();applyPending();}).catch(function(e){document.getElementById("sub").textContent="No se pudo cargar ("+e+")";});
 }
 document.getElementById("q").addEventListener("input",function(e){Q=e.target.value;renderList();});
 [].forEach.call(document.querySelectorAll(".filt button"),function(b){
@@ -351,7 +352,7 @@ setInterval(function(){
   var th=document.getElementById("thread");var atBottom=th?(th.scrollTop+th.clientHeight>=th.scrollHeight-40):true;
   var ta=document.getElementById("ta");var typing=ta&&document.activeElement===ta&&ta.value;
   if(typing)return;
-  fetch("data/conversaciones.json?v="+Date.now()).then(function(r){return r.json()}).then(function(d){
+  fetchConv().then(function(r){return r.json()}).then(function(d){
     DATA=d;mergeOutbox();render();applyPending();
     var th2=document.getElementById("thread");if(th2&&atBottom)th2.scrollTop=th2.scrollHeight;
   }).catch(function(){});
