@@ -1,0 +1,105 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NuveraPRO — Rendimiento Semanal</title><style>
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f5f7fa;color:#0b2545;margin:0;padding:20px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{margin:0 0 4px;font-size:22px}
+.sub{color:#64748b;margin:0 0 16px;font-size:13px}
+.wknav{display:flex;align-items:center;gap:10px;margin:0 0 16px;flex-wrap:wrap}
+.wknav button{background:#0ea5e9;border:0;color:#fff;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:700;cursor:pointer}
+.wknav button:disabled{background:#cbd5e1;cursor:not-allowed}
+.wknav .rng{font-weight:700;font-size:15px;min-width:220px;text-align:center}
+.wknav .today{background:#e2e8f0;color:#0b2545;font-weight:600;font-size:12px;padding:7px 10px}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{padding:11px 8px;text-align:center;font-size:14px;border-top:1px solid #eef2f7}
+thead th{background:#0b2545;color:#fff;font-size:12px;font-weight:700;border:0}
+thead th.hoy{background:#0ea5e9}
+th.met,td.met{text-align:left;position:sticky;left:0;background:#fff;font-weight:600;font-size:13px;min-width:190px;box-shadow:1px 0 0 #eef2f7}
+thead th.met{background:#0b2545;color:#fff}
+td.met .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
+td.val{font-variant-numeric:tabular-nums;font-weight:600}
+td.val.z{color:#cbd5e1;font-weight:400}
+td.tot{background:#f8fafc;font-weight:800}
+th.tot{background:#12345f}
+tr.acum td{color:#64748b;font-weight:600}
+tr.acum td.val{font-weight:700}
+.d2{display:block;font-size:11px;font-weight:400;color:#cbd5e1;margin-top:2px}
+thead th.hoy .d2{color:#e0f2fe}
+.note{background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;border-radius:12px;padding:12px 16px;font-size:12.5px;margin-top:14px;line-height:1.5}
+.note b{color:#9a3412}
+.foot{color:#94a3b8;font-size:12px;margin-top:16px;text-align:center}
+@media(max-width:600px){body{padding:12px}h1{font-size:19px}.wknav .rng{min-width:0;flex:1;font-size:14px}th,td{padding:9px 6px;font-size:13px}th.met,td.met{min-width:150px;font-size:12px}}
+</style></head><body><div class="wrap">
+<h1>Rendimiento Semanal — NuveraPRO</h1>
+<p class="sub" id="sub">Cargando datos…</p>
+<div class="wknav">
+  <button id="prev">‹ Anterior</button>
+  <div class="rng" id="rng">—</div>
+  <button id="next">Siguiente ›</button>
+  <button class="today" id="hoy">Hoy</button>
+</div>
+<div class="tblwrap"><table>
+  <thead><tr id="head"></tr></thead>
+  <tbody id="body"></tbody>
+</table></div>
+<div class="note" id="note"></div>
+<p class="foot" id="foot">—</p>
+</div>
+<script>
+var DIAS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+var METRICAS=[
+  {k:'sc',  lab:'Leads sin cuenta (nuevos)', color:'#f59e0b', acum:false, tot:'sum'},
+  {k:'scAcum', lab:'Sin cuenta acumulados', color:'#94a3b8', acum:true,  tot:'end'},
+  {k:'cr',  lab:'Cuentas creadas',          color:'#0ea5e9', acum:false, tot:'sum'},
+  {k:'cap', lab:'Cuentas capacitadas',      color:'#8b5cf6', acum:false, tot:'sum'},
+  {k:'pag', lab:'Pagos por primera vez',    color:'#16a34a', acum:false, tot:'sum'}
+];
+var DATA=null, week=null, minMon=null, maxMon=null, todayISO=null;
+function iso(d){var m=(d.getMonth()+1),day=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(day<10?'0':'')+day;}
+function parseISO(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function monday(d){var x=new Date(d.getTime());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);x.setHours(0,0,0,0);return x;}
+function addDays(d,n){var x=new Date(d.getTime());x.setDate(x.getDate()+n);return x;}
+function fmt(d){return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2);}
+function render(){
+  var head=document.getElementById('head'), body=document.getElementById('body');
+  var days=[]; for(var i=0;i<7;i++) days.push(addDays(week,i));
+  var h='<th class="met">Métrica</th>';
+  days.forEach(function(d){var k=iso(d);var hoy=(k===todayISO)?' hoy':'';h+='<th class="'+ (hoy?'hoy':'') +'">'+DIAS[(d.getDay()+6)%7]+'<span class="d2">'+fmt(d)+'</span></th>';});
+  h+='<th class="tot">Total</th>';
+  head.innerHTML=h;
+  var rows='';
+  METRICAS.forEach(function(m){
+    var tr='<tr'+(m.acum?' class="acum"':'')+'><td class="met"><span class="dot" style="background:'+m.color+'"></span>'+m.lab+'</td>';
+    var sum=0, endv=0, any=false;
+    days.forEach(function(d){
+      var k=iso(d); var rec=(DATA.dias&&DATA.dias[k])?DATA.dias[k]:null;
+      var v=rec?(rec[m.k]||0):0;
+      if(rec){ sum+=(m.acum?0:v); endv=v; if(v)any=true; }
+      var inRange=rec!=null;
+      tr+='<td class="val'+(v?'':' z')+'">'+(inRange?v.toLocaleString('es-CL'):'·')+'</td>';
+    });
+    var totv=(m.tot==='end')?endv:sum;
+    tr+='<td class="val tot">'+totv.toLocaleString('es-CL')+'</td></tr>';
+    rows+=tr;
+  });
+  body.innerHTML=rows;
+  var end=addDays(week,6);
+  document.getElementById('rng').textContent=fmt(week)+' — '+fmt(end)+' '+week.getFullYear();
+  document.getElementById('prev').disabled = (iso(week)<=iso(minMon));
+  document.getElementById('next').disabled = (iso(week)>=iso(maxMon));
+}
+function go(delta){ if(delta===0){week=monday(parseISO(todayISO));} else {week=addDays(week,delta*7);} if(iso(week)<iso(minMon))week=new Date(minMon); if(iso(week)>iso(maxMon))week=new Date(maxMon); render(); }
+document.getElementById('prev').onclick=function(){go(-1)};
+document.getElementById('next').onclick=function(){go(1)};
+document.getElementById('hoy').onclick=function(){go(0)};
+fetch('data/rendimiento-semanal.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){
+  DATA=d; todayISO=d.hasta;
+  minMon=monday(parseISO(d.desde)); maxMon=monday(parseISO(d.hasta));
+  week=new Date(maxMon);
+  document.getElementById('sub').textContent='Lunes a domingo · datos '+d.desde+' → '+d.hasta+' · actualizado '+d.generado;
+  document.getElementById('note').innerHTML='<b>Cómo leer.</b> <b>Leads sin cuenta (nuevos)</b> = contactos que escribieron ese día y aún no tienen cuenta; <b>acumulados</b> = total sin cuenta arrastrado hasta ese día. <b>Creadas</b> por Fecha activación, <b>Capacitadas</b> por Fecha capacitación. <b>Pagos por primera vez</b> = cuentas que antes no tenían ningún pago (transición sin-pago→pago); es exacto desde el 30-jul en adelante — las cuentas que ya pagaban quedaron fechadas en su activación, así que semanas previas son aproximadas. La base de Contactos parte el 9-jul, antes de esa fecha «sin cuenta» sale vacío.';
+  document.getElementById('foot').textContent='Actualizado cada mañana desde Notion (workflow n8n) · '+d.generado;
+  render();
+}).catch(function(e){document.getElementById('sub').textContent='No se pudo cargar data/rendimiento-semanal.json — '+e;});
+</script>
+</body></html>
