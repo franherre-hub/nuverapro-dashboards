@@ -141,4 +141,4 @@ fetch("data/duplicados.json?v="+Date.now()).then(function(r){return r.json()}).t
   document.getElementById("status").textContent=CASOS.length+" casos · "+tot+" cuentas";
   render();
 }).catch(function(e){document.getElementById("status").textContent="Error cargando datos"});
-</script></body></html>
+</script><!--NVP-AUTOREFRESH--><script>(function(){var u="data/duplicados.json?t=";var l=null;setInterval(function(){fetch(u+Date.now()).then(function(r){return r.text();}).then(function(t){if(l!==null&&t!==l){location.reload();}l=t;}).catch(function(){});},20000);})();</script></body></html>
