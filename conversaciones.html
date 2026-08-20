@@ -161,7 +161,7 @@ function chatById(id){if(!DATA)return null;for(var i=0;i<DATA.chats.length;i++)i
 function visibles(){
   var chats=(DATA?DATA.chats:[]);
   return chats.filter(function(c){
-$   if(FILTER==="ocultas"){if(!c.oculta)return false;}
+    if(FILTER==="ocultas"){if(!c.oculta)return false;}
     else{if(c.oculta)return false;
       if(FILTER==="abiertas"&&c.cerrada)return false;
       if(FILTER==="cerradas"&&!c.cerrada)return false;}
