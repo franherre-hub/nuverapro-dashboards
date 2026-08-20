@@ -100,6 +100,9 @@ body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;backgr
   body.chatopen .chat{display:flex}
   .chead .back{display:block}
 }
+.hidebtn{margin-left:6px;border:0;background:transparent;color:#94a3b8;font-size:13px;cursor:pointer;padding:2px 5px;border-radius:6px}
+.hidebtn:hover{color:#ef4444;background:#fee2e2}
+.badge.b-alert{background:#fef3c7;color:#92400e;border:1px solid #fde68a;cursor:pointer}
 </style></head><body>
 <div class="app">
   <div class="list">
@@ -109,6 +112,7 @@ body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;backgr
         <button data-f="abiertas" class="on" id="fAb">Abiertas</button>
         <button data-f="cerradas" id="fCe">Cerradas</button>
         <button data-f="todas" id="fTo">Todas</button>
+        <button data-f="ocultas" id="fOc">Ocultas</button>
       </div>
       <div class="opbar" id="opbar"></div>
     </div>
@@ -127,6 +131,7 @@ body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;backgr
 var PAUSAR="https://n8n.entrenemos.cl/webhook/conversacion-pausar";
 var RESPONDER="https://n8n.entrenemos.cl/webhook/conversacion-responder";
 var CERRAR="https://n8n.entrenemos.cl/webhook/conversacion-eliminar";
+var OCULTAR="https://n8n.entrenemos.cl/webhook/conversacion-ocultar";
 var ANALIZAR="https://n8n.entrenemos.cl/webhook/analizar-conversacion";
 var DATA=null, SEL=null, Q="", FILTER="abiertas", CONFIRMROW=null, CLICKT=null, PENDING_WA=null;
 var OUTBOX={};
@@ -156,8 +161,10 @@ function chatById(id){if(!DATA)return null;for(var i=0;i<DATA.chats.length;i++)i
 function visibles(){
   var chats=(DATA?DATA.chats:[]);
   return chats.filter(function(c){
-    if(FILTER==="abiertas"&&c.cerrada)return false;
-    if(FILTER==="cerradas"&&!c.cerrada)return false;
+$   if(FILTER==="ocultas"){if(!c.oculta)return false;}
+    else{if(c.oculta)return false;
+      if(FILTER==="abiertas"&&c.cerrada)return false;
+      if(FILTER==="cerradas"&&!c.cerrada)return false;}
     if(!Q)return true;var q=Q.toLowerCase();
     if((c.nombre||"").toLowerCase().indexOf(q)>=0||(c.wa||"").indexOf(q)>=0)return true;
     return (c.msgs||[]).some(function(m){return (m.texto||"").toLowerCase().indexOf(q)>=0});
@@ -178,9 +185,14 @@ function renderList(){
     var fl=FLAGS[crm.pais||""]||"";
     var pb=c.pausada&&!c.cerrada?"<span class='badge b-paus'>Pausado</span>":"";
     var cb=c.cerrada?"<span class='badge b-cerr'>Cerrada</span>":"";
-    h+="<div class='it"+sel+cc+"' data-id='"+c.id+"'><div class='av'>"+esc(initials(c.nombre))+"</div><div class='mid'><div class='nm'>"+(fl?fl+" ":"")+esc(c.nombre)+" "+pb+cb+"</div><div class='pv'>"+esc(c.prev||"")+"</div></div><div class='tm'>"+timeShort(c.ult)+"</div></div>";
+    var ab=(c.alerta_nombres&&c.alerta_nombres.length>1)?"<span class='badge b-alert' data-alert='"+c.id+"' title='Varios nombres'>⚠ "+c.alerta_nombres.length+"</span>":"";
+    var actBtn=(FILTER==="ocultas")?"<button class='hidebtn' data-restore='"+c.id+"' title='Restaurar'>↩</button>":(c.cerrada?"<button class='hidebtn' data-hide='"+c.id+"' title='Ocultar'>✕</button>":"");
+    h+="<div class='it"+sel+cc+"' data-id='"+c.id+"'><div class='av'>"+esc(initials(c.nombre))+"</div><div class='mid'><div class='nm'>"+(fl?fl+" ":"")+esc(c.nombre)+" "+pb+cb+ab+"</div><div class='pv'>"+esc(c.prev||"")+"</div></div><div class='tm'>"+timeShort(c.ult)+actBtn+"</div></div>";
   });
   el.innerHTML=h||"<div class='note' style='padding:20px'>Sin conversaciones en esta vista.</div>";
+  [].forEach.call(el.querySelectorAll("[data-hide]"),function(b){b.addEventListener("click",function(e){e.stopPropagation();var c=chatById(b.getAttribute("data-hide"));if(c)ocultarChat(c);});});
+  [].forEach.call(el.querySelectorAll("[data-restore]"),function(b){b.addEventListener("click",function(e){e.stopPropagation();var c=chatById(b.getAttribute("data-restore"));if(c)restaurarChat(c);});});
+  [].forEach.call(el.querySelectorAll("[data-alert]"),function(b){b.addEventListener("click",function(e){e.stopPropagation();var c=chatById(b.getAttribute("data-alert"));if(c)toast("⚠ Varios nombres para "+esc(c.wa)+": "+(c.alerta_nombres||[]).join(" · "));});});
   [].forEach.call(el.querySelectorAll(".it"),function(n){
     var id=n.getAttribute("data-id");
     if(n.classList.contains("confirmrow")){
@@ -291,6 +303,17 @@ function reabrirChat(c){
   c.cerrada=false;
   try{fetch(CERRAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,cerrada:false})});}catch(e){}
   toast("Conversación reabierta");render();
+}
+function ocultarChat(c){
+  c.oculta=true;
+  try{fetch(OCULTAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({wa:c.wa,oculta:true})});}catch(e){}
+  if(SEL===c.id){SEL=null;document.body.classList.remove("chatopen");}
+  toast("Conversación oculta");render();
+}
+function restaurarChat(c){
+  c.oculta=false;
+  try{fetch(OCULTAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({wa:c.wa,oculta:false})});}catch(e){}
+  toast("Conversación restaurada");render();
 }
 function analizarIA(c){
   try{fetch(ANALIZAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({wa:c.wa})});}catch(e){}
