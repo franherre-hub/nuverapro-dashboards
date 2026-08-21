@@ -154,6 +154,7 @@ function renderSheet(){
   h+="<div class='btns2'>"+call+waB+"</div>";
   h+="<div class='srow'><span class='k'>Estado</span><span class='v'>"+esc(it.sub)+"</span></div>";
   h+="<div class='srow'><span class='k'>Días de prueba</span><span class='v'>"+diaTxt+"</span></div>";
+  h+="<div class='srow'><spa� class='k'>Capacitación</span><span class='v'>"+(it.capTxt?esc(it.capTxt):"—")+"</span></div>";
   h+="<div class='srow'><span class='k'>Uso</span><span class='v'>"+esc(usoTxt(it))+"</span></div>";
   h+="<div class='srow'><span class='k'>País</span><span class='v'>"+(it.pais?esc(it.pais):(it.flag||"—"))+"</span></div>";
   h+="<div class='srow'><span class='k'>Correo</span><span class='v'>"+(it.correo?esc(it.correo):"—")+"</span></div>";
