@@ -53,6 +53,7 @@ textarea.nota{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-r
 .cap-ag{background:#e0e7ff;color:#3730a3}
 .cap-no{background:#fee2e2;color:#991b1b}
 .cap-ok{background:#dcfce7;color:#166534}
+.cap-ven{background:#ffedd5;color:#9a3412}
 </style></head><body><div class="wrap">
 <h1>&#128222; Llamadas de hoy</h1>
 <p class="sub" id="sub">Cargando&hellip;</p>
@@ -158,7 +159,7 @@ function renderSheet(){
   h+="<div class='btns2'>"+call+waB+"</div>";
   h+="<div class='srow'><span class='k'>Estado</span><span class='v'>"+esc(it.sub)+"</span></div>";
   h+="<div class='srow'><span class='k'>Días de prueba</span><span class='v'>"+diaTxt+"</span></div>";
-  var capChip=it.capEst?"<span class='capchip cap-"+(it.capEst==='Capacitado'?'ok':(it.capEst==='No se presentó'?'no':'ag'))+"'>"+esc(it.capEst)+"</span>":"";
+  var capChip=it.capEst?"<span class='capchip cap-"+(it.capEst==='Capacitado'?'ok':(it.capEst==='No se presentó'?'no':(it.capEst==='Vencida'?'ven':'ag')))+"'>"+esc(it.capEst)+"</span>":"";
   var capV=(it.capTxt?esc(it.capTxt):"")+((it.capTxt&&capChip)?" ":"")+capChip;
   h+="<div class='srow'><span class='k'>Capacitación</span><span class='v'>"+(capV||"—")+"</span></div>";
   h+="<div class='srow'><spa� class='k'>Capacitación</span><span class='v'>"+(it.capTxt?esc(it.capTxt):"—")+"</span></div>";
