@@ -49,6 +49,10 @@ textarea.nota{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-r
 .save{background:#0b2545;color:#fff;border:none;border-radius:9px;padding:12px 14px;font-weight:700;font-size:14px;cursor:pointer;margin-top:8px;width:100%}
 .save:active{background:#123457}
 .notionlink{display:inline-block;margin-top:14px;color:#2563eb;font-size:13px;text-decoration:none}
+.capchip{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;margin-left:2px}
+.cap-ag{background:#e0e7ff;color:#3730a3}
+.cap-no{background:#fee2e2;color:#991b1b}
+.cap-ok{background:#dcfce7;color:#166534}
 </style></head><body><div class="wrap">
 <h1>&#128222; Llamadas de hoy</h1>
 <p class="sub" id="sub">Cargando&hellip;</p>
@@ -154,6 +158,9 @@ function renderSheet(){
   h+="<div class='btns2'>"+call+waB+"</div>";
   h+="<div class='srow'><span class='k'>Estado</span><span class='v'>"+esc(it.sub)+"</span></div>";
   h+="<div class='srow'><span class='k'>Días de prueba</span><span class='v'>"+diaTxt+"</span></div>";
+  var capChip=it.capEst?"<span class='capchip cap-"+(it.capEst==='Capacitado'?'ok':(it.capEst==='No se presentó'?'no':'ag'))+"'>"+esc(it.capEst)+"</span>":"";
+  var capV=(it.capTxt?esc(it.capTxt):"")+((it.capTxt&&capChip)?" ":"")+capChip;
+  h+="<div class='srow'><span class='k'>Capacitación</span><span class='v'>"+(capV||"—")+"</span></div>";
   h+="<div class='srow'><spa� class='k'>Capacitación</span><span class='v'>"+(it.capTxt?esc(it.capTxt):"—")+"</span></div>";
   h+="<div class='srow'><span class='k'>Uso</span><span class='v'>"+esc(usoTxt(it))+"</span></div>";
   h+="<div class='srow'><span class='k'>País</span><span class='v'>"+(it.pais?esc(it.pais):(it.flag||"—"))+"</span></div>";
