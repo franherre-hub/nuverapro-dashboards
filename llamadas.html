@@ -54,6 +54,10 @@ textarea.nota{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-r
 .cap-no{background:#fee2e2;color:#991b1b}
 .cap-ok{background:#dcfce7;color:#166534}
 .cap-ven{background:#ffedd5;color:#9a3412}
+.grph{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px;color:var(--gc);text-transform:uppercase;letter-spacing:.4px;margin:16px 2px 8px;padding-left:8px;border-left:3px solid var(--gc)}
+.grph .grpn{background:var(--gc);color:#fff;border-radius:999px;font-size:11px;padding:1px 8px;font-weight:700}
+.diab{font-size:11px;font-weight:700;color:#475569;background:#eef2f7;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.sortbar{display:none}
 </style></head><body><div class="wrap">
 <h1>&#128222; Llamadas de hoy</h1>
 <p class="sub" id="sub">Cargando&hellip;</p>
@@ -117,16 +121,18 @@ function renderSort(){
   [].forEach.call(el.querySelectorAll(".sb"),function(b){b.addEventListener("click",function(){var k=b.getAttribute("data-s");if(k===SORT){SDIR=-SDIR;}else{SORT=k;SDIR=DEFDIR[k];}render();});});
 }
 function render(){
-  renderChips();renderSort();
+  renderChips();
   var rows=pending().filter(function(it){return FILT==="todas"||it.bucket===FILT});
-  sortRows(rows);
+  rows.sort(function(a,b){var o={atencion:0,nuevas:1,riesgo:2,prueba:3};var oa=o[a.bucket],ob=o[b.bucket];if(oa!==ob)return oa-ob;var da=(a.dia==null?9999:a.dia),db=(b.dia==null?9999:b.dia);if(da!==db)return da-db;return esc(a.n).localeCompare(esc(b.n));});
+  var _counts={};rows.forEach(function(it){_counts[it.bucket]=(_counts[it.bucket]||0)+1;});var _lb=null;
   document.getElementById("empty").style.display=pending().length?"none":"block";
   var list=document.getElementById("list");list.innerHTML="";
   rows.forEach(function(it){
-    var card=document.createElement("div");card.className="card";card.style.setProperty("--c",COLORS[it.bucket]||"#64748b");
+    if(it.bucket!==_lb){_lb=it.bucket;var _hd=document.createElement("div");_hd.className="grph";_hd.style.setProperty("--gc",COLORS[it.bucket]||"#64748b");var _lbl={atencion:"Requiere atención",nuevas:"Nuevas por contactar",riesgo:"En riesgo · por vencer",prueba:"Activas"}[it.bucket]||it.bucket;_hd.innerHTML=esc(_lbl)+"<span class='grpn'>"+(_counts[it.bucket]||0)+"</span>";list.appendChild(_hd);}
+    var card=document.createElement("div");card.className="card";card.style.setProperty("--c",(it.capEst==="Agendada"||it.capEst==="Capacitado")?"#16a34a":(COLORS[it.bucket]||"#64748b"));
     var prev=it.resPrev?"<div class='prev'>Última: "+esc(it.resPrev)+"</div>":"";
     var call=it.telH?"<a class='call' href='tel:"+esc(it.telH)+"'>&#128222; Llamar "+esc(it.tel)+"</a>":"<div class='prev' style='text-align:center;margin-top:8px'>Sin teléfono registrado</div>";
-    card.innerHTML="<div class='top'><span class='nm'>"+it.flag+" "+esc(it.n)+"</span><span class='tag'>"+esc(it.tag)+"</span><button class='chev' title='Abrir ficha'>→</button></div>"+
+    card.innerHTML="<div class='top'><span class='nm'>"+it.flag+" "+esc(it.n)+"</span>"+((it.dia!=null)?"<span class='diab'>día "+it.dia+"/15</span>":"")+"<span class='tag'>"+esc(it.tag)+"</span><button class='chev' title='Abrir ficha'>→</button></div>"+
       "<div class='sub2'>"+esc(it.sub)+"</div>"+prev+call+
       "<div class='acts'><button data-r='Contactado'>&#9989; Contactado</button><button data-r='No contestó'>&#128245; No contestó</button><button data-r='Reagendar'>&#128197; Reagendar</button></div>";
     card.querySelector(".chev").addEventListener("click",function(){openSheet(it);});
@@ -162,8 +168,10 @@ function renderSheet(){
   var capChip=it.capEst?"<span class='capchip cap-"+(it.capEst==='Capacitado'?'ok':(it.capEst==='No se presentó'?'no':(it.capEst==='Vencida'?'ven':'ag')))+"'>"+esc(it.capEst)+"</span>":"";
   var capV=(it.capTxt?esc(it.capTxt):"")+((it.capTxt&&capChip)?" ":"")+capChip;
   h+="<div class='srow'><span class='k'>Capacitación</span><span class='v'>"+(capV||"—")+"</span></div>";
-  h+="<div class='srow'><spa� class='k'>Capacitación</span><span class='v'>"+(it.capTxt?esc(it.capTxt):"—")+"</span></div>";
   h+="<div class='srow'><span class='k'>Uso</span><span class='v'>"+esc(usoTxt(it))+"</span></div>";
+  h+="<div class='srow'><span class='k'>PDF oficial (COTI C/N)</span><span class='v'>"+(it.cotiCN!=null?it.cotiCN:0)+"</span></div>";
+  h+="<div class='srow'><span class='k'>Borradores (COTI S/N)</span><span class='v'>"+(it.cotiSN!=null?it.cotiSN:0)+"</span></div>";
+  h+="<div class='srow'><span class='k'>Sin cotizar</span><span class='v'>"+(it.dSin!=null?it.dSin+" días":"—")+"</span></div>";
   h+="<div class='srow'><span class='k'>País</span><span class='v'>"+(it.pais?esc(it.pais):(it.flag||"—"))+"</span></div>";
   h+="<div class='srow'><span class='k'>Correo</span><span class='v'>"+(it.correo?esc(it.correo):"—")+"</span></div>";
   h+="<div class='srow'><span class='k'>Teléfono</span><span class='v'>"+(it.tel?esc(it.tel):"—")+"</span></div>";
