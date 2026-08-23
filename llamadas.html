@@ -58,6 +58,15 @@ textarea.nota{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-r
 .grph .grpn{background:var(--gc);color:#fff;border-radius:999px;font-size:11px;padding:1px 8px;font-weight:700}
 .diab{font-size:11px;font-weight:700;color:#475569;background:#eef2f7;border-radius:999px;padding:2px 8px;white-space:nowrap}
 .sortbar{display:none}
+.agbtn{background:#0b2545;color:#fff;border:none;border-radius:9px;padding:12px 14px;font-weight:700;font-size:14px;cursor:pointer;width:100%}
+.agbtn:active{background:#123457}
+.agchips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.agchip{background:#fff;border:1px solid #cbd5e1;color:#334155;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.agchip.on{background:#0b2545;border-color:#0b2545;color:#fff}
+.aghint{font-size:12px;color:#64748b;margin:6px 0}
+.agok{background:#16a34a;color:#fff;border:none;border-radius:9px;padding:12px;font-weight:700;font-size:14px;cursor:pointer;width:100%;margin-top:6px}
+.agok:active{background:#15803d}
+.agok:disabled{opacity:.5}
 </style></head><body><div class="wrap">
 <h1>&#128222; Llamadas de hoy</h1>
 <p class="sub" id="sub">Cargando&hellip;</p>
@@ -163,6 +172,9 @@ function renderSheet(){
   var h="";
   h+="<div class='shead'><button class='back' id='backBtn'>← Volver</button><span class='shname'>"+it.flag+" "+esc(it.n)+"</span><span class='tag' style='background:"+(COLORS[it.bucket]||"#64748b")+"'>"+esc(it.tag)+"</span></div>";
   h+="<div class='btns2'>"+call+waB+"</div>";
+  var bienvB="<button class='wa' id='bienvBtn' style='background:#0b2545;border:none;font-family:inherit;cursor:pointer'>&#9989; Bienvenida</button>";
+  var correoB=it.correo?("<a class='wa' style='background:#475569' href='mailto:"+esc(it.correo)+"'>&#9993; Correo</a>"):"<span></span>";
+  h+="<div class='btns2'>"+bienvB+correoB+"</div>";
   h+="<div class='srow'><span class='k'>Estado</span><span class='v'>"+esc(it.sub)+"</span></div>";
   h+="<div class='srow'><span class='k'>Días de prueba</span><span class='v'>"+diaTxt+"</span></div>";
   var capChip=it.capEst?"<span class='capchip cap-"+(it.capEst==='Capacitado'?'ok':(it.capEst==='No se presentó'?'no':(it.capEst==='Vencida'?'ven':'ag')))+"'>"+esc(it.capEst)+"</span>":"";
@@ -176,6 +188,8 @@ function renderSheet(){
   h+="<div class='srow'><span class='k'>Correo</span><span class='v'>"+(it.correo?esc(it.correo):"—")+"</span></div>";
   h+="<div class='srow'><span class='k'>Teléfono</span><span class='v'>"+(it.tel?esc(it.tel):"—")+"</span></div>";
   h+="<div class='srow'><span class='k'>Última llamada</span><span class='v'>"+(it.resPrev?esc(it.resPrev):"—")+"</span></div>";
+  h+="<div class='secttl'>📅 Capacitación</div>";
+  h+="<div class='notesbox' id='agBox'></div>";
   h+="<div class='secttl'>📝 Anotaciones</div>";
   h+="<div class='notesbox'><div class='noteshist' id='noteshist'>"+notasHtml+"</div><textarea class='nota' id='notaInput' placeholder='Escribe una anotación sobre este cliente…'></textarea><button class='save' id='saveNota'>&#128190; Guardar nota</button></div>";
   h+="<div class='acts' style='margin-top:12px'><button data-r='Contactado'>&#9989; Contactado</button><button data-r='No contestó'>&#128245; No contestó</button><button data-r='Reagendar'>&#128197; Reagendar</button></div>";
@@ -184,6 +198,8 @@ function renderSheet(){
   document.getElementById("backBtn").addEventListener("click",closeSheet);
   document.getElementById("saveNota").addEventListener("click",saveNota);
   var _wb=document.getElementById("waBtn");if(_wb)_wb.addEventListener("click",function(){abrirConv(it);});
+  var _bb=document.getElementById("bienvBtn");if(_bb)_bb.addEventListener("click",function(){hacerBienvenida(it);});
+  agReset();renderAg();
   var acts=w.querySelectorAll(".acts button");
   [].forEach.call(acts,function(b){b.addEventListener("click",function(){var r=b.getAttribute("data-r");marcar(it,r);closeSheet();});});
 }
