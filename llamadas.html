@@ -211,7 +211,7 @@ function agReset(){AG=null;AG_DIA=null;AG_SLOT=null;}
 function renderAg(){
   var box=document.getElementById("agBox");if(!box)return;var it=SHEET_IT;
   if(it&&it.capEst==="Capacitado"){box.innerHTML="<div class='aghint'>Cliente ya capacitado.</div>";return;}
-  if(!AG){box.innerHTML="<button class='agbtn' id='agStart'>&#128197; Agendar capacitación</button>"+(it&&it.capTxt?"<div class='aghint'>Actual: "+esc(it.capTxt)+"</div>":"");document.getElementById("agStart").addEventListener("click",cargarDisp);return;}
+  if(!AG){var _ag=(it&&it.capEst==="Agendada");box.innerHTML=(_ag?"<div class='agok' style='cursor:default'>&#9989; Agendada: "+esc(it.capTxt||"")+"</div>":"")+"<button class='agbtn' id='agStart'>&#128197; "+(_ag?"Reagendar":"Agendar capacitación")+"</button>"+((!_ag&&it&&it.capTxt)?"<div class='aghint'>Actual: "+esc(it.capTxt)+"</div>":"");document.getElementById("agStart").addEventListener("click",cargarDisp);return;}
   if(AG==="loading"){box.innerHTML="<div class='aghint'>Buscando horas disponibles&hellip;</div>";return;}
   if(AG==="error"){box.innerHTML="<button class='agbtn' id='agStart'>Reintentar</button><div class='aghint'>No se pudo cargar disponibilidad.</div>";document.getElementById("agStart").addEventListener("click",cargarDisp);return;}
   var h="<div class='aghint'>Elegí día:</div><div class='agchips' id='agDias'></div><div id='agHoras'></div>";
@@ -238,7 +238,7 @@ function confirmarAg(){
   fetch(CAL_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"agendar",via:"panel",correo:it.correo,nombre:it.n,telefono:it.tel||"",lead_id:it.id,start:AG_SLOT.start,end:AG_SLOT.end})})
    .then(function(r){return r.json();})
    .then(function(d){
-     if(d&&d.success){toast("✅ Capacitación agendada");it.capEst="Agendada";it.capTxt=AG_SLOT.label;agReset();markCalled(it.id);renderSheet();setTimeout(render,300);}
+     if(d&&d.success){var _lbl=AG_SLOT.label;toast("✅ Agendada: "+_lbl);it.capEst="Agendada";it.capTxt=_lbl;agReset();markCalled(it.id);renderSheet();setTimeout(render,300);}
      else{toast(d&&d.error?"No se pudo agendar":"No se pudo agendar");if(b){b.disabled=false;b.textContent="Reintentar";}}
    })
    .catch(function(){toast("Error de red al agendar");if(b){b.disabled=false;b.textContent="Reintentar";}});
