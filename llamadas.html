@@ -203,6 +203,46 @@ function renderSheet(){
   var acts=w.querySelectorAll(".acts button");
   [].forEach.call(acts,function(b){b.addEventListener("click",function(){var r=b.getAttribute("data-r");marcar(it,r);closeSheet();});});
 }
+var CAL_WEBHOOK="https://n8n.entrenemos.cl/webhook/calendar-nuverapro";
+var BIENV_WEBHOOK="https://n8n.entrenemos.cl/webhook/registrar-bienvenida";
+var AG=null, AG_DIA=null, AG_SLOT=null;
+function hacerBienvenida(it){try{fetch(BIENV_WEBHOOK,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:it.id,nombre:it.n})});}catch(e){}if(it)it.bienv=1;toast("Bienvenida registrada");}
+function agReset(){AG=null;AG_DIA=null;AG_SLOT=null;}
+function renderAg(){
+  var box=document.getElementById("agBox");if(!box)return;var it=SHEET_IT;
+  if(it&&it.capEst==="Capacitado"){box.innerHTML="<div class='aghint'>Cliente ya capacitado.</div>";return;}
+  if(!AG){box.innerHTML="<button class='agbtn' id='agStart'>&#128197; Agendar capacitación</button>"+(it&&it.capTxt?"<div class='aghint'>Actual: "+esc(it.capTxt)+"</div>":"");document.getElementById("agStart").addEventListener("click",cargarDisp);return;}
+  if(AG==="loading"){box.innerHTML="<div class='aghint'>Buscando horas disponibles&hellip;</div>";return;}
+  if(AG==="error"){box.innerHTML="<button class='agbtn' id='agStart'>Reintentar</button><div class='aghint'>No se pudo cargar disponibilidad.</div>";document.getElementById("agStart").addEventListener("click",cargarDisp);return;}
+  var h="<div class='aghint'>Elegí día:</div><div class='agchips' id='agDias'></div><div id='agHoras'></div>";
+  box.innerHTML=h;var dias=document.getElementById("agDias");
+  AG.forEach(function(d){var c=document.createElement("button");c.className="agchip"+(AG_DIA===d.fecha?" on":"");c.textContent=d.dia_label;c.addEventListener("click",function(){AG_DIA=d.fecha;AG_SLOT=null;renderAg();});dias.appendChild(c);});
+  if(AG_DIA){
+    var dobj=AG.filter(function(d){return d.fecha===AG_DIA})[0];
+    document.getElementById("agHoras").innerHTML="<div class='aghint'>Elegí hora:</div><div class='agchips' id='agHrs'></div>";
+    var hrs=document.getElementById("agHrs");
+    dobj.slots.forEach(function(s){var c=document.createElement("button");c.className="agchip"+(AG_SLOT&&AG_SLOT.start===s.start?" on":"");c.textContent=s.hora;c.addEventListener("click",function(){AG_SLOT=s;renderAg();});hrs.appendChild(c);});
+    if(AG_SLOT){var b=document.createElement("button");b.className="agok";b.id="agConfirm";b.textContent="✅ Confirmar "+AG_SLOT.label;document.getElementById("agHoras").appendChild(b);b.addEventListener("click",confirmarAg);}
+  }
+}
+function cargarDisp(){AG="loading";renderAg();
+  fetch(CAL_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"disponibilidad"})})
+   .then(function(r){return r.json();})
+   .then(function(d){AG=(d&&d.slots_todos&&d.slots_todos.length)?d.slots_todos:"error";renderAg();})
+   .catch(function(){AG="error";renderAg();});
+}
+function confirmarAg(){
+  var it=SHEET_IT;if(!it||!AG_SLOT)return;
+  if(!it.correo){toast("Falta correo del cliente para invitarlo");return;}
+  var b=document.getElementById("agConfirm");if(b){b.disabled=true;b.textContent="Agendando…";}
+  fetch(CAL_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"agendar",via:"panel",correo:it.correo,nombre:it.n,telefono:it.tel||"",lead_id:it.id,start:AG_SLOT.start,end:AG_SLOT.end})})
+   .then(function(r){return r.json();})
+   .then(function(d){
+     if(d&&d.success){toast("✅ Capacitación agendada");it.capEst="Agendada";it.capTxt=AG_SLOT.label;agReset();markCalled(it.id);renderSheet();setTimeout(render,300);}
+     else{toast(d&&d.error?"No se pudo agendar":"No se pudo agendar");if(b){b.disabled=false;b.textContent="Reintentar";}}
+   })
+   .catch(function(){toast("Error de red al agendar");if(b){b.disabled=false;b.textContent="Reintentar";}});
+}
 function saveNota(){
   var it=SHEET_IT;if(!it)return;
   var ta=document.getElementById("notaInput");var txt=(ta.value||"").trim();
