@@ -1,105 +1,156 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NuveraPRO — Rendimiento Semanal</title><style>
-*{box-sizing:border-box}
-body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f5f7fa;color:#0b2545;margin:0;padding:20px}
-.wrap{max-width:1080px;margin:0 auto}
-h1{margin:0 0 4px;font-size:22px}
-.sub{color:#64748b;margin:0 0 16px;font-size:13px}
-.wknav{display:flex;align-items:center;gap:10px;margin:0 0 16px;flex-wrap:wrap}
-.wknav button{background:#0ea5e9;border:0;color:#fff;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:700;cursor:pointer}
-.wknav button:disabled{background:#cbd5e1;cursor:not-allowed}
-.wknav .rng{font-weight:700;font-size:15px;min-width:220px;text-align:center}
-.wknav .today{background:#e2e8f0;color:#0b2545;font-weight:600;font-size:12px;padding:7px 10px}
-.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-table{width:100%;border-collapse:collapse;min-width:640px}
-th,td{padding:11px 8px;text-align:center;font-size:14px;border-top:1px solid #eef2f7}
-thead th{background:#0b2545;color:#fff;font-size:12px;font-weight:700;border:0}
-thead th.hoy{background:#0ea5e9}
-th.met,td.met{text-align:left;position:sticky;left:0;background:#fff;font-weight:600;font-size:13px;min-width:190px;box-shadow:1px 0 0 #eef2f7}
-thead th.met{background:#0b2545;color:#fff}
-td.met .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
-td.val{font-variant-numeric:tabular-nums;font-weight:600}
-td.val.z{color:#cbd5e1;font-weight:400}
-td.tot{background:#f8fafc;font-weight:800}
-th.tot{background:#12345f}
-tr.acum td{color:#64748b;font-weight:600}
-tr.acum td.val{font-weight:700}
-.d2{display:block;font-size:11px;font-weight:400;color:#cbd5e1;margin-top:2px}
-thead th.hoy .d2{color:#e0f2fe}
-.note{background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;border-radius:12px;padding:12px 16px;font-size:12.5px;margin-top:14px;line-height:1.5}
-.note b{color:#9a3412}
-.foot{color:#94a3b8;font-size:12px;margin-top:16px;text-align:center}
-@media(max-width:600px){body{padding:12px}h1{font-size:19px}.wknav .rng{min-width:0;flex:1;font-size:14px}th,td{padding:9px 6px;font-size:13px}th.met,td.met{min-width:150px;font-size:12px}}
-</style></head><body><div class="wrap">
-<h1>Rendimiento Semanal — NuveraPRO</h1>
-<p class="sub" id="sub">Cargando datos…</p>
-<div class="wknav">
-  <button id="prev">‹ Anterior</button>
-  <div class="rng" id="rng">—</div>
-  <button id="next">Siguiente ›</button>
-  <button class="today" id="hoy">Hoy</button>
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Embudo Comercial — NuveraPRO</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --card2:#eef0f3; --line:#e2e5ea;
+    --gold:#b8860b; --goldbg:#fbf3d8; --txt:#1a1f2b; --mut:#6b7280; --mut2:#9aa3b2;
+    --green:#1a9e5f; --greenbg:#e6f6ee; --blue:#2f6fed; --red:#d64545;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  body{margin:0; background:var(--bg); color:var(--txt); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:15px; padding:14px 12px 40px; max-width:820px; margin:0 auto}
+  h1{font-size:18px; font-weight:600; margin:0 0 2px; display:flex; align-items:center; gap:8px}
+  .sub{color:var(--mut); font-size:12px; margin:0 0 14px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 6px rgba(26,158,95,.5)}
+  .periodo{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px}
+  .chip{flex:1 0 auto; text-align:center; font-size:13px; padding:8px 10px; border-radius:20px; background:var(--card); border:1px solid var(--line); color:var(--mut); cursor:pointer; user-select:none}
+  .chip.on{background:#f5c542; color:#4a3a00; border-color:#eab308; font-weight:600}
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:16px}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:11px 13px}
+  .kpi .lab{font-size:11px; color:var(--mut); margin-bottom:3px; text-transform:uppercase; letter-spacing:.04em}
+  .kpi .val{font-size:23px; font-weight:700; color:var(--gold); line-height:1.1}
+  .kpi .val.g{color:var(--green)} .kpi .val.w{color:var(--txt)}
+  .kpi .delta{font-size:12px; margin-top:2px; color:var(--mut)}
+  .kpi input{width:78px; background:#fff; border:1px solid var(--line); color:var(--gold); font-size:18px; font-weight:700; border-radius:8px; padding:3px 6px; text-align:center}
+  .meta-bar{height:5px; background:var(--card2); border-radius:3px; margin-top:7px; overflow:hidden}
+  .meta-bar > i{display:block; height:100%; background:#f5c542}
+  .sec{font-size:13px; color:var(--mut); text-transform:uppercase; letter-spacing:.05em; margin:18px 0 9px}
+  .funnel{display:flex; flex-direction:column; gap:7px}
+  .step{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 13px; position:relative; overflow:hidden}
+  .step .fill{position:absolute; left:0; top:0; bottom:0; background:var(--goldbg); z-index:0}
+  .step .row{position:relative; z-index:1; display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+  .step .name{font-size:14px}
+  .step .n{font-size:19px; font-weight:700}
+  .step .pct{font-size:12px; color:var(--mut); min-width:52px; text-align:right}
+  .step.gold .n{color:var(--gold)} .step.green .n{color:var(--green)} .step.green .fill{background:var(--greenbg)}
+  .canal{margin-top:8px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--card)}
+  .canal table{width:100%; border-collapse:collapse; font-size:13px}
+  .canal th,.canal td{padding:8px 6px; text-align:center; border-bottom:1px solid var(--line)}
+  .canal th{color:var(--mut); font-weight:500; font-size:11px; text-transform:uppercase}
+  .canal td:first-child,.canal th:first-child{text-align:left; padding-left:12px}
+  .canal tr:last-child td{border-bottom:none}
+  .canal .z{color:var(--mut2)}
+  .note{background:#fdf6e3; border:1px solid #ecd9a0; color:#8a6d1a; font-size:12px; border-radius:10px; padding:9px 12px; margin:10px 0}
+  .foot{color:var(--mut2); font-size:11px; text-align:center; margin-top:20px}
+  .loading{color:var(--mut); text-align:center; padding:40px 0}
+</style>
+</head>
+<body>
+<h1><span class="dot"></span> Embudo Comercial</h1>
+<p class="sub" id="sub">Cargando…</p>
+
+<div class="periodo" id="periodo">
+  <div class="chip" data-r="semana">Esta semana</div>
+  <div class="chip on" data-r="mes">Este mes</div>
+  <div class="chip" data-r="30">30 días</div>
+  <div class="chip" data-r="todo">Todo</div>
 </div>
-<div class="tblwrap"><table>
-  <thead><tr id="head"></tr></thead>
-  <tbody id="body"></tbody>
-</table></div>
-<div class="note" id="note"></div>
-<p class="foot" id="foot">—</p>
-</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="sec">Embudo · % sobre cuentas creadas</div>
+<div class="funnel" id="funnel"><div class="loading">Cargando embudo…</div></div>
+
+<div class="sec">Desglose por canal</div>
+<div id="canalWrap"></div>
+
+<p class="foot" id="foot"></p>
+
 <script>
-var DIAS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-var METRICAS=[
-  {k:'sc',  lab:'Leads sin cuenta (nuevos)', color:'#f59e0b', acum:false, tot:'sum'},
-  {k:'scAcum', lab:'Sin cuenta acumulados', color:'#94a3b8', acum:true,  tot:'end'},
-  {k:'cr',  lab:'Cuentas creadas',          color:'#0ea5e9', acum:false, tot:'sum'},
-  {k:'cap', lab:'Cuentas capacitadas',      color:'#8b5cf6', acum:false, tot:'sum'},
-  {k:'pag', lab:'Pagos por primera vez',    color:'#16a34a', acum:false, tot:'sum'}
-];
-var DATA=null, week=null, minMon=null, maxMon=null, todayISO=null;
-function iso(d){var m=(d.getMonth()+1),day=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(day<10?'0':'')+day;}
-function parseISO(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
-function monday(d){var x=new Date(d.getTime());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);x.setHours(0,0,0,0);return x;}
-function addDays(d,n){var x=new Date(d.getTime());x.setDate(x.getDate()+n);return x;}
-function fmt(d){return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2);}
-function render(){
-  var head=document.getElementById('head'), body=document.getElementById('body');
-  var days=[]; for(var i=0;i<7;i++) days.push(addDays(week,i));
-  var h='<th class="met">Métrica</th>';
-  days.forEach(function(d){var k=iso(d);var hoy=(k===todayISO)?' hoy':'';h+='<th class="'+ (hoy?'hoy':'') +'">'+DIAS[(d.getDay()+6)%7]+'<span class="d2">'+fmt(d)+'</span></th>';});
-  h+='<th class="tot">Total</th>';
-  head.innerHTML=h;
-  var rows='';
-  METRICAS.forEach(function(m){
-    var tr='<tr'+(m.acum?' class="acum"':'')+'><td class="met"><span class="dot" style="background:'+m.color+'"></span>'+m.lab+'</td>';
-    var sum=0, endv=0, any=false;
-    days.forEach(function(d){
-      var k=iso(d); var rec=(DATA.dias&&DATA.dias[k])?DATA.dias[k]:null;
-      var v=rec?(rec[m.k]||0):0;
-      if(rec){ sum+=(m.acum?0:v); endv=v; if(v)any=true; }
-      var inRange=rec!=null;
-      tr+='<td class="val'+(v?'':' z')+'">'+(inRange?v.toLocaleString('es-CL'):'·')+'</td>';
-    });
-    var totv=(m.tot==='end')?endv:sum;
-    tr+='<td class="val tot">'+totv.toLocaleString('es-CL')+'</td></tr>';
-    rows+=tr;
-  });
-  body.innerHTML=rows;
-  var end=addDays(week,6);
-  document.getElementById('rng').textContent=fmt(week)+' — '+fmt(end)+' '+week.getFullYear();
-  document.getElementById('prev').disabled = (iso(week)<=iso(minMon));
-  document.getElementById('next').disabled = (iso(week)>=iso(maxMon));
+var DATA=null, RANGO='mes';
+var F=['cr','cont','agend','cap','pag'];
+function pad(n){return n<10?'0'+n:''+n}
+function iso(d){return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())}
+function hoyISO(){var d=new Date();return iso(new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())))}
+function rangoDesde(r){
+  var d=new Date(), y=d.getFullYear(), m=d.getMonth(), day=d.getDate();
+  if(r==='mes') return y+'-'+pad(m+1)+'-01';
+  if(r==='30'){var t=new Date(Date.UTC(y,m,day)); t.setUTCDate(t.getUTCDate()-29); return iso(t);}
+  if(r==='semana'){var t2=new Date(Date.UTC(y,m,day)); var dow=(t2.getUTCDay()+6)%7; t2.setUTCDate(t2.getUTCDate()-dow); return iso(t2);}
+  return '0000-01-01';
 }
-function go(delta){ if(delta===0){week=monday(parseISO(todayISO));} else {week=addDays(week,delta*7);} if(iso(week)<iso(minMon))week=new Date(minMon); if(iso(week)>iso(maxMon))week=new Date(maxMon); render(); }
-document.getElementById('prev').onclick=function(){go(-1)};
-document.getElementById('next').onclick=function(){go(1)};
-document.getElementById('hoy').onclick=function(){go(0)};
-fetch('data/rendimiento-semanal.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){
-  DATA=d; todayISO=d.hasta;
-  minMon=monday(parseISO(d.desde)); maxMon=monday(parseISO(d.hasta));
-  week=new Date(maxMon);
-  document.getElementById('sub').textContent='Lunes a domingo · datos '+d.desde+' → '+d.hasta+' · actualizado '+d.generado;
-  document.getElementById('note').innerHTML='<b>Cómo leer.</b> <b>Leads sin cuenta (nuevos)</b> = contactos que escribieron ese día y aún no tienen cuenta; <b>acumulados</b> = total sin cuenta arrastrado hasta ese día. <b>Creadas</b> por Fecha activación, <b>Capacitadas</b> por Fecha capacitación. <b>Pagos por primera vez</b> = cuentas que antes no tenían ningún pago (transición sin-pago→pago); es exacto desde el 30-jul en adelante — las cuentas que ya pagaban quedaron fechadas en su activación, así que semanas previas son aproximadas. La base de Contactos parte el 9-jul, antes de esa fecha «sin cuenta» sale vacío.';
-  document.getElementById('foot').textContent='Actualizado cada mañana desde Notion (workflow n8n) · '+d.generado;
-  render();
-}).catch(function(e){document.getElementById('sub').textContent='No se pudo cargar data/rendimiento-semanal.json — '+e;});
+function sumaRango(){
+  var desde=rangoDesde(RANGO), hasta=hoyISO(), dias=DATA.dias||{}, tot={cr:0,cont:0,agend:0,cap:0,pag:0}, ndias=0;
+  for(var k in dias){ if(k>=desde && k<=hasta){ ndias++; for(var i=0;i<F.length;i++) tot[F[i]]+=(dias[k][F[i]]||0);} }
+  var spanDays=Math.max(1,Math.round((new Date(hasta)-new Date(desde))/86400000)+1);
+  return {tot:tot, ndias:spanDays};
+}
+function num(n){return (n||0).toLocaleString('es-CL')}
+function pct(a,b){return b>0?Math.round(a/b*1000)/10:0}
+function render(){
+  if(!DATA){return;}
+  var r=sumaRango(), t=r.tot;
+  var hoy=hoyISO(), hd=(DATA.dias&&DATA.dias[hoy])||{cont:0,agend:0};
+  var d=new Date(), diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(), diaHoy=d.getDate();
+  var mesDesde=rangoDesde('mes'), crMes=0; for(var k in DATA.dias){ if(k>=mesDesde&&k<=hoy) crMes+=(DATA.dias[k].cr||0); }
+  var proy=Math.round(crMes/Math.max(1,diaHoy)*diasMes);
+  var prom=Math.round(t.cr/Math.max(1,Math.min(r.ndias,diaHoy||r.ndias))*10)/10;
+  var meta=parseInt(localStorage.getItem('nvp_meta_embudo')||'0',10)||0;
+  var avance=meta>0?Math.min(100,Math.round(crMes/meta*100)):0;
+  var coh=DATA.cohorte||{elegibles:0,pagaron:0,tasa:0};
+  var kpis=[
+    {lab:'Cuentas creadas', val:num(t.cr), cls:'', extra:'<div class="delta">'+RANGO+'</div>'},
+    {lab:'Conversión → pago (cohorte)', val:coh.tasa+'%', cls:'g', extra:'<div class="delta">'+num(coh.pagaron)+'/'+num(coh.elegibles)+' maduras</div>'},
+    {lab:'Proyección fin de mes', val:num(proy), cls:'w', extra:'<div class="delta">'+num(crMes)+' este mes</div>'},
+    {lab:'Promedio diario', val:prom, cls:'w', extra:'<div class="delta">cuentas/día</div>'},
+    {lab:'Hoy', val:num(hd.cont)+' / '+num(hd.agend), cls:'w', extra:'<div class="delta">contactadas / agendadas</div>'},
+    {lab:'Meta del mes', val:'<input id="meta" type="number" min="0" value="'+meta+'" placeholder="—">', cls:'', extra:'<div class="meta-bar"><i style="width:'+avance+'%"></i></div><div class="delta">'+(meta>0?avance+'% avance':'editable')+'</div>'}
+  ];
+  document.getElementById('kpis').innerHTML=kpis.map(function(k){return '<div class="kpi"><div class="lab">'+k.lab+'</div><div class="val '+k.cls+'">'+k.val+'</div>'+(k.extra||'')+'</div>'}).join('');
+  var m=document.getElementById('meta');
+  if(m) m.addEventListener('change',function(){localStorage.setItem('nvp_meta_embudo',this.value||'0'); render();});
+  var steps=[
+    {name:'Cuentas creadas', n:t.cr, base:true, cls:'gold'},
+    {name:'Contactadas x teléfono', n:t.cont, cls:'gold'},
+    {name:'Agendadas', n:t.agend, cls:'gold'},
+    {name:'Capacitadas', n:t.cap, cls:'gold'},
+    {name:'Pagaron (≤15 días)', n:t.pag, cls:'green'}
+  ];
+  document.getElementById('funnel').innerHTML=steps.map(function(s){
+    var p=s.base?100:pct(s.n,t.cr);
+    return '<div class="step '+s.cls+'"><div class="fill" style="width:'+p+'%"></div><div class="row"><span class="name">'+s.name+'</span><span style="display:flex;gap:12px;align-items:baseline"><span class="n">'+num(s.n)+'</span><span class="pct">'+(s.base?'base':p+'%')+'</span></span></div></div>';
+  }).join('');
+  var ch=DATA.porCanal||{}, orden=['WhatsApp','Instagram','Facebook','Messenger','Formulario web','Referido','Otro','Sin origen'];
+  var rows=orden.filter(function(c){return ch[c]&&ch[c].cr>0}).map(function(c){
+    var v=ch[c]; var cell=function(x){return '<td'+(x?'':' class="z"')+'>'+num(x)+'</td>'};
+    return '<tr><td>'+c+'</td>'+cell(v.cr)+cell(v.cont)+cell(v.agend)+cell(v.cap)+cell(v.pag)+'</tr>';
+  }).join('');
+  var sinOrigen=(ch['Sin origen']&&ch['Sin origen'].cr)||0;
+  var nota=sinOrigen>t.cr*0.5?'<div class="note">La mayoría de las cuentas no tiene canal de origen registrado. El desglose se completa cuando el receptor guarde el <b>Origen</b> al crear la cuenta (pendiente G1).</div>':'';
+  document.getElementById('canalWrap').innerHTML=nota+'<div class="canal"><table><thead><tr><th>Canal</th><th>Creadas</th><th>Cont.</th><th>Agend.</th><th>Capac.</th><th>Pagó</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  document.getElementById('sub').innerHTML='En vivo · generado '+(DATA.generado||'—');
+  document.getElementById('foot').innerHTML='Cohorte madura (entradas ≥15 días): '+coh.tasa+'% pagó · ventana '+(DATA.desde||'')+' → '+(DATA.hasta||'');
+}
+function pintarChips(){
+  var chips=document.querySelectorAll('#periodo .chip');
+  chips.forEach(function(c){ c.onclick=function(){ RANGO=c.getAttribute('data-r'); chips.forEach(function(x){x.classList.remove('on')}); c.classList.add('on'); render(); }; });
+}
+function cargar(cb){
+  var urls=['data/embudo.json','embudo.json'];
+  (function tryU(i){
+    if(i>=urls.length){ if(cb)cb(false); return; }
+    fetch(urls[i]+'?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){DATA=j; if(cb)cb(true);}).catch(function(){tryU(i+1);});
+  })(0);
+}
+pintarChips();
+cargar(function(ok){ if(ok){render();} else {document.getElementById('funnel').innerHTML='<div class="loading">No se pudo cargar embudo.json</div>';} });
+/* NVP-AUTOREFRESH */
+(function(){ var last=null;
+  setInterval(function(){ cargar(function(ok){ if(ok){ var sig=JSON.stringify(DATA.totales)+DATA.generado; if(last&&sig!==last){render();} last=sig; } }); }, 20000);
+})();
 </script>
-<!--NVP-AUTOREFRESH--><script>(function(){var u="data/rendimiento-semanal.json?t=";var l=null;setInterval(function(){fetch(u+Date.now()).then(function(r){return r.text();}).then(function(t){if(l!==null&&t!==l){location.reload();}l=t;}).catch(function(){});},20000);})();</script></body></html>
+</body>
+</html>
