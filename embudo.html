@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Embudo Comercial — NuveraPRO</title>
+<style>
+  :root{
+    --bg:#0b0e14; --card:#141924; --card2:#1b2130; --line:#252c3b;
+    --gold:#f5c542; --gold2:#e8b923; --txt:#eef1f7; --mut:#8a93a6; --mut2:#5f6a7e;
+    --green:#2fd07a; --greenbg:#12301f; --blue:#4a9bff; --red:#ff5d5d;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  body{margin:0; background:var(--bg); color:var(--txt); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:15px; padding:14px 12px 40px; max-width:820px; margin:0 auto}
+  h1{font-size:18px; font-weight:600; margin:0 0 2px; display:flex; align-items:center; gap:8px}
+  .sub{color:var(--mut); font-size:12px; margin:0 0 14px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 8px var(--green)}
+  .periodo{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px}
+  .chip{flex:1 0 auto; text-align:center; font-size:13px; padding:8px 10px; border-radius:20px; background:var(--card); border:1px solid var(--line); color:var(--mut); cursor:pointer; user-select:none}
+  .chip.on{background:var(--gold); color:#1a1500; border-color:var(--gold); font-weight:600}
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:16px}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:11px 13px}
+  .kpi .lab{font-size:11px; color:var(--mut); margin-bottom:3px; text-transform:uppercase; letter-spacing:.04em}
+  .kpi .val{font-size:23px; font-weight:700; color:var(--gold); line-height:1.1}
+  .kpi .val.g{color:var(--green)} .kpi .val.w{color:var(--txt)}
+  .kpi .delta{font-size:12px; margin-top:2px; color:var(--mut)}
+  .kpi .delta.up{color:var(--green)} .kpi .delta.down{color:var(--red)}
+  .kpi input{width:70px; background:var(--card2); border:1px solid var(--line); color:var(--gold); font-size:18px; font-weight:700; border-radius:8px; padding:2px 6px; text-align:center}
+  .meta-bar{height:5px; background:var(--card2); border-radius:3px; margin-top:7px; overflow:hidden}
+  .meta-bar > i{display:block; height:100%; background:var(--gold)}
+  .sec{font-size:13px; color:var(--mut); text-transform:uppercase; letter-spacing:.05em; margin:18px 0 9px}
+  .funnel{display:flex; flex-direction:column; gap:7px}
+  .step{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 13px; position:relative; overflow:hidden}
+  .step .fill{position:absolute; left:0; top:0; bottom:0; background:var(--card2); z-index:0}
+  .step .row{position:relative; z-index:1; display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+  .step .name{font-size:14px}
+  .step .n{font-size:19px; font-weight:700}
+  .step .pct{font-size:12px; color:var(--mut); min-width:52px; text-align:right}
+  .step.gold .n{color:var(--gold)} .step.green .n{color:var(--green)} .step.green .fill{background:var(--greenbg)}
+  .canal{margin-top:8px; border:1px solid var(--line); border-radius:12px; overflow:hidden}
+  .canal table{width:100%; border-collapse:collapse; font-size:13px}
+  .canal th,.canal td{padding:8px 6px; text-align:center; border-bottom:1px solid var(--line)}
+  .canal th{color:var(--mut); font-weight:500; font-size:11px; text-transform:uppercase}
+  .canal td:first-child,.canal th:first-child{text-align:left; padding-left:12px}
+  .canal tr:last-child td{border-bottom:none}
+  .canal .z{color:var(--mut2)}
+  .note{background:#2a2410; border:1px solid #4a3f16; color:#e8cf7a; font-size:12px; border-radius:10px; padding:9px 12px; margin:10px 0}
+  .foot{color:var(--mut2); font-size:11px; text-align:center; margin-top:20px}
+  .loading{color:var(--mut); text-align:center; padding:40px 0}
+</style>
+</head>
+<body>
+<h1><span class="dot"></span> Embudo Comercial</h1>
+<p class="sub" id="sub">Cargando…</p>
+
+<div class="periodo" id="periodo">
+  <div class="chip" data-r="semana">Esta semana</div>
+  <div class="chip on" data-r="mes">Este mes</div>
+  <div class="chip" data-r="30">30 días</div>
+  <div class="chip" data-r="todo">Todo</div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="sec">Embudo · % sobre cuentas creadas</div>
+<div class="funnel" id="funnel"><div class="loading">Cargando embudo…</div></div>
+
+<div class="sec">Desglose por canal</div>
+<div id="canalWrap"></div>
+
+<p class="foot" id="foot"></p>
+
+<script>
+var DATA=null, RANGO='mes';
+var F=['cr','cont','agend','cap','pag'];
+function pad(n){return n<10?'0'+n:''+n}
+function iso(d){return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())}
+function hoyISO(){var d=new Date();return iso(new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())))}
+function rangoDesde(r){
+  var d=new Date(), y=d.getFullYear(), m=d.getMonth(), day=d.getDate();
+  if(r==='mes') return y+'-'+pad(m+1)+'-01';
+  if(r==='30'){var t=new Date(Date.UTC(y,m,day)); t.setUTCDate(t.getUTCDate()-29); return iso(t);}
+  if(r==='semana'){var t2=new Date(Date.UTC(y,m,day)); var dow=(t2.getUTCDay()+6)%7; t2.setUTCDate(t2.getUTCDate()-dow); return iso(t2);}
+  return '0000-01-01';
+}
+function sumaRango(){
+  var desde=rangoDesde(RANGO), hasta=hoyISO(), dias=DATA.dias||{}, tot={cr:0,cont:0,agend:0,cap:0,pag:0}, ndias=0;
+  for(var k in dias){ if(k>=desde && k<=hasta){ ndias++; for(var i=0;i<F.length;i++) tot[F[i]]+=(dias[k][F[i]]||0);} }
+  var spanDays=Math.max(1,Math.round((new Date(hasta)-new Date(desde))/86400000)+1);
+  return {tot:tot, ndias:spanDays};
+}
+function num(n){return (n||0).toLocaleString('es-CL')}
+function pct(a,b){return b>0?Math.round(a/b*1000)/10:0}
+function render(){
+  if(!DATA){return;}
+  var r=sumaRango(), t=r.tot;
+  var hoy=hoyISO(), hd=(DATA.dias&&DATA.dias[hoy])||{cont:0,agend:0};
+  var d=new Date(), diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(), diaHoy=d.getDate();
+  var mesDesde=rangoDesde('mes'), crMes=0; for(var k in DATA.dias){ if(k>=mesDesde&&k<=hoy) crMes+=(DATA.dias[k].cr||0); }
+  var proy=Math.round(crMes/Math.max(1,diaHoy)*diasMes);
+  var prom=Math.round(t.cr/Math.max(1,Math.min(r.ndias,diaHoy||r.ndias))*10)/10;
+  var meta=parseInt(localStorage.getItem('nvp_meta_embudo')||'0',10)||0;
+  var avance=meta>0?Math.min(100,Math.round(crMes/meta*100)):0;
+  var coh=DATA.cohorte||{elegibles:0,pagaron:0,tasa:0};
+  var kpis=[
+    {lab:'Cuentas creadas', val:num(t.cr), cls:'', extra:'<div class="delta">'+RANGO+'</div>'},
+    {lab:'Conversión → pago (cohorte)', val:coh.tasa+'%', cls:'g', extra:'<div class="delta">'+num(coh.pagaron)+'/'+num(coh.elegibles)+' maduras</div>'},
+    {lab:'Proyección fin de mes', val:num(proy), cls:'w', extra:'<div class="delta">'+num(crMes)+' este mes</div>'},
+    {lab:'Promedio diario', val:prom, cls:'w', extra:'<div class="delta">cuentas/día</div>'},
+    {lab:'Hoy', val:num(hd.cont)+' / '+num(hd.agend), cls:'w', extra:'<div class="delta">contactadas / agendadas</div>'},
+    {lab:'Meta del mes', val:'<input id="meta" type="number" min="0" value="'+meta+'" placeholder="—">', cls:'', extra:'<div class="meta-bar"><i style="width:'+avance+'%"></i></div><div class="delta">'+(meta>0?avance+'% avance':'editable')+'</div>'}
+  ];
+  document.getElementById('kpis').innerHTML=kpis.map(function(k){return '<div class="kpi"><div class="lab">'+k.lab+'</div><div class="val '+k.cls+'">'+k.val+'</div>'+(k.extra||'')+'</div>'}).join('');
+  var m=document.getElementById('meta');
+  if(m) m.addEventListener('change',function(){localStorage.setItem('nvp_meta_embudo',this.value||'0'); render();});
+  var steps=[
+    {name:'Cuentas creadas', n:t.cr, base:true, cls:'gold'},
+    {name:'Contactadas x teléfono', n:t.cont, cls:'gold'},
+    {name:'Agendadas', n:t.agend, cls:'gold'},
+    {name:'Capacitadas', n:t.cap, cls:'gold'},
+    {name:'Pagaron (≤15 días)', n:t.pag, cls:'green'}
+  ];
+  document.getElementById('funnel').innerHTML=steps.map(function(s){
+    var p=s.base?100:pct(s.n,t.cr);
+    return '<div class="step '+s.cls+'"><div class="fill" style="width:'+p+'%"></div><div class="row"><span class="name">'+s.name+'</span><span style="display:flex;gap:12px;align-items:baseline"><span class="n">'+num(s.n)+'</span><span class="pct">'+(s.base?'base':p+'%')+'</span></span></div></div>';
+  }).join('');
+  var ch=DATA.porCanal||{}, orden=['WhatsApp','Instagram','Facebook','Messenger','Formulario web','Referido','Otro','Sin origen'];
+  var rows=orden.filter(function(c){return ch[c]&&ch[c].cr>0}).map(function(c){
+    var v=ch[c]; var cell=function(x){return '<td'+(x?'':' class="z"')+'>'+num(x)+'</td>'};
+    return '<tr><td>'+c+'</td>'+cell(v.cr)+cell(v.cont)+cell(v.agend)+cell(v.cap)+cell(v.pag)+'</tr>';
+  }).join('');
+  var sinOrigen=(ch['Sin origen']&&ch['Sin origen'].cr)||0;
+  var nota=sinOrigen>t.cr*0.5?'<div class="note">La mayoría de las cuentas no tiene canal de origen registrado. El desglose se completa cuando el receptor guarde el <b>Origen</b> al crear la cuenta (pendiente G1).</div>':'';
+  document.getElementById('canalWrap').innerHTML=nota+'<div class="canal"><table><thead><tr><th>Canal</th><th>Creadas</th><th>Cont.</th><th>Agend.</th><th>Capac.</th><th>Pagó</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  document.getElementById('sub').innerHTML='En vivo · generado '+(DATA.generado||'—');
+  document.getElementById('foot').innerHTML='Cohorte madura (entradas ≥15 días): '+coh.tasa+'% pagó · ventana '+(DATA.desde||'')+' → '+(DATA.hasta||'');
+}
+function pintarChips(){
+  var chips=document.querySelectorAll('#periodo .chip');
+  chips.forEach(function(c){ c.onclick=function(){ RANGO=c.getAttribute('data-r'); chips.forEach(function(x){x.classList.remove('on')}); c.classList.add('on'); render(); }; });
+}
+function cargar(cb){
+  var urls=['data/embudo.json','embudo.json'];
+  (function tryU(i){
+    if(i>=urls.length){ if(cb)cb(false); return; }
+    fetch(urls[i]+'?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){DATA=j; if(cb)cb(true);}).catch(function(){tryU(i+1);});
+  })(0);
+}
+pintarChips();
+cargar(function(ok){ if(ok){render();} else {document.getElementById('funnel').innerHTML='<div class="loading">No se pudo cargar embudo.json</div>';} });
+/* NVP-AUTOREFRESH */
+(function(){ var last=null;
+  setInterval(function(){ cargar(function(ok){ if(ok){ var sig=JSON.stringify(DATA.totales)+DATA.generado; if(last&&sig!==last){render();} last=sig; } }); }, 20000);
+})();
+</script>
+</body>
+</html>
