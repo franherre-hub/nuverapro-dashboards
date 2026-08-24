@@ -61,7 +61,7 @@
 
 <div class="kpis" id="kpis"></div>
 
-<div class="sec">Embudo · % sobre cuentas creadas</div>
+<div class="sec">Embudo · leads → cuenta → pago</div>
 <div class="funnel" id="funnel"><div class="loading">Cargando embudo…</div></div>
 
 <div class="sec">Desglose por canal</div>
@@ -72,6 +72,7 @@
 <script>
 var DATA=null, RANGO='mes';
 var F=['cr','cont','agend','cap','pag'];
+var ENT_DESDE='2026-07-01';
 function pad(n){return n<10?'0'+n:''+n}
 function iso(d){return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())}
 function hoyISO(){var d=new Date();return iso(new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())))}
@@ -83,8 +84,9 @@ function rangoDesde(r){
   return '0000-01-01';
 }
 function sumaRango(){
-  var desde=rangoDesde(RANGO), hasta=hoyISO(), dias=DATA.dias||{}, tot={cr:0,cont:0,agend:0,cap:0,pag:0}, ndias=0;
-  for(var k in dias){ if(k>=desde && k<=hasta){ ndias++; for(var i=0;i<F.length;i++) tot[F[i]]+=(dias[k][F[i]]||0);} }
+  var desde=rangoDesde(RANGO), hasta=hoyISO(), dias=DATA.dias||{}, tot={cr:0,cont:0,agend:0,cap:0,pag:0,ent:0}, ndias=0;
+  var entDesde=desde<ENT_DESDE?ENT_DESDE:desde;
+  for(var k in dias){ if(k>=desde && k<=hasta){ ndias++; for(var i=0;i<F.length;i++) tot[F[i]]+=(dias[k][F[i]]||0);} if(k>=entDesde && k<=hasta){ tot.ent+=(dias[k].ent||0);} }
   var spanDays=Math.max(1,Math.round((new Date(hasta)-new Date(desde))/86400000)+1);
   return {tot:tot, ndias:spanDays};
 }
@@ -102,6 +104,7 @@ function render(){
   var avance=meta>0?Math.min(100,Math.round(crMes/meta*100)):0;
   var coh=DATA.cohorte||{elegibles:0,pagaron:0,tasa:0};
   var kpis=[
+    {lab:'Leads entrantes', val:num(t.ent), cls:'w', extra:'<div class="delta">'+(t.ent>0?pct(t.cr,t.ent)+'% \u2192 cuenta':RANGO)+'</div>'},
     {lab:'Cuentas creadas', val:num(t.cr), cls:'', extra:'<div class="delta">'+RANGO+'</div>'},
     {lab:'Conversión → pago (cohorte)', val:coh.tasa+'%', cls:'g', extra:'<div class="delta">'+num(coh.pagaron)+'/'+num(coh.elegibles)+' maduras</div>'},
     {lab:'Proyección fin de mes', val:num(proy), cls:'w', extra:'<div class="delta">'+num(crMes)+' este mes</div>'},
@@ -112,16 +115,18 @@ function render(){
   document.getElementById('kpis').innerHTML=kpis.map(function(k){return '<div class="kpi"><div class="lab">'+k.lab+'</div><div class="val '+k.cls+'">'+k.val+'</div>'+(k.extra||'')+'</div>'}).join('');
   var m=document.getElementById('meta');
   if(m) m.addEventListener('change',function(){localStorage.setItem('nvp_meta_embudo',this.value||'0'); render();});
-  var steps=[
-    {name:'Cuentas creadas', n:t.cr, base:true, cls:'gold'},
-    {name:'Contactadas x teléfono', n:t.cont, cls:'gold'},
-    {name:'Agendadas', n:t.agend, cls:'gold'},
-    {name:'Capacitadas', n:t.cap, cls:'gold'},
-    {name:'Pagaron (≤15 días)', n:t.pag, cls:'green'}
-  ];
+  var hayEnt=t.ent>0;
+  var steps=[];
+  if(hayEnt){ steps.push({name:'Leads entrantes', n:t.ent, base:true, cls:'gold'}); steps.push({name:'Cuentas creadas', n:t.cr, cls:'gold', den:t.ent}); }
+  else { steps.push({name:'Cuentas creadas', n:t.cr, base:true, cls:'gold'}); }
+  steps.push({name:'Contactadas x tel\u00e9fono', n:t.cont, cls:'gold', den:t.cr});
+  steps.push({name:'Agendadas', n:t.agend, cls:'gold', den:t.cr});
+  steps.push({name:'Capacitadas', n:t.cap, cls:'gold', den:t.cr});
+  steps.push({name:'Pagaron (\u226415 d\u00edas)', n:t.pag, cls:'green', den:t.cr});
   document.getElementById('funnel').innerHTML=steps.map(function(s){
-    var p=s.base?100:pct(s.n,t.cr);
-    return '<div class="step '+s.cls+'"><div class="fill" style="width:'+p+'%"></div><div class="row"><span class="name">'+s.name+'</span><span style="display:flex;gap:12px;align-items:baseline"><span class="n">'+num(s.n)+'</span><span class="pct">'+(s.base?'base':p+'%')+'</span></span></div></div>';
+    var p=s.base?100:pct(s.n,(s.den||t.cr));
+    var w=Math.min(100,p);
+    return '<div class="step '+s.cls+'"><div class="fill" style="width:'+w+'%"></div><div class="row"><span class="name">'+s.name+'</span><span style="display:flex;gap:12px;align-items:baseline"><span class="n">'+num(s.n)+'</span><span class="pct">'+(s.base?'base':p+'%')+'</span></span></div></div>';
   }).join('');
   var ch=DATA.porCanal||{}, orden=['WhatsApp','Instagram','Facebook','Messenger','Formulario web','Referido','Otro','Sin origen'];
   var rows=orden.filter(function(c){return ch[c]&&ch[c].cr>0}).map(function(c){
@@ -132,7 +137,7 @@ function render(){
   var nota=sinOrigen>t.cr*0.5?'<div class="note">La mayoría de las cuentas no tiene canal de origen registrado. El desglose se completa cuando el receptor guarde el <b>Origen</b> al crear la cuenta (pendiente G1).</div>':'';
   document.getElementById('canalWrap').innerHTML=nota+'<div class="canal"><table><thead><tr><th>Canal</th><th>Creadas</th><th>Cont.</th><th>Agend.</th><th>Capac.</th><th>Pagó</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   document.getElementById('sub').innerHTML='En vivo · generado '+(DATA.generado||'—');
-  document.getElementById('foot').innerHTML='Cohorte madura (entradas ≥15 días): '+coh.tasa+'% pagó · ventana '+(DATA.desde||'')+' → '+(DATA.hasta||'');
+  document.getElementById('foot').innerHTML='Leads entrantes contados desde jul-2026 (jun fue carga inicial de la BdD) · Cohorte madura \u226515 d\u00edas: '+coh.tasa+'% pag\u00f3 · ventana '+(DATA.desde||'')+' \u2192 '+(DATA.hasta||'');
 }
 function pintarChips(){
   var chips=document.querySelectorAll('#periodo .chip');
