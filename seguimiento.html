@@ -177,7 +177,9 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
           <button class="act" id="aBienv"><span class="ic">👋</span>WA bienvenida</button>
           <button class="act" id="aMail"><span class="ic">✉️</span>Correo bienv.</button>
           <button class="act" id="aVoz"><span class="ic">🎤</span>Nota de voz</button>
+          <button class="act" id="aSimDia" style="display:none"><span class="ic">🧪</span>Simular día</button>
         </div>
+        <div class="sec" id="simSec" style="display:none"><h3>Simular día de cadencia (solo prueba)</h3><div class="agchips" id="simChips"></div></div>
         <div class="sec"><h3>Uso de la cuenta</h3><div class="facts" id="fFacts"></div></div>
         <div class="sec"><h3>Capacitación</h3><div id="agBox"></div></div>
         <div class="sec"><h3>Resultado de la llamada</h3>
@@ -205,6 +207,8 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
 <script>
 var TOQUE_WEBHOOK="https://n8n.entrenemos.cl/webhook/registrar-toque";
 var CAL_WEBHOOK="https://n8n.entrenemos.cl/webhook/calendar-nuverapro";
+var CADENCIA_WEBHOOK="https://n8n.entrenemos.cl/webhook/cadencia-run";
+var SIM_WHITELIST=["56974403735","5492996302300","56988089538"];
 var DATA=null,cur=null,res=null,AG=null,AG_DIA=null,AG_SLOT=null;
 var $=function(id){return document.getElementById(id)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -260,6 +264,8 @@ function openFicha(id){
   var end=new Date(a.fAct);end.setDate(end.getDate()+15);$("fEnds").textContent="vence "+fmtISO(end.toISOString());
   $("aCall").href=a.telH?"tel:"+a.telH:"#";
   var m=a.marcas||{};$("aBienv").classList.toggle("done",!!m.wa_bienv);$("aMail").classList.toggle("done",!!m.correo_bienv);
+  var esTest=SIM_WHITELIST.indexOf(String(a.wa||"").replace(/\D/g,""))>=0;
+  $("aSimDia").style.display=esTest?"":"none";$("simSec").style.display="none";$("simChips").innerHTML="";
   $("fFacts").innerHTML='<div><span>PDF con nombre</span><b class="mono">'+(a.cotiCN||0)+'</b></div><div><span>Cotizaciones sin nombre</span><b class="mono">'+(a.cotiSN||0)+'</b></div><div><span>Días sin cotizar</span>'+(a.dSin!=null?a.dSin:"—")+'</div><div><span>Capacitación</span>'+esc(a.capEst?a.capEst+(a.capTxt?" · "+a.capTxt:""):"—")+'</div><div><span>Correo</span>'+(a.correo?esc(a.correo):'<span class="pill warn">falta · pedir</span>')+'</div><div><span>ID cuenta</span><span class="mono">'+(a.idExt||"—")+'</span></div>';
   $("fLog").innerHTML=(a.toques||[]).slice().reverse().map(function(t){return '<li><span class="t">D'+(t.dia!=null?t.dia:"?")+' '+fmtISO(t.fecha)+'</span><span><span class="k '+esc(t.tipo)+'">'+tipoLbl(t.tipo)+'</span> · '+esc(t.resultado||"")+(t.nota?' · <em>'+esc(t.nota)+'</em>':"")+(t.origen==="sistema"?' <span class="pill mute">auto</span>':"")+'</span></li>'}).join("")||'<li><span class="t">—</span><span>Sin toques todavía.</span></li>';
   $("fNotes").textContent=a.notas||"Sin anotaciones.";
@@ -273,7 +279,7 @@ function closeFicha(){$("ficha").classList.remove("open");$("scrim").classList.r
 document.addEventListener("click",function(e){var b=e.target.closest("[data-id]");if(b)openFicha(b.getAttribute("data-id"))});
 $("fClose").onclick=closeFicha;$("scrim").onclick=closeFicha;
 [].forEach.call(document.querySelectorAll(".seg button"),function(b){b.onclick=function(){[].forEach.call(document.querySelectorAll(".seg button"),function(x){x.setAttribute("aria-selected",x===b)});[].forEach.call(document.querySelectorAll(".view"),function(v){v.classList.toggle("on",v.id==="v-"+b.getAttribute("data-view"))})}});
-function notaStamp(){try{return new Date().toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","");}catch(e){var d=new Date();return d.getDate()+"-"+(d.getMonth()+1)+" "+d.getHours()+":"+("0"+d.getMinutes()).slice(-2);}}
+function notaStamp(){try{return new Date().toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(","," ");}catch(e){var d=new Date();return d.getDate()+"-"+(d.getMonth()+1)+" "+d.getHours()+":"+("0"+d.getMinutes()).slice(-2);}}
 function postToque(a,payload,cb){
   payload.pageId=a.id;payload.wa=a.wa||"";payload.nombre=a.n;payload.idlead=a.idExt||"";payload.dia=a.dia;
   fetch(TOQUE_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(payload)}).then(function(r){return r.ok}).then(function(ok){cb&&cb(ok)}).catch(function(){cb&&cb(false)});
@@ -306,6 +312,19 @@ $("aMail").onclick=function(){if(!cur)return;if(cur.correo)window.open("mailto:"
 $("aWa").onclick=function(){if(!cur)return;var d=cur.wa||"";try{window.parent.postMessage({type:"openConv",wa:d},"*")}catch(e){}if(window.parent===window&&d)window.open("https://wa.me/"+d,"_blank")};
 $("aVoz").onclick=function(){toast("Nota de voz: fase 2 (Whisper vía action-button-intake)")};
 $("aAgenda").onclick=function(){cargarDisp();var el=$("agBox");if(el)el.scrollIntoView({behavior:"smooth",block:"center"})};
+$("aSimDia").onclick=function(){
+  var box=$("simSec");var open=box.style.display!=="none";box.style.display=open?"none":"";
+  if(!open&&!$("simChips").childElementCount){
+    [2,5,8,12,14].forEach(function(d){
+      var b=document.createElement("button");b.className="agchip";b.textContent="D"+d+" · "+(CADTXT[d]||"");
+      b.onclick=function(){
+        b.disabled=true;var prev=b.textContent;b.textContent="Enviando…";
+        fetch(CADENCIA_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({dia_forzar:d,wa:cur.wa})}).then(function(r){return r.ok}).then(function(ok){toast(ok?"Cadencia D"+d+" simulada":"No se pudo simular");b.disabled=false;b.textContent=prev}).catch(function(){toast("Error de red al simular");b.disabled=false;b.textContent=prev});
+      };
+      $("simChips").appendChild(b);
+    });
+  }
+};
 function renderAg(){
   var box=$("agBox");if(!box)return;var it=cur;
   if(it&&it.capEst==="Capacitado"){box.innerHTML='<div class="aghint">Cliente ya capacitado.</div>';return}
