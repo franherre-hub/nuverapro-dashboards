@@ -208,6 +208,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
 var TOQUE_WEBHOOK="https://n8n.entrenemos.cl/webhook/registrar-toque";
 var CAL_WEBHOOK="https://n8n.entrenemos.cl/webhook/calendar-nuverapro";
 var CADENCIA_WEBHOOK="https://n8n.entrenemos.cl/webhook/cadencia-run";
+var NOTAVOZ_WEBHOOK="https://n8n.entrenemos.cl/webhook/nota-voz";
 var SIM_WHITELIST=["56974403735","5492996302300","56988089538"];
 var DATA=null,cur=null,res=null,AG=null,AG_DIA=null,AG_SLOT=null;
 var $=function(id){return document.getElementById(id)};
@@ -310,7 +311,22 @@ function marca(tipo,lbl){if(!cur)return;var a=cur;if(a.marcas&&((tipo==="wa_bien
 $("aBienv").onclick=function(){marca("wa_bienvenida","WA de bienvenida")};
 $("aMail").onclick=function(){if(!cur)return;if(cur.correo)window.open("mailto:"+cur.correo+"?subject="+encodeURIComponent("Bienvenido a NuveraPRO")+"","_blank");marca("correo_bienvenida","Correo de bienvenida")};
 $("aWa").onclick=function(){if(!cur)return;var d=cur.wa||"";try{window.parent.postMessage({type:"openConv",wa:d},"*")}catch(e){}if(window.parent===window&&d)window.open("https://wa.me/"+d,"_blank")};
-$("aVoz").onclick=function(){toast("Nota de voz: fase 2 (Whisper vía action-button-intake)")};
+$("aVoz").onclick=function(){
+  if(!cur)return;
+  var texto='Hola '+cur.n+'! Soy Francisco de NuveraPRO. Te llamé recién pero no logré ubicarte. Te escribo porque quiero coordinar contigo tu reunión de puesta en marcha — ahí te muestro los atajos para que le saques el máximo provecho a tu cuenta desde el primer día. Cuando puedas, respóndeme por acá y agendamos un horario que te acomode. ¡Hablamos pronto!';
+  if(!cur.wa){toast('Este cliente no tiene WhatsApp registrado');return}
+  if(!confirm('¿Enviar esta nota de voz a '+cur.n+' ('+cur.wa+')?\n\n"'+texto+'"'))return;
+  var b=$('aVoz');var prevHtml=b.innerHTML;b.innerHTML='<span class="ic">🎤</span>Enviando…';
+  fetch(NOTAVOZ_WEBHOOK,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({to:cur.wa,texto:texto,pageId:cur.id})}).then(function(r){return r.ok}).then(function(ok){
+    b.innerHTML=prevHtml;
+    toast(ok?'Nota de voz enviada':'No se pudo enviar (revisa modo prueba/lista blanca)');
+    if(ok){
+      cur.toques=(cur.toques||[]).concat([{fecha:new Date().toISOString(),dia:cur.dia,tipo:'nota',resultado:'Nota de voz enviada (no contestó)',nota:'',origen:'fran'}]);
+      postToque(cur,{tipo:'nota',resultado:'Nota de voz enviada (no contestó)',nota:''});
+      openFicha(cur.id);
+    }
+  }).catch(function(){b.innerHTML=prevHtml;toast('Error de red al enviar')});
+};
 $("aAgenda").onclick=function(){cargarDisp();var el=$("agBox");if(el)el.scrollIntoView({behavior:"smooth",block:"center"})};
 $("aSimDia").onclick=function(){
   var box=$("simSec");var open=box.style.display!=="none";box.style.display=open?"none":"";
