@@ -94,6 +94,7 @@ h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;text-wrap:
 .act.primary{background:var(--gold);color:#1B1A17}
 .act .ic{font-size:20px}
 .pendbar{display:flex;align-items:center;gap:10px;margin:0 2px 10px;flex-wrap:wrap}.pendbtn{padding:9px 14px;border-radius:10px;background:var(--surf2);color:var(--ink);font-weight:600;font-size:13px;border:1px solid rgba(255,255,255,.08)}.pendbtn:disabled{opacity:.5}.pendhint{font-size:12px;color:var(--mute)}
+.card.fraude{box-shadow:inset 5px 0 0 var(--bad);background:color-mix(in srgb,var(--bad) 6%,var(--surf))}.marks i.fr{color:#fff;background:var(--bad);border-color:var(--bad);font-weight:700}
 .act.done::after{content:"✓";position:absolute;top:6px;right:8px;font-size:12px;color:var(--ok);font-weight:700}
 .sec{margin-top:16px}
 .sec h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-bottom:8px}
@@ -226,8 +227,8 @@ function card(a){
   (a.senal||[]).forEach(function(s){pills.push('<span class="pill bad">⚑ '+esc(s)+'</span>')});
   if(a.bucket==="done")pills.push('<span class="pill ok">✓ tocada hoy</span>');
   var m=a.marcas||{};
-  var marks='<span class="marks"><i class="'+(m.wa_bienv?"on":"")+'">WA bienv.</i><i class="'+(m.correo_bienv?"on":"")+'">Correo</i><i class="'+(m.voz_ok?"on":((m.no_contesto||m.tel_invalido)?"bad":""))+'">'+(m.voz_ok?"Voz ✓":(m.tel_invalido?"☎ inválido":(m.no_contesto?"No contestó ×"+m.no_contesto:"Sin llamada")))+'</i></span>';
-  return '<button class="card'+(a.bucket==="pago"||a.bucket==="done"?" dim":"")+'" data-id="'+esc(a.id)+'"><span class="dchip '+chip+'"><b>'+a.dia+'</b>día</span><span class="who"><span class="n">'+flag(a.cc)+' '+esc(a.n)+'</span><span class="s">'+pills.join("")+'</span>'+marks+'</span><span class="quick">'+(a.telH?'<a class="call" href="tel:'+esc(a.telH)+'" aria-label="Llamar" onclick="event.stopPropagation()">📞</a>':"")+(a.wa?'<a href="'+waHref(a)+'" target="_blank" rel="noopener" aria-label="WhatsApp" onclick="event.stopPropagation()">💬</a>':"")+'</span></button>';
+  var marks='<span class="marks">'+(m.fraude?'<i class="fr">🚨 Fraude '+esc(m.fraude)+'</i>':'')+'<i class="'+(m.wa_bienv?"on":"")+'">WA bienv.</i><i class="'+(m.correo_bienv?"on":"")+'">Correo</i><i class="'+(m.voz_ok?"on":((m.no_contesto||m.tel_invalido)?"bad":""))+'">'+(m.voz_ok?"Voz ✓":(m.tel_invalido?"☎ inválido":(m.no_contesto?"No contestó ×"+m.no_contesto:"Sin llamada")))+'</i></span>';
+  return '<button class="card'+(a.bucket==="pago"||a.bucket==="done"?" dim":"")+(m.fraude?" fraude":"")+'" data-id="'+esc(a.id)+'"><span class="dchip '+chip+'"><b>'+a.dia+'</b>día</span><span class="who"><span class="n">'+flag(a.cc)+' '+esc(a.n)+'</span><span class="s">'+pills.join("")+'</span>'+marks+'</span><span class="quick">'+(a.telH?'<a class="call" href="tel:'+esc(a.telH)+'" aria-label="Llamar" onclick="event.stopPropagation()">📞</a>':"")+(a.wa?'<a href="'+waHref(a)+'" target="_blank" rel="noopener" aria-label="WhatsApp" onclick="event.stopPropagation()">💬</a>':"")+'</span></button>';
 }
 function renderHoy(){
   var B={d0:[],senal:[],cad:[],resto:[],done:[],pago:[]};
@@ -256,8 +257,9 @@ function openFicha(id){
   cur=DATA.cuentas.filter(function(a){return a.id===id})[0];if(!cur)return;res=null;var a=cur;
   [].forEach.call(document.querySelectorAll(".card"),function(c){c.classList.toggle("sel",c.getAttribute("data-id")===id)});
   $("fName").textContent=a.n;
-  $("fSub").innerHTML=flag(a.cc)+" "+esc(a.tel||"sin teléfono")+" · "+esc(a.estado||"")+' · <span class="pill '+usoCls[a.uso]+'">'+usoTxt[a.uso]+'</span>';
+  var m0=a.marcas||{};$("fSub").innerHTML=flag(a.cc)+" "+esc(a.tel||"sin teléfono")+" · "+esc(a.estado||"")+' · <span class="pill '+usoCls[a.uso]+'">'+usoTxt[a.uso]+'</span>';
   $("fDay").textContent=a.dia;
+  if(m0.fraude)$("fSub").innerHTML+=' · <a href="'+esc(m0.fraude_caso||"#")+'" target="_blank" rel="noopener" style="color:var(--bad);font-weight:700">🚨 Caso de fraude ('+esc(m0.fraude)+') ↗</a>';
   var touched={};(a.toques||[]).forEach(function(t){if(t.tipo!=="sistema"&&t.dia!=null)touched[t.dia]=1});
   var days="";for(var i=0;i<16;i++){days+='<i class="'+(i===a.dia?"now":"")+(touched[i]?" touch":(DATA.cadencia.indexOf(i)>=0&&i>a.dia?" plan":""))+'">'+i+'</i>'}
   $("fDays").innerHTML=days;
