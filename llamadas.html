@@ -317,7 +317,7 @@ function pendientesCorreo(){return (DATA&&DATA.cuentas||[]).filter(function(a){r
 function renderPend(){var p=pendientesCorreo();$("nPend").textContent=p.length;$("btnPend").disabled=!p.length;$("pendHint").textContent=p.length?"cuentas en prueba con correo y sin bienvenida enviada":"todas las cuentas en prueba ya recibieron el correo"}
 $("aMail").onclick=function(){if(!cur)return;var a=cur;
   if(!a.correo){toast("Esta cuenta no tiene correo");return}
-  if(a.marcas&&a.marcas.correo_bienv&&!confirm("Ya se envió el correo de bienvenida a "+a.correo+". ¿Reenviar?"))return;
+  if(!confirm((a.marcas&&a.marcas.correo_bienv?"Ya se envió el correo de bienvenida a "+a.n+". ¿Reenviar":"¿Enviar el correo de bienvenida a "+a.n)+" ("+a.correo+")?"))return;
   var b=$("aMail");b.disabled=true;
   enviarCorreo(a,function(ok,m){b.disabled=false;toast(ok?"Correo enviado a "+a.correo:"No salió · "+m);if(ok){renderHoy();renderPend();openFicha(a.id)}});
 };
