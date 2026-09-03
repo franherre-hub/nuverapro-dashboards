@@ -1,0 +1,772 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>Conversaciones — NuveraPRO</title><style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f5f7fa;color:#0b2545;margin:0;height:100vh;overflow:hidden}
+.app{display:flex;height:100vh}
+.list{width:360px;flex:0 0 360px;border-right:1px solid #e2e8f0;background:#fff;display:flex;flex-direction:column;min-height:0}
+.lhead{padding:12px 14px;border-bottom:1px solid #eef2f7}
+.lhead h1{margin:0;font-size:17px}
+.lhead .sub{color:#64748b;font-size:12px;margin-top:2px}
+.search{margin:8px 0 4px}
+.search input{width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;font-size:15px;font-family:inherit}
+.filt{display:flex;gap:6px;margin:6px 0 2px}
+.filt button{flex:1;border:1px solid #e2e8f0;background:#fff;color:#475569;border-radius:8px;padding:7px 4px;font-size:12px;font-weight:700;cursor:pointer}
+.filt button.on{background:#0b2545;color:#fff;border-color:#0b2545}
+.opbar{display:flex;align-items:center;gap:8px;margin:8px 0 2px;padding:7px 9px;background:#0b2545;border-radius:10px;cursor:pointer}
+.opbar .opav{width:26px;height:26px;border-radius:50%;flex:0 0 auto;background:#1e3a8a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;overflow:hidden}
+.opbar .opav img{width:100%;height:100%;object-fit:cover}
+.opbar .opn{flex:1;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opbar .opc{font-size:11px;color:#7dd3fc;font-weight:800;text-transform:uppercase}
+.opmodal{position:fixed;inset:0;background:rgba(11,37,69,.55);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.opmodal.open{display:flex}
+.opsheet{background:#fff;width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:16px 14px calc(16px + env(safe-area-inset-bottom));max-height:80vh;overflow:auto}
+.opsheet h3{margin:2px 0 12px;font-size:16px}
+.oprow{display:flex;align-items:center;gap:10px;padding:9px;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px;cursor:pointer}
+.oprow.sel{border-color:#0ea5e9;background:#f0f9ff}
+.oprow .oav{width:42px;height:42px;border-radius:50%;flex:0 0 auto;background:#0b2545;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;overflow:hidden}
+.oprow .oav img{width:100%;height:100%;object-fit:cover}
+.oprow .onm{flex:1;font-weight:700;font-size:15px}
+.oprow .ofoto{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;color:#334155;cursor:pointer}
+.opclose{width:100%;border:none;background:#0b2545;color:#fff;border-radius:10px;padding:12px;font-weight:800;font-size:15px;cursor:pointer;margin-top:4px}
+.items{overflow-y:auto;flex:1;min-height:0}
+.it{padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;gap:10px;align-items:flex-start;user-select:none;-webkit-user-select:none}
+.it:active{background:#eef4ff}
+.it.sel{background:#eef4ff}
+.it.cerrada{opacity:.6}
+.it.confirmrow{padding:0;cursor:default}
+.rowconfirm{display:flex;align-items:center;gap:8px;width:100%;background:#eef4ff;border-top:1px solid #c7d2fe;border-bottom:1px solid #c7d2fe;padding:11px 14px}
+.rowconfirm .rcq{flex:1;font-weight:700;font-size:13px;color:#1e3a8a;min-width:0}
+.rcbtn{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.rcbtn.yes{background:#0b2545;color:#fff;border-color:#0b2545}
+.av{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:#0b2545;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.it.cerrada .av{background:#94a3b8}
+.it .mid{flex:1;min-width:0}
+.it .nm{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.it .pv{color:#64748b;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.it .tm{flex:0 0 auto;color:#94a3b8;font-size:11px;white-space:nowrap}
+.badge{font-size:9px;font-weight:800;color:#fff;border-radius:999px;padding:1px 6px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+.b-paus{background:#ea580c}.b-cerr{background:#64748b}
+.chat{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+.chead{padding:10px 14px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;gap:10px}
+.chead .back{display:none;border:none;background:#eef2f7;border-radius:9px;padding:8px 12px;font-weight:800;cursor:pointer;font-size:16px;color:#0b2545}
+.chead .cn{flex:1;min-width:0}
+.chead .cn b{font-size:16px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chead .cn span{color:#64748b;font-size:12px}
+.crm{background:#fff;border-bottom:1px solid #e2e8f0;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.crmrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font-size:11px;font-weight:700;border-radius:999px;padding:3px 9px;background:#f1f5f9;color:#334155;white-space:nowrap}
+.chip.etapa{background:#e0e7ff;color:#3730a3}
+.chip.estado{background:#dcfce7;color:#166534}
+.chip.estado.warn{background:#fef9c3;color:#854d0e}.chip.estado.bad{background:#fee2e2;color:#991b1b}
+.chip.mat{background:#ede9fe;color:#5b21b6}
+.chip.dias{background:#fff7ed;color:#9a3412}
+.crmmeta{font-size:12px;color:#475569;display:flex;flex-wrap:wrap;gap:10px}
+.crmmeta a{color:#0369a1;text-decoration:none}
+.iabox{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:9px 11px;margin-top:2px}
+.iahead{font-size:12px;font-weight:800;color:#5b21b6;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chip.iaest{background:#ede9fe;color:#5b21b6}
+.iares{font-size:13px;color:#334155;margin-top:5px;line-height:1.35}
+.iaprox{font-size:13px;color:#166534;background:#f0fdf4;border-radius:8px;padding:5px 8px;margin-top:6px;font-weight:600}
+.iabtn{width:100%;border:1px solid #ddd6fe;background:#fff;color:#5b21b6;border-radius:10px;padding:9px;font-size:13px;font-weight:800;cursor:pointer;margin-top:6px}
+.iabtn:active{background:#f5f3ff}
+.actions{display:flex;gap:8px;padding:10px 14px;background:#fff;border-bottom:1px solid #e2e8f0;flex-wrap:wrap}
+.act{flex:1;min-width:96px;border:none;border-radius:12px;padding:12px 8px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.act.call{background:#16a34a;color:#fff}
+.act.wa{background:#25d366;color:#fff}
+.act.notion{background:#0b2545;color:#fff;font-size:13px}
+.act.notion.lead{background:#334155}
+.act2{display:flex;gap:8px;padding:0 14px 10px;background:#fff;border-bottom:1px solid #e2e8f0}
+.pausebtn{flex:1;border:1px solid #e2e8f0;background:#fff;border-radius:10px;padding:10px;font-weight:700;font-size:14px;cursor:pointer;color:#334155}
+.pausebtn.on{background:#fff7ed;border-color:#fdba74;color:#c2410c}
+.closebtn{flex:1;border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:10px;padding:10px;font-size:14px;font-weight:700;cursor:pointer}
+.reopenbtn{flex:1;border:1px solid #86efac;background:#f0fdf4;color:#15803d;border-radius:10px;padding:10px;font-size:14px;font-weight:700;cursor:pointer}
+.thread{flex:1;overflow-y:auto;min-height:0;padding:16px;background:#f5f7fa;display:flex;flex-direction:column;gap:8px}
+.cerrbanner{align-self:center;background:#e2e8f0;color:#475569;font-size:11px;font-weight:700;border-radius:999px;padding:3px 12px;margin-bottom:4px}
+.bb{max-width:78%;padding:9px 12px;border-radius:14px;font-size:15px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
+.bb .bt{display:block;font-size:10px;color:#94a3b8;margin-top:4px}
+.bb.cli{align-self:flex-start;background:#fff;border:1px solid #e2e8f0;border-bottom-left-radius:4px}
+.bb.age{align-self:flex-end;background:#dcf8c6;border-bottom-right-radius:4px}
+.bb.man .bt::after{content:' · manual'}
+.composer{border-top:1px solid #e2e8f0;background:#fff;padding:10px 12px;display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;font-size:16px;font-family:inherit;resize:none;max-height:120px;min-height:44px}
+.composer .send{background:#16a34a;color:#fff;border:none;border-radius:12px;padding:0 18px;height:44px;font-weight:800;cursor:pointer;font-size:15px}
+.empty{flex:1;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;padding:20px;text-align:center}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+.note{font-size:11px;color:#94a3b8;padding:0 12px 8px;text-align:center}
+.livedot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#16a34a;margin-right:3px;vertical-align:middle}
+.livedot.off{background:#ea580c}
+@media(max-width:720px){
+  .list{width:100%;flex:1 1 auto}
+  .chat{display:none;position:fixed;inset:0;z-index:10;background:#f5f7fa}
+  body.chatopen .list{display:none}
+  body.chatopen .chat{display:flex}
+  .chead .back{display:block}
+}
+
+.nvqr{position:fixed;z-index:60;bottom:70px;left:50%;transform:translateX(-50%);width:min(560px,94%);max-height:46vh;overflow:auto;background:#fff;border:1px solid #cbd5e1;border-radius:14px;box-shadow:0 10px 34px rgba(2,6,23,.20);padding:6px;display:none}
+.nvqr.open{display:block}
+.nvqr .nvqr-h{font-size:11px;font-weight:800;color:#64748b;padding:6px 8px}
+.nvqr .nvqr-i{padding:9px 10px;border-radius:10px;cursor:pointer;border-bottom:1px solid #f1f5f9}
+.nvqr .nvqr-i:hover{background:#eef4ff}
+.nvqr .nvqr-i b{font-size:13px;color:#0b2545;display:block}
+.nvqr .nvqr-i span{font-size:12px;color:#64748b;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+
+.it.nv-g{box-shadow:inset 4px 0 0 #22c55e;background:#f6fef9}
+.it.nv-y{box-shadow:inset 4px 0 0 #f59e0b;background:#fffef6}
+.it.nv-g.sel,.it.nv-y.sel{background:#eef4ff}
+.thread.nv-g{background:#f3fdf7}
+.thread.nv-y{background:#fffdf3}
+.chead.nv-g{box-shadow:inset 0 3px 0 #22c55e}
+.chead.nv-y{box-shadow:inset 0 3px 0 #f59e0b}
+.nvpill{font-size:10px;font-weight:800;border-radius:999px;padding:2px 8px;margin-left:6px;white-space:nowrap;vertical-align:middle}
+.nvpill.g{background:#dcfce7;color:#166534}
+.nvpill.y{background:#fef9c3;color:#854d0e}
+</style></head><body>
+<div class="app">
+  <div class="list">
+    <div class="lhead"><h1>💬 Conversaciones</h1><div class="sub" id="sub">Cargando…</div>
+      <div class="search"><input id="q" placeholder="Buscar número, nombre o texto…" autocomplete="off"></div>
+      <div class="filt">
+        <button data-f="abiertas" class="on" id="fAb">Abiertas</button>
+        <button data-f="cerradas" id="fCe">Cerradas</button>
+        <button data-f="todas" id="fTo">Todas</button>
+      </div>
+      <div class="opbar" id="opbar"></div>
+      <div id="ausbar" style="margin-top:6px"><button id="ausbtn" style="width:100%;padding:7px 10px;border:1px solid #e2e8f0;border-radius:10px;background:#f1f5f9;color:#475569;font-weight:600;cursor:pointer;font-size:13px">🌙 Mensaje de ausencia: …</button></div>
+    </div>
+    <div class="items" id="items"></div>
+  </div>
+  <div class="chat">
+    <div id="chatinner" style="display:flex;flex-direction:column;height:100%">
+      <div class="empty" id="empty">Elegí una conversación para ver el hilo y la ficha del cliente.</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="opmodal" id="opmodal"><div class="opsheet" id="opsheet"></div></div>
+<script>
+var STATE_URL="/state";
+var PAUSAR="https://n8n.entrenemos.cl/webhook/conversacion-pausar";
+var RESPONDER="https://n8n.entrenemos.cl/webhook/conversacion-responder";
+var CERRAR="https://n8n.entrenemos.cl/webhook/conversacion-eliminar";
+var ANALIZAR="https://n8n.entrenemos.cl/webhook/analizar-conversacion";
+var DATA=null, SEL=null, Q="", FILTER="abiertas", CONFIRMROW=null, CLICKT=null, PENDING_WA=null;
+var LIVE=false, OUTBOX=[];
+var OPS_DEF=[{k:"francisco",n:"Francisco"},{k:"matias",n:"Matías"},{k:"cristina",n:"Cristina"},{k:"marcelo",n:"Marcelo"}];
+var OP=null, OPPHOTOS={};
+function opLoad(){try{OPPHOTOS=JSON.parse(localStorage.getItem("nvp_op_photos")||"{}");}catch(e){OPPHOTOS={};}var c=localStorage.getItem("nvp_op_cur");var d=OPS_DEF.filter(function(o){return o.k===c})[0];if(d)OP={k:d.k,n:d.n};}
+function opAvHtml(k,n){var ph=OPPHOTOS[k];if(ph)return "<img src='"+ph+"' alt=''>";return esc((n||"?").slice(0,1).toUpperCase());}
+function renderOpBar(){var el=document.getElementById("opbar");if(!el)return;if(OP){el.innerHTML="<div class='opav'>"+opAvHtml(OP.k,OP.n)+"</div><div class='opn'>Respondés como "+esc(OP.n)+"</div><div class='opc'>cambiar</div>";}else{el.innerHTML="<div class='opav'>NP</div><div class='opn'>Elegí quién sos para contestar</div><div class='opc'>elegir</div>";}}
+function openOpModal(){var s=document.getElementById("opsheet");var h="<h3>¿Quién está contestando?</h3>";OPS_DEF.forEach(function(o){var sel=(OP&&OP.k===o.k)?" sel":"";h+="<div class='oprow"+sel+"' data-k='"+o.k+"'><div class='oav'>"+opAvHtml(o.k,o.n)+"</div><div class='onm'>"+esc(o.n)+"</div><button class='ofoto' data-foto='"+o.k+"'>📷 Foto</button><input type='file' accept='image/*' id='file_"+o.k+"' style='display:none'></div>";});h+="<button class='opclose' id='opCloseBtn'>Listo</button>";s.innerHTML=h;document.getElementById("opmodal").classList.add("open");
+  OPS_DEF.forEach(function(o){
+    var row=s.querySelector(".oprow[data-k='"+o.k+"']");
+    var fbtn=s.querySelector(".ofoto[data-foto='"+o.k+"']");
+    var finput=document.getElementById("file_"+o.k);
+    row.addEventListener("click",function(ev){if(ev.target.classList.contains("ofoto"))return;OP={k:o.k,n:o.n};try{localStorage.setItem("nvp_op_cur",o.k);}catch(e){}renderOpBar();closeOpModal();toast("Ahora respondés como "+o.n);});
+    fbtn.addEventListener("click",function(ev){ev.stopPropagation();finput.click();});
+    finput.addEventListener("change",function(){var f=finput.files&&finput.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){var img=new Image();img.onload=function(){var cv=document.createElement("canvas");var S=96;cv.width=S;cv.height=S;var ctx=cv.getContext("2d");var m=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);OPPHOTOS[o.k]=cv.toDataURL("image/jpeg",0.82);try{localStorage.setItem("nvp_op_photos",JSON.stringify(OPPHOTOS));}catch(e){toast("No se pudo guardar la foto");}openOpModal();renderOpBar();};img.src=rd.result;};rd.readAsDataURL(f);});
+  });
+  document.getElementById("opCloseBtn").addEventListener("click",closeOpModal);
+}
+function closeOpModal(){document.getElementById("opmodal").classList.remove("open");}
+var FLAGS={"Chile":"🇨🇱","Argentina":"🇦🇷","México":"🇲🇽","Mexico":"🇲🇽","Colombia":"🇨🇴","Perú":"🇵🇪","Peru":"🇵🇪","Costa Rica":"🇨🇷","Honduras":"🇭🇳","Guatemala":"🇬🇹","El Salvador":"🇸🇻"};
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1700)}
+function initials(n){n=String(n||"?").trim();var d=n.replace(/[^0-9]/g,"");if(d.length>=2)return d.slice(-2);return n.slice(0,2).toUpperCase();}
+function timeShort(iso){if(!iso)return "";try{var d=new Date(iso);return d.toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","");}catch(e){return ""}}
+function chatById(id){if(!DATA)return null;for(var i=0;i<DATA.chats.length;i++)if(DATA.chats[i].id===id)return DATA.chats[i];return null;}
+function visibles(){
+  var chats=(DATA?DATA.chats:[]);
+  return chats.filter(function(c){
+    if(FILTER==="abiertas"&&c.cerrada)return false;
+    if(FILTER==="cerradas"&&!c.cerrada)return false;
+    if(!Q)return true;var q=Q.toLowerCase();
+    if((c.nombre||"").toLowerCase().indexOf(q)>=0||(c.wa||"").indexOf(q)>=0)return true;
+    return (c.msgs||[]).some(function(m){return (m.texto||"").toLowerCase().indexOf(q)>=0});
+  });
+}
+function renderList(){
+  var el=document.getElementById("items");
+  var chats=visibles();
+  var h="";
+  chats.forEach(function(c){
+    if(c.id===CONFIRMROW && !c.cerrada){
+      h+="<div class='it confirmrow' data-id='"+c.id+"'><div class='rowconfirm'><span class='rcq'>¿Cerrar esta conversación?</span><button class='rcbtn yes'>Sí</button><button class='rcbtn no'>No</button></div></div>";
+      return;
+    }
+    var sel=c.id===SEL?" sel":"";
+    var cc=c.cerrada?" cerrada":"";
+    var crm=c.crm||{};
+    var fl=FLAGS[crm.pais||""]||"";
+    var pb=c.pausada&&!c.cerrada?"<span class='badge b-paus'>Pausado</span>":"";
+    var cb=c.cerrada?"<span class='badge b-cerr'>Cerrada</span>":"";
+    h+="<div class='it"+sel+cc+"' data-id='"+c.id+"'><div class='av'>"+esc(initials(c.nombre))+"</div><div class='mid'><div class='nm'>"+(fl?fl+" ":"")+esc(c.nombre)+" "+pb+cb+"</div><div class='pv'>"+esc(c.prev||"")+"</div></div><div class='tm'>"+timeShort(c.ult)+"</div></div>";
+  });
+  el.innerHTML=h||"<div class='note' style='padding:20px'>Sin conversaciones en esta vista.</div>";
+  [].forEach.call(el.querySelectorAll(".it"),function(n){
+    var id=n.getAttribute("data-id");
+    if(n.classList.contains("confirmrow")){
+      var yb=n.querySelector(".yes"), nb=n.querySelector(".no");
+      if(yb)yb.addEventListener("click",function(e){e.stopPropagation();CONFIRMROW=null;var c=chatById(id);if(c)cerrarChat(c);});
+      if(nb)nb.addEventListener("click",function(e){e.stopPropagation();CONFIRMROW=null;render();});
+      return;
+    }
+    n.addEventListener("click",function(){
+      if(CLICKT){clearTimeout(CLICKT);CLICKT=null;}
+      CLICKT=setTimeout(function(){CLICKT=null;SEL=id;CONFIRMROW=null;document.body.classList.add("chatopen");render();},220);
+    });
+    n.addEventListener("dblclick",function(){
+      if(CLICKT){clearTimeout(CLICKT);CLICKT=null;}
+      var c=chatById(id);if(c&&!c.cerrada){CONFIRMROW=id;render();}
+    });
+  });
+}
+function crmCard(c){
+  var crm=c.crm||{};
+  var fl=FLAGS[crm.pais||""]||"";
+  var chips="";
+  if(crm.etapa)chips+="<span class='chip etapa'>"+esc(crm.etapa)+"</span>";
+  if(crm.estado){var cl="";var e=crm.estado.toLowerCase();if(/abandono|error|no cliente|perdido/.test(e))cl=" bad";else if(/7d|15d|contactad|registrad|capacitar/.test(e))cl=" warn";chips+="<span class='chip estado"+cl+"'>"+esc(crm.estado)+"</span>";}
+  if(crm.material)chips+="<span class='chip mat'>"+esc(crm.material)+"</span>";
+  if(crm.dias!=null)chips+="<span class='chip dias'>"+crm.dias+"d sin cotizar</span>";
+  var meta=[];
+  var coti=[];if(crm.cotiCN!=null)coti.push(crm.cotiCN+" c/nombre");if(crm.cotiSN!=null)coti.push(crm.cotiSN+" s/nombre");
+  if(coti.length)meta.push("📐 "+coti.join(" · "));
+  if(crm.correo)meta.push("✉️ <a href='mailto:"+esc(crm.correo)+"'>"+esc(crm.correo)+"</a>");
+  if(crm.rut)meta.push("🪪 "+esc(crm.rut));
+  if(c.empresa)meta.push("🏢 "+esc(c.empresa));
+  if(crm.fAct)meta.push("📅 activó "+esc(crm.fAct));
+  var h="<div class='crm'>";
+  h+="<div class='crmrow'>"+((fl?"<span class='chip'>"+fl+" "+esc(crm.pais)+"</span>":"")+chips || "<span class='chip'>Sin datos de CRM aún</span>")+"</div>";
+  if(meta.length)h+="<div class='crmmeta'>"+meta.join("")+"</div>";
+  var ia="";
+  if(crm.estadoIA||crm.resumenIA){
+    ia+="<div class='iabox'><div class='iahead'>🧠 Análisis IA"+(crm.estadoIA?" <span class='chip iaest'>"+esc(crm.estadoIA)+"</span>":"")+"</div>";
+    if(crm.resumenIA)ia+="<div class='iares'>"+esc(crm.resumenIA)+"</div>";
+    if(crm.proximoIA)ia+="<div class='iaprox'>→ "+esc(crm.proximoIA)+"</div>";
+    ia+="</div>";
+  }
+  ia+="<button class='iabtn' id='iaBtn'>🧠 "+((crm.estadoIA||crm.resumenIA)?"Re-analizar con IA":"Analizar con IA")+"</button>";
+  h+=ia+"</div>";
+  return h;
+}
+function renderChat(){
+  var inner=document.getElementById("chatinner");
+  var c=chatById(SEL);
+  if(!c){inner.innerHTML="<div class='empty'>Elegí una conversación para ver el hilo y la ficha del cliente.</div>";return;}
+  var tel="+"+String(c.wa||"").replace(/[^0-9]/g,"");
+  var h="";
+  h+="<div class='chead'><button class='back' id='backBtn'>←</button><div class='av'>"+esc(initials(c.nombre))+"</div><div class='cn'><b>"+esc(c.nombre)+"</b><span>"+esc(c.wa||"")+"</span></div></div>";
+  h+=crmCard(c);
+  h+="<div class='actions'>";
+  h+="<a class='act call' href='tel:"+esc(tel)+"'>📞 Llamar</a>";
+  h+="<a class='act wa' href='https://wa.me/"+esc(String(c.wa||'').replace(/[^0-9]/g,''))+"' target='_blank' rel='noopener'>💬 WhatsApp</a>";
+  h+="</div>";
+  if(c.notion||c.lead_notion){
+    h+="<div class='actions' style='border-top:0;padding-top:0'>";
+    if(c.notion)h+="<a class='act notion' href='"+esc(c.notion)+"' target='_blank' rel='noopener'>Contacto en Notion</a>";
+    if(c.lead_notion)h+="<a class='act notion lead' href='"+esc(c.lead_notion)+"' target='_blank' rel='noopener'>Lead en Notion</a>";
+    h+="</div>";
+  }
+  if(c.cerrada){
+    h+="<div class='act2'><button class='reopenbtn' id='reopenBtn'>↩ Reabrir conversación</button></div>";
+  }else{
+    h+="<div class='act2'><button class='pausebtn"+(c.pausada?" on":"")+"' id='pauseBtn'>"+(c.pausada?"⏸ Bot pausado":"▶ Bot activo")+"</button><button class='closebtn' id='delBtn'>✓ Cerrar</button></div>";
+  }
+  h+="<div class='thread' id='thread'></div>";
+  if(c.cerrada){
+    h+="<div class='note' style='padding:12px'>Conversación cerrada. El registro queda en Notion. Reabrí arriba si el cliente vuelve a escribir.</div>";
+  }else{
+    h+="<div class='composer'><textarea id='ta' rows='1' placeholder='Escribe una respuesta…'></textarea><button class='send' id='sendBtn'>Enviar</button></div>";
+    h+="<div class='note'>Al responder manual, el bot queda en pausa para no encimarse. Reactívalo con el botón de arriba.</div>";
+  }
+  inner.innerHTML=h;
+  var th=document.getElementById("thread");
+  var mh="";
+  if(c.cerrada)mh+="<div class='cerrbanner'>— Conversación cerrada —</div>";
+  (c.msgs||[]).forEach(function(m){
+    var cls=m.quien==="cliente"?"cli":"age";
+    var man=/manual/i.test(m.quien)?" man":"";
+    mh+="<div class='bb "+cls+man+"'>"+esc(m.texto)+"<span class='bt'>"+esc(m.ts||"")+"</span></div>";
+  });
+  th.innerHTML=mh;th.scrollTop=th.scrollHeight;
+  var bb=document.getElementById("backBtn");if(bb)bb.addEventListener("click",function(){document.body.classList.remove("chatopen");SEL=null;render();});
+  var ib=document.getElementById("iaBtn");if(ib)ib.addEventListener("click",function(){analizarIA(c);});
+  if(c.cerrada){
+    document.getElementById("reopenBtn").addEventListener("click",function(){reabrirChat(c);});
+  }else{
+    document.getElementById("pauseBtn").addEventListener("click",function(){togglePausa(c);});
+    document.getElementById("delBtn").addEventListener("click",function(){CONFIRMROW=c.id;render();});
+    var ta=document.getElementById("ta");
+    ta.addEventListener("input",function(){ta.style.height="44px";ta.style.height=Math.min(120,ta.scrollHeight)+"px";});
+    document.getElementById("sendBtn").addEventListener("click",function(){enviar(c);});
+  }
+}
+function render(){renderList();renderChat();updateSub();}
+function cerrarChat(c){
+  c.cerrada=true;c.pausada=true;
+  try{fetch(CERRAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,cerrada:true})});}catch(e){}
+  if(FILTER==="abiertas"){SEL=null;document.body.classList.remove("chatopen");}
+  toast("Conversación cerrada — queda en Notion");render();
+}
+function reabrirChat(c){
+  c.cerrada=false;
+  try{fetch(CERRAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,cerrada:false})});}catch(e){}
+  toast("Conversación reabierta");render();
+}
+function analizarIA(c){
+  try{fetch(ANALIZAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({wa:c.wa})});}catch(e){}
+  toast("Analizando con IA… en unos segundos aparece");
+}
+function togglePausa(c){
+  var nueva=!c.pausada;c.pausada=nueva;
+  try{fetch(PAUSAR,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,pausada:nueva})});}catch(e){}
+  toast(nueva?"Bot pausado":"Bot reactivado");render();
+}
+function enviar(c){
+  var ta=document.getElementById("ta");var txt=(ta.value||"").trim();if(!txt){return;}
+  if(!OP){toast("Primero elegí quién sos");openOpModal();return;}
+  var now=new Date().toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","");
+  var firmado=txt+"\n\n— "+OP.n;
+  c.msgs.push({ts:now,quien:"agente-manual",texto:firmado});c.pausada=true;c.ult=new Date().toISOString();
+  OUTBOX.push({wa:c.wa,texto:firmado,core:txt,ts:now,at:Date.now()});
+  try{fetch(RESPONDER,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({pageId:c.id,wa:c.wa,texto:txt,operador:OP.n})});}catch(e){}
+  ta.value="";ta.style.height="44px";toast("Enviado como "+OP.n);render();
+}
+// Reinyecta respuestas manuales recién enviadas que aún no están persistidas (evita parpadeo).
+function mergeOutbox(){
+  if(!DATA||!OUTBOX.length)return;
+  var now=Date.now();
+  OUTBOX=OUTBOX.filter(function(o){return now-o.at<120000;});
+  OUTBOX.forEach(function(o){
+    var wa=String(o.wa||"").replace(/[^0-9]/g,"");
+    for(var i=0;i<DATA.chats.length;i++){
+      var c=DATA.chats[i];
+      if(String(c.wa||"").replace(/[^0-9]/g,"")===wa){
+        var has=(c.msgs||[]).some(function(m){return (m.texto||"").indexOf(o.core)>=0 && String(m.quien||"").indexOf("agente")>=0;});
+        if(!has){c.msgs=c.msgs||[];c.msgs.push({ts:o.ts,quien:"agente-manual",texto:o.texto});c.ult=new Date().toISOString();}
+        break;
+      }
+    }
+  });
+}
+function updateSub(){
+  if(!DATA){return;}
+  var ab=0,ce=0;(DATA.chats||[]).forEach(function(c){if(c.cerrada)ce++;else ab++;});
+  var dot="<span class='livedot"+(LIVE?"":" off")+"'></span>"+(LIVE?"en vivo":"reconectando…");
+  document.getElementById("sub").innerHTML=dot+" · "+ab+" abiertas · "+ce+" cerradas · "+esc(DATA.generado||"");
+}
+function liveSet(v){LIVE=v;if(DATA)updateSub();}
+function applyPending(){
+  if(!PENDING_WA||!DATA)return;
+  var d=PENDING_WA;var found=null;
+  for(var i=0;i<DATA.chats.length;i++){if(String(DATA.chats[i].wa||"").replace(/[^0-9]/g,"")===d){found=DATA.chats[i];break;}}
+  if(found){
+    FILTER="todas";
+    [].forEach.call(document.querySelectorAll(".filt button"),function(x){x.classList.toggle("on",x.getAttribute("data-f")==="todas");});
+    SEL=found.id;CONFIRMROW=null;document.body.classList.add("chatopen");PENDING_WA=null;render();
+  }else{
+    Q=d;var qi=document.getElementById("q");if(qi)qi.value=d;PENDING_WA=null;render();toast("Sin historial aún para "+d);
+  }
+}
+function openByWa(wa){var d=String(wa||"").replace(/[^0-9]/g,"");if(!d)return;PENDING_WA=d;applyPending();}
+window.addEventListener("message",function(ev){var m=ev.data;if(m&&m.type==="openConv")openByWa(m.wa);});
+try{var _h=(location.hash||"").match(/wa=(\d+)/);if(_h)PENDING_WA=_h[1];}catch(e){}
+// Carga inicial desde el server (caché instantánea del endpoint live de n8n).
+function load(){
+  fetch(STATE_URL+"?v="+Date.now()).then(function(r){return r.json()}).then(function(d){DATA=d;mergeOutbox();render();applyPending();}).catch(function(e){document.getElementById("sub").textContent="No se pudo cargar ("+e+")";});
+}
+// Refresco disparado por un evento SSE (no por temporizador). Preserva scroll y lo que estás escribiendo.
+function refreshData(){
+  var th=document.getElementById("thread");var atBottom=th?(th.scrollTop+th.clientHeight>=th.scrollHeight-40):true;
+  var ta=document.getElementById("ta");var typing=ta&&document.activeElement===ta&&ta.value;
+  if(typing)return;
+  fetch(STATE_URL+"?v="+Date.now()).then(function(r){return r.json()}).then(function(d){
+    DATA=d;mergeOutbox();render();applyPending();
+    var th2=document.getElementById("thread");if(th2&&atBottom)th2.scrollTop=th2.scrollHeight;
+  }).catch(function(){});
+}
+// Conexión en tiempo real. El panel NO refresca por reloj: solo cuando el server empuja un evento.
+function connectSSE(){
+  if(!window.EventSource){setInterval(refreshData,8000);liveSet(false);return;}
+  var es=new EventSource("/stream");
+  es.onopen=function(){liveSet(true);};
+  es.onmessage=function(){liveSet(true);refreshData();};
+  es.onerror=function(){liveSet(false);}; // EventSource reconecta solo
+}
+document.addEventListener("visibilitychange",function(){if(!document.hidden)refreshData();});
+document.getElementById("q").addEventListener("input",function(e){Q=e.target.value;renderList();});
+[].forEach.call(document.querySelectorAll(".filt button"),function(b){
+  b.addEventListener("click",function(){
+    FILTER=b.getAttribute("data-f");
+    [].forEach.call(document.querySelectorAll(".filt button"),function(x){x.classList.remove("on")});
+    b.classList.add("on");
+    var c=chatById(SEL);
+    if(SEL&&c){if((FILTER==="abiertas"&&c.cerrada)||(FILTER==="cerradas"&&!c.cerrada)){SEL=null;document.body.classList.remove("chatopen");}}
+    render();
+  });
+});
+opLoad();renderOpBar();
+var _ob=document.getElementById("opbar");if(_ob)_ob.addEventListener("click",openOpModal);
+load();
+connectSSE();
+
+/* NVQR respuestas rapidas */
+var NVQR=[{"l":"1 · Saludo","t":"Hola 👋👋👋 -  ¿Qué tal?\nPor acá Francisco Herrera de NuveraPRO."},{"l":"2 · Intro (¿Alu o PVC?)","t":"NuveraPRO es el cotizador para Carpintería de ventanas de PVC o Aluminio más potente y simple de usar del mercado.\n\nNuveraPRO le permite dibujar puertas o ventanas de PVC o Aluminio de la marca o serie de su preferencia, obtener la Cotización para el Cliente, Pautas de Corte, Presupuesto de Materiales y mucho más...\n\n¿Usted trabaja en Aluminio o en PVC?"},{"l":"3 · Video","t":"🎥 https://drive.google.com/uc?export=download&id=1werViXTv8sVLighCq43lJ3Zubs1wktlB"},{"l":"4 · Marcas","t":"NuveraPRO le permite trabajar con los principales proveedores de PVC y Aluminio del Mercado.\n\nVer Marcas: https://www.nuverapro.com/cotizadorpvcaluminio/Marcas.html\n\nPuede cotizar con todas las marcas que necesite: el valor es una tarifa plana mensual, sin restricciones ni cobro por cantidad de marcas. Aluminio incluye todas sus series."},{"l":"5 · Precios","t":"Valores mensuales\n\nPagando el ano completo: US$24,75/mes\nPagando el semestre: US$27,50/mes\nPagando mensualmente: US$33,00/mes\n\nPagas un valor fijo mensual y puedes usar el sistema sin restricciones.\n\nIncluye soporte en linea via WhatsApp y Capacitacion.\n\nhttps://drive.google.com/uc?export=download&id=13V-CJ9re7d2Xm1iChDwgA3VR5GIQht8G"},{"l":"6 · Oferta 15 días","t":"Le ofrecemos 15 dias de Prueba SIN COSTO y SIN COMPROMISO, para que pueda comprobar porque somos el software preferido de los carpinteros.\n\nSolo debe crearse un usuario en NuveraPRO.\n\nRegistrese en NuveraPRO:\nhttps://www.nuverapro.com/cfgregistro.aspx?ID=__WA__"},{"l":"7 · Cierre","t":"Quedamos atentos para cuando quiera comenzar su prueba de 15 dias de NuveraPro. Sin costo y sin compromiso.\n\nIncluye Puesta en Marcha, Soporte y Capacitacion.\n\nLos pasos a seguir son:\n\n1. Registrese en NuveraPRO.\nhttps://www.nuverapro.com/cfgregistro.aspx?ID=__WA__\n\n2. Agendar una reunion Puesta en Marcha, donde configuramos sus preferencias y le ensenamos el uso del sistema.\nhttps://calendar.app.google/kmBiCqbpPe47R14q7\n\nSaludos cordiales!\n\nFrancisco Herrera\nNuveraPRO"},{"l":"8 · Bienvenida","t":"¡Hola! 👋\n\nSu cuenta en NuveraPRO ya está activa.\n\n👉 Ingrese aquí:\nhttps://nuverapro.com/cfgLogin.aspx\n\nLe recomiendo agendar su capacitación SIN COSTO para dejar todo configurado, aclarar dudas y empezar a cotizar bien desde el inicio.\n\n👉 Agende aquí:\nhttps://calendar.app.google/kmBiCqbpPe47R14q7\n\nCualquier duda, estamos atentos 👍"}];
+(function(){
+var menu=document.createElement('div');menu.className='nvqr';menu.id='nvqrMenu';document.body.appendChild(menu);
+function waNow(){try{var c=chatById(SEL);return c?String(c.wa||'').replace(/[^0-9]/g,''):'';}catch(e){return '';}}
+function fill(t){return String(t).split('__WA__').join(waNow());}
+function hide(){menu.classList.remove('open');menu.innerHTML='';}
+function show(f){f=(f||'').toLowerCase();var items=NVQR.filter(function(x){return !f||x.l.toLowerCase().indexOf(f)>=0||x.t.toLowerCase().indexOf(f)>=0;});if(!items.length){hide();return;}var h="<div class='nvqr-h'>Respuestas rapidas - guion (elegi una)</div>";items.forEach(function(x){var pv=fill(x.t).replace(/\s+/g,' ').slice(0,72);h+="<div class='nvqr-i' data-i='"+NVQR.indexOf(x)+"'><b>"+esc(x.l)+"</b><span>"+esc(pv)+"</span></div>";});menu.innerHTML=h;menu.classList.add('open');[].forEach.call(menu.querySelectorAll('.nvqr-i'),function(n){n.addEventListener('click',function(){var idx=+n.getAttribute('data-i');var ta=document.getElementById('ta');if(ta){ta.value=fill(NVQR[idx].t);try{ta.style.height='44px';ta.style.height=Math.min(120,ta.scrollHeight)+'px';}catch(e){}ta.focus();}hide();});});}
+document.addEventListener('input',function(e){var t=e.target;if(!t||t.id!=='ta')return;var v=t.value||'';if(v.charAt(0)==='/'){show(v.slice(1));}else{hide();}});
+document.addEventListener('click',function(e){if(menu.contains(e.target))return;if(e.target&&e.target.id==='ta')return;hide();});
+})();
+
+/* NVCOLOR estado */
+(function(){
+window.nvSt=function(c){var m=(c&&c.crm)||{};var con=!!m.fAct||/cuenta creada|capacit|cerrado ganado/i.test(String(m.etapa||''))||/activo|abandono|capacitado|cliente/i.test(String(m.estado||''));return con?'y':'g';};
+function nvPaint(){try{[].forEach.call(document.querySelectorAll('.items .it[data-id]'),function(n){var c=chatById(n.getAttribute('data-id'));if(!c)return;n.classList.remove('nv-g','nv-y');n.classList.add('nv-'+nvSt(c));});var c=chatById(SEL);if(c){var th=document.getElementById('thread');if(th){th.classList.remove('nv-g','nv-y');th.classList.add('nv-'+nvSt(c));}var ch=document.querySelector('.chat .chead');if(ch){ch.classList.remove('nv-g','nv-y');var st=nvSt(c);ch.classList.add('nv-'+st);var cn=ch.querySelector('.cn b');if(cn&&!ch.querySelector('.nvpill')){var pill=document.createElement('span');pill.className='nvpill '+st;pill.textContent=st==='y'?'🟡 Cuenta creada':'🟢 Sin cuenta';cn.appendChild(pill);}}}}catch(e){}}
+window.nvPaint=nvPaint;var _r=window.render;window.render=function(){var x=_r.apply(this,arguments);nvPaint();return x;};setTimeout(nvPaint,300);
+})();
+</script>
+<style>
+.nved-btn{margin-top:8px;display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 9px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;cursor:pointer}
+.nved-btn:hover{background:#f3f4f6}
+.nved-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:99999}
+.nved-ov.on{display:flex}
+.nved-card{background:#fff;border-radius:14px;padding:18px 20px;width:min(430px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.35);font-family:inherit}
+.nved-card h3{margin:0 0 4px;font-size:15px;color:#111827}
+.nved-sub{font-size:11px;color:#9ca3af;margin:0 0 12px}
+.nved-f{margin-bottom:10px}
+.nved-f label{display:block;font-size:11px;color:#6b7280;margin-bottom:3px}
+.nved-f input{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px}
+.nved-f input:focus{outline:none;border-color:#2563eb}
+.nved-row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.nved-row button{padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid #d1d5db;background:#fff}
+.nved-row .save{background:#2563eb;color:#fff;border-color:#2563eb}
+.nved-row .save:hover{background:#1d4ed8}
+.nved-msg{font-size:12px;color:#16a34a;margin-top:8px;min-height:14px}
+</style>
+<script>
+(function(){
+  if(window.NVEDIT) return; window.NVEDIT=true;
+  var WH='https://n8n.entrenemos.cl/webhook/actualizar-lead';
+  function leadId(c){ var u=(c&&c.lead_notion)||''; var m=String(u).match(/([0-9a-fA-F]{32})(?![\s\S]*[0-9a-fA-F]{32})/); return m?m[1]:''; }
+  function fmtWa(c){ var d=String((c&&c.wa)||'').replace(/[^0-9]/g,''); return d?('+'+d):''; }
+  var ov=document.createElement('div'); ov.className='nved-ov';
+  ov.innerHTML='<div class="nved-card"><h3>✏️ Editar datos del lead<\/h3><p class="nved-sub">Se guarda en Notion (Lead + Contacto)<\/p>'+
+    '<div class="nved-f"><label>Nombre / razón social<\/label><input id="nved-nom"><\/div>'+
+    '<div class="nved-f"><label>WhatsApp (con +)<\/label><input id="nved-wa" inputmode="tel"><\/div>'+
+    '<div class="nved-f"><label>Correo<\/label><input id="nved-cor" type="email"><\/div>'+
+    '<div class="nved-f"><label>Comuna<\/label><input id="nved-com"><\/div>'+
+    '<div class="nved-f"><label>Dirección<\/label><input id="nved-dir"><\/div>'+
+    '<div class="nved-msg" id="nved-msg"><\/div>'+
+    '<div class="nved-row"><button id="nved-x">Cancelar<\/button><button class="save" id="nved-s">Guardar<\/button><\/div><\/div>';
+  document.body.appendChild(ov);
+  var cur=null;
+  function g(id){ return document.getElementById(id); }
+  function close(){ ov.classList.remove('on'); g('nved-msg').textContent=''; }
+  ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+  g('nved-x').addEventListener('click',close);
+  function open(c){ cur=c;
+    g('nved-nom').value=(c.nombre||c.empresa||'');
+    g('nved-wa').value=fmtWa(c);
+    g('nved-cor').value=(c.crm&&c.crm.correo)||'';
+    g('nved-com').value=(c.crm&&c.crm.comuna)||'';
+    g('nved-dir').value=(c.crm&&c.crm.direccion)||'';
+    g('nved-msg').textContent=''; ov.classList.add('on'); g('nved-nom').focus();
+  }
+  g('nved-s').addEventListener('click',function(){ if(!cur) return;
+    var waDig=g('nved-wa').value.replace(/[^0-9]/g,'');
+    var body={ contactoId:cur.id, leadId:leadId(cur), wa:cur.wa,
+      telefono: waDig?('+'+waDig):'',
+      nombre:g('nved-nom').value.trim(), correo:g('nved-cor').value.trim(),
+      comuna:g('nved-com').value.trim(), direccion:g('nved-dir').value.trim() };
+    g('nved-msg').style.color='#16a34a'; g('nved-msg').textContent='Guardando…';
+    fetch(WH,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)})
+      .then(function(){
+        if(body.nombre) cur.nombre=body.nombre;
+        if(waDig) cur.wa=waDig;
+        cur.crm=cur.crm||{}; if(body.correo) cur.crm.correo=body.correo;
+        cur.crm.comuna=body.comuna; cur.crm.direccion=body.direccion;
+        g('nved-msg').textContent='✓ Guardado en Notion';
+        try{ if(typeof window.render==='function') window.render(); }catch(e){}
+        setTimeout(close,900);
+      })
+      .catch(function(){ g('nved-msg').style.color='#dc2626'; g('nved-msg').textContent='Error al guardar'; });
+  });
+  function paint(){ var crm=document.querySelector('div.crm'); if(!crm) return;
+    if(crm.querySelector('.nved-btn')) return;
+    var c=null; try{ c=window.chatById(window.SEL); }catch(e){} if(!c) return;
+    var b=document.createElement('button'); b.className='nved-btn'; b.type='button'; b.textContent='✏️ Editar datos';
+    b.addEventListener('click',function(){ var cc=null; try{cc=window.chatById(window.SEL);}catch(e){} if(cc) open(cc); });
+    crm.appendChild(b);
+  }
+  var _r=window.render;
+  window.render=function(){ var x=(typeof _r==='function')?_r.apply(this,arguments):undefined; try{paint();}catch(e){} return x; };
+  try{ paint(); }catch(e){}
+})();
+</script>
+
+<script>
+(function(){
+if(window.__NVQUAL)return;window.__NVQUAL=1;
+var CLI=['Activo','Contactado','p/Capacitar','Capacitado','Abandono'];
+function inDB(c){var m=(c&&c.crm)||{};return !!(c&&(c.lead_notion||m.etapa||m.estado||m.link||m.rut||m.correo));}
+function isCli(c){var m=(c&&c.crm)||{};return m.cuentaReg===true||m.etapa==='Cuenta creada'||CLI.indexOf(m.estado)>=0;}
+function stateOf(c){if(!inDB(c))return 'new';return isCli(c)?'cli':'pro';}
+var st=document.createElement('style');st.textContent='.it.nv-new{box-shadow:inset 3px 0 0 #6b7280}.it.nv-new .av{filter:grayscale(.6)}';document.head.appendChild(st);
+function fixHead(){var head=document.querySelector('#chatinner .chead');if(!head)return;var c=window.chatById&&window.chatById(window.SEL);if(!c)return;var pill=head.querySelector('.nvpill');if(!pill)return;var s=stateOf(c);if(s==='new'){pill.className='nvpill';pill.style.background='#6b7280';pill.style.color='#fff';pill.textContent='🆕 Nuevo';}else if(s==='cli'){pill.className='nvpill y';pill.style.background='';pill.style.color='';pill.textContent='🟡 Cuenta creada';}else{pill.className='nvpill g';pill.style.background='';pill.style.color='';pill.textContent='🟢 Sin cuenta';}}
+function fixList(){var its=document.querySelectorAll('#items .it');for(var i=0;i<its.length;i++){var it=its[i];var c=null;try{c=window.chatById(it.dataset.id);}catch(e){}if(!c)continue;if(stateOf(c)==='new')it.classList.add('nv-new');else it.classList.remove('nv-new');}}
+function wrap(){if(typeof window.render!=='function'){return setTimeout(wrap,200);}if(window.render.__nvq)return;var _r=window.render;window.render=function(){var r=_r.apply(this,arguments);try{fixHead();fixList();}catch(e){}return r;};window.render.__nvq=1;try{window.render();}catch(e){}}
+wrap();
+})();
+</script>
+<script>/*NVCHAN+NVDEL v1*/(function(){
+if(window.__nvchan)return;window.__nvchan=1;
+var CH={whatsapp:{t:'WhatsApp',bg:'#25D366',fg:'#0b3d1e'},messenger:{t:'Messenger',bg:'#0084FF',fg:'#ffffff'},instagram:{t:'Instagram',bg:'linear-gradient(45deg,#f09433,#dc2743,#bc1888)',fg:'#ffffff'}};
+function paintChan(){try{
+ if(!document.body.classList.contains('chatopen'))return;
+ var sel=window.SEL;if(!sel||typeof window.chatById!=='function')return;
+ var c=window.chatById(sel);if(!c)return;
+ var cn=document.querySelector('.chead .cn b')||document.querySelector('.chead .cn')||document.querySelector('.chead');if(!cn)return;
+ document.querySelectorAll('.chead .nvchan').forEach(function(n){n.remove();});
+ var canal=String(c.canal||'whatsapp').toLowerCase();var m=CH[canal]||CH.whatsapp;
+ var s=document.createElement('span');s.className='nvchan';s.textContent=m.t;
+ s.style.cssText='display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:700;vertical-align:middle;line-height:1.4;background:'+m.bg+';color:'+m.fg+';';
+ var pill=cn.querySelector?cn.querySelector('.nvpill'):null;
+ if(pill&&pill.parentElement){pill.parentElement.insertBefore(s,pill.nextSibling);}else{cn.appendChild(s);}
+}catch(e){}}
+if(typeof window.render==='function'){var _r=window.render;window.render=function(){var x=_r.apply(this,arguments);setTimeout(paintChan,0);return x;};}
+setTimeout(paintChan,200);
+window.__nvSnap={};
+document.addEventListener('click',function(ev){try{
+ var el=ev.target,hit=false;
+ for(var i=0;i<5&&el;i++){var tx=(el.textContent||'').replace(/\s+/g,' ').trim();if(/Editar dato/.test(tx)&&tx.length<40){hit=true;break;}el=el.parentElement;}
+ if(!hit)return;
+ var sel=window.SEL;if(!sel||typeof window.chatById!=='function')return;
+ var c=window.chatById(sel);if(!c)return;var crm=c.crm||{};
+ window.__nvSnap[String(c.id)]={correo:String(crm.correo||'').trim(),comuna:String(crm.comuna||'').trim(),direccion:String(crm.direccion||'').trim()};
+}catch(e){}},true);
+var _f=window.fetch;
+window.fetch=function(u,o){try{
+ var url=(typeof u==='string')?u:((u&&u.url)||'');
+ if(o&&o.method&&String(o.method).toUpperCase()==='POST'&&/actualizar-lead/.test(url)&&typeof o.body==='string'){
+  var p=null;try{p=JSON.parse(o.body);}catch(e){p=null;}
+  if(p&&typeof p==='object'){
+   var snap=window.__nvSnap[String(p.contactoId)]||null;
+   if(!snap){var ks=Object.keys(window.__nvSnap);if(ks.length)snap=window.__nvSnap[ks[ks.length-1]];}
+   if(snap){var borrar=[];['correo','comuna','direccion'].forEach(function(f){var cur=(p[f]==null?'':String(p[f])).trim();if(cur===''&&snap[f]&&snap[f]!=='')borrar.push(f);});
+    if(borrar.length){p.borrar=borrar;o=Object.assign({},o,{body:JSON.stringify(p)});}}
+  }
+ }
+}catch(e){}return _f.call(this,u,o);};
+})();</script>
+<script>
+(function(){
+if(window.NVCOST)return;window.NVCOST=1;var RATE=0.0889;
+function fmt(v){v=Number(v)||0;if(v===0)return 'US$0';var s=(v<1?v.toFixed(4):v.toFixed(2));s=s.replace(/0+$/,'').replace(/\.$/,'');return 'US</html>
++s.replace('.',',');}
+function nTpl(v){return Math.round((Number(v)||0)/RATE);}
+function paintTotal(){try{var D=window.DATA||{};var chats=D.chats||[];var tot=(typeof D.costo_wa_total==='number')?D.costo_wa_total:chats.reduce(function(s,c){return s+(Number(c.costo_wa)||0);},0);var sub=document.getElementById('sub');if(!sub)return;var b=document.getElementById('nvcostTotal');if(!b){b=document.createElement('div');b.id='nvcostTotal';b.style.cssText='margin:8px 0 2px;padding:7px 11px;background:#0b3d2e;color:#d1fae5;border-radius:9px;font-size:12.5px;font-weight:600;display:flex;justify-content:space-between;align-items:center;';sub.parentNode.insertBefore(b,sub.nextSibling);}var n=nTpl(tot);b.innerHTML='<span>\uD83D\uDCAC Gasto WhatsApp</span><span>'+fmt(tot)+(n?(' \u00B7 '+n+' plantilla'+(n===1?'':'s')):'')+'</span>';}catch(e){}}
+function paintFicha(){try{if(typeof window.SEL!=='string')return;var c=window.chatById(window.SEL);if(!c)return;var crm=document.querySelector('.chat .crm');if(!crm)return;var r=document.getElementById('nvcostRow');if(!r||r.parentNode!==crm){if(r&&r.parentNode)r.parentNode.removeChild(r);r=document.createElement('div');r.id='nvcostRow';r.className='crmrow';crm.appendChild(r);}r.style.cssText='display:block;margin:2px 0;';var v=Number(c.costo_wa)||0;var n=nTpl(v);r.innerHTML='<span style="opacity:.65">Costo WhatsApp:</span> <b style="color:#0b8a5a">'+fmt(v)+'</b>'+(n?(' <span style="opacity:.65">\u00B7 '+n+' plantilla'+(n===1?'':'s')+'</span>'):'');}catch(e){}}
+['renderList','renderChat','refreshData'].forEach(function(fn){if(typeof window[fn]==='function'){var _o=window[fn];window[fn]=function(){var r=_o.apply(this,arguments);setTimeout(function(){paintTotal();paintFicha();},0);return r;};}});
+setTimeout(function(){paintTotal();paintFicha();},400);
+})();
+</script>
+
+
+
+
+
+<script>(function(){if(window.NVCOST)return;window.NVCOST=1;var RATE=0.0889;
+function fmt(v){v=Number(v)||0;if(v===0)return "US$0";var s=(v<1?v.toFixed(4):v.toFixed(2));s=s.replace(/0+$/,"").replace(/\.$/,"");return "US$"+s.replace(".",",");}
+function nTpl(v){return Math.round((Number(v)||0)/RATE);}
+function esc(s){return String(s==null?"":s).replace(/[<>&]/g,function(x){return x==="<"?"&lt;":x===">"?"&gt;":"&amp;";});}
+function fdate(iso){try{if(!iso)return "";return new Date(iso).toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit",year:"2-digit"});}catch(e){return "";}}
+function pT(){try{var D=window.DATA||{};var ch=D.chats||[];var tot=(typeof D.costo_wa_total==="number")?D.costo_wa_total:ch.reduce(function(s,c){return s+(Number(c.costo_wa)||0);},0);var sub=document.getElementById("sub");if(!sub)return;var b=document.getElementById("nvcostTotal");if(!b){b=document.createElement("div");b.id="nvcostTotal";b.title="Ver detalle del cobro";b.style.cssText="margin:8px 0 2px;padding:7px 11px;background:#0b3d2e;color:#d1fae5;border-radius:9px;font-size:12.5px;font-weight:600;display:flex;justify-content:space-between;align-items:center;cursor:pointer";b.onclick=openDetail;sub.parentNode.insertBefore(b,sub.nextSibling);}var n=nTpl(tot);b.innerHTML="<span>💬 Gasto WhatsApp</span><span>"+fmt(tot)+(n?(" · "+n+" plantilla"+(n===1?"":"s")):"")+" ›</span>";}catch(e){}}
+function pF(){try{if(typeof window.SEL!=="string")return;var c=window.chatById(window.SEL);if(!c)return;var crm=document.querySelector(".chat .crm");if(!crm)return;var r=document.getElementById("nvcostRow");if(!r||r.parentNode!==crm){if(r&&r.parentNode)r.parentNode.removeChild(r);r=document.createElement("div");r.id="nvcostRow";r.className="crmrow";crm.appendChild(r);}r.style.cssText="display:block;margin:2px 0";var v=Number(c.costo_wa)||0;var n=nTpl(v);r.innerHTML="<span style='opacity:.65'>Costo WhatsApp:</span> <b style='color:#0b8a5a'>"+fmt(v)+"</b>"+(n?(" <span style='opacity:.65'>· "+n+" plantilla"+(n===1?"":"s")+"</span>"):"");}catch(e){}}
+function openDetail(){var D=window.DATA||{};var ch=(D.chats||[]).filter(function(c){return (Number(c.costo_wa)||0)>0;}).sort(function(a,b){return (Number(b.costo_wa)||0)-(Number(a.costo_wa)||0);});var tot=(typeof D.costo_wa_total==="number")?D.costo_wa_total:ch.reduce(function(s,c){return s+(Number(c.costo_wa)||0);},0);var o=document.getElementById("nvcostOv");if(o)o.remove();o=document.createElement("div");o.id="nvcostOv";o.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px";var rows=ch.map(function(c){var v=Number(c.costo_wa)||0;var n=nTpl(v);return "<div style='display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px solid #eee;font-size:13px'><span style='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>"+esc(c.nombre||c.wa)+" <span style='opacity:.5'>"+fdate(c.ult)+"</span></span><span style='white-space:nowrap'><span style='opacity:.55'>"+n+" plant.</span> <b style='color:#0b8a5a'>"+fmt(v)+"</b></span></div>";}).join("");if(!rows)rows="<div style='padding:14px 2px;opacity:.6;font-size:13px'>Sin cobros registrados todavía.</div>";o.innerHTML="<div style='background:#fff;border-radius:14px;max-width:460px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 12px 44px rgba(0,0,0,.3)'><div style='padding:13px 16px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center'><b>💬 Detalle · Gasto WhatsApp</b><span id='nvcostClose' style='cursor:pointer;font-size:22px;opacity:.5;line-height:1'>×</span></div><div style='padding:4px 16px;overflow:auto'>"+rows+"</div><div style='padding:12px 16px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-weight:700'><span>Total · "+nTpl(tot)+" plantilla"+(nTpl(tot)===1?"":"s")+"</span><span style='color:#0b8a5a'>"+fmt(tot)+"</span></div><div style='padding:0 16px 13px;font-size:11px;opacity:.55'>Estimado: US$"+String(RATE).replace(".",",")+" por plantilla (Marketing). El texto libre dentro de 24h no tiene costo.</div></div>";document.body.appendChild(o);o.addEventListener("click",function(e){if(e.target===o||e.target.id==="nvcostClose")o.remove();});}
+var _t=0;var _iv=setInterval(function(){pT();pF();["renderList","renderChat","refreshData"].forEach(function(fn){var f=window[fn];if(typeof f==="function"&&!f.__nvc){var oo=f;window[fn]=function(){var x=oo.apply(this,arguments);setTimeout(function(){pT();pF();},0);return x;};window[fn].__nvc=1;}});if(++_t>60)clearInterval(_iv);},1000);
+})();</script>
+
+<script>/* NVREPLY - responder citando (reply/quote) */
+(function(){
+ if(window.__NVREPLY) return; window.__NVREPLY=true;
+ var RS=null;
+ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+ function whoLabel(q){return q==='cliente'?'Cliente':(q==='bot'?'Bot':'Tú');}
+ var st=document.createElement('style');
+ st.textContent='.nvrbtn{margin-left:6px;border:none;background:transparent;color:#64748b;cursor:pointer;font-size:14px;line-height:1;padding:2px 5px;border-radius:6px;vertical-align:middle}.nvrbtn:hover{background:rgba(0,0,0,.08);color:#0f172a}.nvrq{border-left:3px solid #16a34a;background:rgba(0,0,0,.06);border-radius:6px;padding:4px 8px;margin:0 0 5px;font-size:12px;color:#334155;white-space:pre-wrap;word-break:break-word}.nvrq b{color:#16a34a;font-size:11px}.nvr-strip{margin:0 8px}.nvr-strip-in{display:flex;align-items:flex-start;gap:8px;background:#f1f5f9;border-left:3px solid #16a34a;border-radius:8px;padding:6px 10px;margin-bottom:6px}.nvr-strip-txt{flex:1;font-size:12px;color:#334155;white-space:pre-wrap;word-break:break-word;max-height:52px;overflow:hidden}.nvr-strip-txt b{color:#16a34a;font-size:11px}.nvr-x{border:none;background:transparent;color:#64748b;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px}.nvr-x:hover{background:rgba(0,0,0,.08)}';
+ document.head.appendChild(st);
+ function drawStrip(){
+   var comp=document.querySelector('.composer');
+   var old=document.getElementById('nvrStrip');
+   if(!RS||!comp){ if(old)old.remove(); return; }
+   var strip=old; if(!strip){ strip=document.createElement('div'); strip.id='nvrStrip'; strip.className='nvr-strip'; comp.parentNode.insertBefore(strip,comp); }
+   strip.innerHTML='<div class="nvr-strip-in"><div class="nvr-strip-txt"><b>Respondiendo a '+esc(whoLabel(RS.quien))+'</b><br>'+esc(String(RS.texto||'').slice(0,140))+'</div><button id="nvrCancel" class="nvr-x" title="Cancelar">✕</button></div>';
+   var x=document.getElementById('nvrCancel'); if(x)x.onclick=function(){RS=null;drawStrip();};
+ }
+ function decorate(){
+   var th=document.getElementById('thread');
+   if(th){
+     var c=null; try{c=window.chatById(window.SEL);}catch(e){}
+     var msgs=(c&&c.msgs)||[];
+     var bubbles=th.querySelectorAll('.bb');
+     for(var i=0;i<bubbles.length;i++){
+       var b=bubbles[i], m=msgs[i]; if(!m) continue;
+       if(m.reply_texto && !b.querySelector('.nvrq')){
+         var q=document.createElement('div'); q.className='nvrq';
+         q.innerHTML='<b>'+esc(whoLabel(m.reply_quien))+'</b><br>'+esc(String(m.reply_texto).slice(0,140));
+         b.insertBefore(q,b.firstChild);
+       }
+       if(m.wamid && !b.querySelector('.nvrbtn')){
+         (function(mm){
+           var btn=document.createElement('button'); btn.className='nvrbtn'; btn.type='button'; btn.textContent='↩'; btn.title='Responder';
+           btn.onclick=function(ev){ev.stopPropagation();ev.preventDefault();RS={wamid:mm.wamid,texto:mm.texto||'',quien:mm.quien||''};drawStrip();var ta=document.getElementById('ta');if(ta)ta.focus();};
+           b.appendChild(btn);
+         })(m);
+       }
+     }
+   }
+   drawStrip();
+ }
+ if(typeof window.render==='function'){ var _r=window.render; window.render=function(){var out=_r.apply(this,arguments); try{decorate();}catch(e){} return out;}; }
+ if(window.fetch){ var _f=window.fetch; window.fetch=function(url,opts){ try{ var u=(typeof url==='string')?url:((url&&url.url)||''); if(RS&&opts&&opts.body&&u.indexOf('conversacion-responder')>=0){ var body=opts.body; if(typeof body==='string'){ var o=null; try{o=JSON.parse(body);}catch(e){} if(o){o.reply_wamid=RS.wamid;o.reply_texto=String(RS.texto||'').slice(0,200);o.reply_quien=RS.quien;opts.body=JSON.stringify(o);} } else if(body instanceof URLSearchParams){body.set('reply_wamid',RS.wamid);body.set('reply_texto',String(RS.texto||'').slice(0,200));body.set('reply_quien',RS.quien);} else if(typeof FormData!=='undefined'&&body instanceof FormData){body.set('reply_wamid',RS.wamid);body.set('reply_texto',String(RS.texto||'').slice(0,200));body.set('reply_quien',RS.quien);} RS=null; setTimeout(drawStrip,0);} }catch(e){} return _f.apply(this,arguments); }; }
+ try{ var _op=XMLHttpRequest.prototype.open,_sn=XMLHttpRequest.prototype.send; XMLHttpRequest.prototype.open=function(m,u){this.__nvu=u;return _op.apply(this,arguments);}; XMLHttpRequest.prototype.send=function(body){ try{ if(RS&&typeof body==='string'&&String(this.__nvu||'').indexOf('conversacion-responder')>=0){ var o=null; try{o=JSON.parse(body);}catch(e){} if(o){o.reply_wamid=RS.wamid;o.reply_texto=String(RS.texto||'').slice(0,200);o.reply_quien=RS.quien; var nb=JSON.stringify(o); RS=null; setTimeout(drawStrip,0); return _sn.call(this,nb);} } }catch(e){} return _sn.apply(this,arguments); }; }catch(e){}
+ try{decorate();}catch(e){}
+})();
+</script>
+
+<script>/* NVCHIP - chip de negocio por conversacion */
+(function(){
+ if(window.__NVCHIP) return; window.__NVCHIP=true;
+ var st=document.createElement('style');
+ st.textContent='.nvbiz{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.3px;padding:1px 6px;border-radius:999px;margin-left:5px;vertical-align:middle;line-height:1.5;white-space:nowrap}.nvbiz-np{background:#dbeafe;color:#1e40af}.nvbiz-tp{background:#ffedd5;color:#9a3412}.nvbiz-x{background:#e2e8f0;color:#334155}';
+ document.head.appendChild(st);
+ function chipHTML(tags){ if(!tags||!tags.length)return ''; var h=''; for(var i=0;i<tags.length;i++){ var t=String(tags[i]||'').toUpperCase(); var cls=t==='TEAMPARDO'?'nvbiz-tp':(t==='NUVERAPRO'?'nvbiz-np':'nvbiz-x'); var lbl=t==='TEAMPARDO'?'#TeamPardo':(t==='NUVERAPRO'?'#NuveraPRO':'#'+t); h+='<span class="nvbiz '+cls+'">'+lbl+'</span>'; } return h; }
+ function decorate(){
+   try{
+     var rows=document.querySelectorAll('[data-id]');
+     for(var i=0;i<rows.length;i++){ var r=rows[i]; var id=r.getAttribute('data-id'); if(!id)continue; if(r.querySelector('.nvbiz'))continue; var c=null; try{c=window.chatById(id);}catch(e){} if(!c)continue; var tags=c.etiquetas||[]; if(!tags.length)continue; var nm=r.querySelector('.nm')||r.querySelector('.mid')||r; nm.insertAdjacentHTML('beforeend', chipHTML(tags)); }
+     var cn=document.querySelector('.chead .cn'); if(cn && !cn.querySelector('.nvbiz')){ var c2=null; try{c2=window.chatById(window.SEL);}catch(e){} if(c2 && (c2.etiquetas||[]).length){ var b=cn.querySelector('b')||cn; b.insertAdjacentHTML('afterend', chipHTML(c2.etiquetas)); } }
+   }catch(e){}
+ }
+ if(typeof window.render==='function'){ var _r=window.render; window.render=function(){var out=_r.apply(this,arguments); try{decorate();}catch(e){} return out;}; }
+ try{decorate();}catch(e){}
+})();
+</script>
+<script>/* NVMEDIA v1 - render de media en el hilo */
+(function(){
+if(window.__NVMEDIA)return; window.__NVMEDIA=true;
+function mediaEl(m){
+  var url=m.media_url; if(!url) return null; var t=m.tipo||'';
+  var w=document.createElement('div'); w.className='nvmedia'; w.style.cssText='margin:3px 0 5px';
+  if(t==='image'){ var im=document.createElement('img'); im.src=url; im.loading='lazy'; im.style.cssText='max-width:230px;max-height:280px;border-radius:12px;display:block;cursor:pointer'; im.onclick=function(){window.open(url,'_blank');}; w.appendChild(im); }
+  else if(t==='video'){ var v=document.createElement('video'); v.src=url; v.controls=true; v.preload='metadata'; v.style.cssText='max-width:250px;max-height:300px;border-radius:12px;display:block'; w.appendChild(v); }
+  else if(t==='audio'){ var a=document.createElement('audio'); a.src=url; a.controls=true; a.preload='metadata'; a.style.cssText='max-width:250px;display:block'; w.appendChild(a); }
+  else { var lk=document.createElement('a'); lk.href=url; lk.target='_blank'; lk.textContent='Abrir documento'; lk.style.cssText='display:inline-block;color:#2563eb;text-decoration:underline;font-size:13px'; w.appendChild(lk); }
+  return w;
+}
+function decM(){ var th=document.getElementById('thread'); if(!th) return; var c=null; try{c=window.chatById(window.SEL);}catch(e){} var msgs=(c&&c.msgs)||[]; var bb=th.querySelectorAll('.bb'); for(var i=0;i<bb.length;i++){ var b=bb[i], m=msgs[i]; if(!m||!m.media_url) continue; if(b.querySelector('.nvmedia')) continue; var el=mediaEl(m); if(el) b.insertBefore(el, b.firstChild); } }
+if(typeof window.render==='function'){ var _r=window.render; window.render=function(){var o=_r.apply(this,arguments); try{decM();}catch(e){} return o;}; }
+setTimeout(function(){try{decM();}catch(e){}},300);
+})();
+</script>
+<script>/* NVTICKS v1 - ticks recibido/leido */
+(function(){
+if(window.__NVTICKS)return; window.__NVTICKS=true;
+function tickHtml(e){ e=String(e||''); if(e==='read')return '<span class="nvtick" style="color:#34b7f1;font-size:11px;margin-left:5px">✓✓</span>'; if(e==='delivered')return '<span class="nvtick" style="color:#94a3b8;font-size:11px;margin-left:5px">✓✓</span>'; if(e==='sent')return '<span class="nvtick" style="color:#94a3b8;font-size:11px;margin-left:5px">✓</span>'; if(e==='failed')return '<span class="nvtick" style="color:#dc2626;font-size:11px;margin-left:5px">⚠</span>'; return ''; }
+function decT(){ var th=document.getElementById('thread'); if(!th) return; var c=null; try{c=window.chatById(window.SEL);}catch(e){} var msgs=(c&&c.msgs)||[]; var bb=th.querySelectorAll('.bb'); for(var i=0;i<bb.length;i++){ var b=bb[i], m=msgs[i]; if(!m) continue; var q=String(m.quien||''); if(q.indexOf('agente')<0) continue; if(!m.estado) continue; var html=tickHtml(m.estado); if(!html) continue; var ex=b.querySelector('.nvtick'); var t=document.createElement('span'); t.innerHTML=html; if(ex){ ex.replaceWith(t.firstChild); } else { b.appendChild(t.firstChild); } } }
+if(typeof window.render==='function'){ var _r=window.render; window.render=function(){var o=_r.apply(this,arguments); try{decT();}catch(e){} return o;}; }
+setTimeout(function(){try{decT();}catch(e){}},350);
+})();
+</script>
+<script>/* NVSEND v1 - enviar imagenes/videos */
+(function(){
+if(window.__NVSEND)return; window.__NVSEND=true;
+var TENANT=(location.host.indexOf('paneltp')>=0||location.host.indexOf('teampardo')>=0)?'teampardo':'nuvera';
+var API='https://n8n.entrenemos.cl/webhook/conversacion-responder-media';
+function curChat(){ try{ return window.chatById(window.SEL); }catch(e){ return null; } }
+function toB64(file,cb){ var r=new FileReader(); r.onload=function(){ cb(String(r.result).replace(/^data:[^,]*,/,'')); }; r.readAsDataURL(file); }
+function kindOf(f){ var t=(f.type||''); if(t.indexOf('image')===0)return 'image'; if(t.indexOf('video')===0)return 'video'; if(t.indexOf('audio')===0)return 'audio'; return 'document'; }
+function extOf(f){ var n=(f.name||''); var m=n.match(/.([a-z0-9]+)$/i); if(m)return m[1].toLowerCase(); return (f.type||'').split('/')[1]||'bin'; }
+function send(file){ var c=curChat(); if(!c){ alert('Elegí una conversación primero'); return; } var to=String(c.wa||'').replace(/D/g,''); if(!to){ alert('Esta conversación no tiene número'); return; } if(file.size>16000000){ alert('Máximo 16 MB'); return; } var st=document.getElementById('nvsend-st'); if(st){st.style.color='#64748b';st.textContent='Enviando…';} toB64(file,function(b64){ var body={ tenant:TENANT, to:to, pageId:String(c.id||''), kind:kindOf(file), ext:extOf(file), mime:file.type||'', caption:'', data_b64:b64 }; fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(j){ if(st){ st.style.color=(j&&j.ok)?'#16a34a':'#dc2626'; st.textContent=(j&&j.ok)?'✓ Enviado':'Error al enviar'; } setTimeout(function(){try{if(typeof window.render==='function')window.render();}catch(e){}},700); setTimeout(function(){if(st)st.textContent='';},2500); }).catch(function(){ if(st){st.style.color='#dc2626';st.textContent='Error de red';} }); }); }
+function mount(){ var comp=document.querySelector('.composer'); if(!comp) return; if(comp.querySelector('.nvsend-btn')) return; var inp=document.createElement('input'); inp.type='file'; inp.accept='image/*,video/*'; inp.style.display='none'; inp.className='nvsend-inp'; inp.addEventListener('change',function(e){ var f=e.target.files&&e.target.files[0]; if(f)send(f); e.target.value=''; }); var btn=document.createElement('button'); btn.type='button'; btn.className='nvsend-btn'; btn.title='Adjuntar imagen o video'; btn.textContent='📎'; btn.style.cssText='border:none;background:transparent;font-size:20px;cursor:pointer;padding:2px 6px;line-height:1'; btn.addEventListener('click',function(){ inp.click(); }); var st=document.createElement('span'); st.id='nvsend-st'; st.style.cssText='font-size:11px;color:#16a34a'; comp.insertBefore(st,comp.firstChild); comp.insertBefore(btn,comp.firstChild); comp.insertBefore(inp,comp.firstChild); }
+if(typeof window.render==='function'){ var _r=window.render; window.render=function(){var o=_r.apply(this,arguments); try{mount();}catch(e){} return o;}; }
+setInterval(function(){try{mount();}catch(e){}},1500);
+})();
+</script>
+<script>/* NVVOICE v1 - grabar y enviar nota de voz */
+(function(){
+if(window.__NVVOICE)return; window.__NVVOICE=true;
+var TENANT=(location.host.indexOf('paneltp')>=0||location.host.indexOf('teampardo')>=0)?'teampardo':'nuvera';
+var API='https://n8n.entrenemos.cl/webhook/conversacion-responder-media';
+var rec=null, chunks=[], recording=false;
+function curChat(){ try{ return window.chatById(window.SEL); }catch(e){ return null; } }
+function setBtn(b,on){ b.textContent=on?'⏹':'🎤'; b.style.color=on?'#dc2626':''; b.title=on?'Detener y enviar':'Grabar nota de voz'; }
+function sendBlob(blob){ var c=curChat(); if(!c){ alert('Elegí una conversación'); return; } var to=String(c.wa||'').replace(/D/g,''); if(!to){ alert('Sin número'); return; } var st=document.getElementById('nvvoice-st'); if(st){st.style.color='#64748b';st.textContent='Enviando…';} var r=new FileReader(); r.onload=function(){ var b64=String(r.result).replace(/^data:[^,]*,/,''); fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tenant:TENANT,to:to,pageId:String(c.id||''),kind:'audio',is_voice:true,ext:'webm',mime:'audio/webm',data_b64:b64})}).then(function(r){return r.json();}).then(function(j){ if(st){st.style.color=(j&&j.ok)?'#16a34a':'#dc2626';st.textContent=(j&&j.ok)?'✓ Enviado':'Error';} setTimeout(function(){try{if(typeof window.render==='function')window.render();}catch(e){}},900); setTimeout(function(){if(st)st.textContent='';},2600); }).catch(function(){ if(st){st.style.color='#dc2626';st.textContent='Error de red';} }); }; r.readAsDataURL(blob); }
+function toggle(btn){ if(recording){ try{ rec.stop(); }catch(e){} return; } if(!navigator.mediaDevices||!window.MediaRecorder){ alert('Tu navegador no soporta grabación'); return; } navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){ chunks=[]; var mt=''; try{ if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))mt='audio/webm;codecs=opus'; else if(MediaRecorder.isTypeSupported('audio/webm'))mt='audio/webm'; else if(MediaRecorder.isTypeSupported('audio/mp4'))mt='audio/mp4'; }catch(e){} rec=mt?new MediaRecorder(stream,{mimeType:mt}):new MediaRecorder(stream); rec.ondataavailable=function(e){ if(e.data&&e.data.size)chunks.push(e.data); }; rec.onstop=function(){ recording=false; setBtn(btn,false); try{ stream.getTracks().forEach(function(t){t.stop();}); }catch(e){} var blob=new Blob(chunks,{type:(chunks[0]&&chunks[0].type)||'audio/webm'}); if(blob.size>0)sendBlob(blob); }; rec.start(); recording=true; setBtn(btn,true); }).catch(function(){ alert('No pude acceder al micrófono'); }); }
+function mount(){ var comp=document.querySelector('.composer'); if(!comp) return; if(comp.querySelector('.nvvoice-btn')) return; var btn=document.createElement('button'); btn.type='button'; btn.className='nvvoice-btn'; setBtn(btn,false); btn.style.cssText='border:none;background:transparent;font-size:19px;cursor:pointer;padding:2px 6px;line-height:1'; btn.addEventListener('click',function(){ toggle(btn); }); var st=document.createElement('span'); st.id='nvvoice-st'; st.style.cssText='font-size:11px;color:#16a34a'; comp.insertBefore(st,comp.firstChild); comp.insertBefore(btn,comp.firstChild); }
+if(typeof window.render==='function'){ var _r=window.render; window.render=function(){var o=_r.apply(this,arguments); try{mount();}catch(e){} return o;}; }
+setInterval(function(){try{mount();}catch(e){}},1500);
+})();
+</script>
+<script>
+(function(){var AUSW='https://n8n.entrenemos.cl/webhook/ausencia-switch';var b=document.getElementById('ausbtn');if(!b)return;var on=false;
+function paint(){b.textContent=(on?'🌙 Mensaje de ausencia: ON':'🌙 Mensaje de ausencia: OFF');b.style.background=on?'#7c3aed':'#f1f5f9';b.style.color=on?'#fff':'#475569';b.style.borderColor=on?'#7c3aed':'#e2e8f0';}
+function load(){fetch(AUSW+'?op=get').then(function(r){return r.json();}).then(function(j){on=!!j.on;paint();}).catch(function(){});}
+b.onclick=function(){var t=!on;var msg=t?('¿Encender el mensaje de ausencia?\n\nSe respondera automaticamente a quien escriba (max. 1 vez cada 24 h por contacto) y a los leads nuevos les llega este mensaje en vez del saludo.'):'¿Apagar el mensaje de ausencia?';if(!confirm(msg))return;b.disabled=true;fetch(AUSW+'?op=set&on='+(t?'1':'0')).then(function(r){return r.json();}).then(function(j){on=!!j.on;paint();b.disabled=false;}).catch(function(){b.disabled=false;alert('Error de red al cambiar el switch');});};
+load();paint();setInterval(load,60000);})();
+</script>
+<script>/* NVWANAME - nombre de WhatsApp en el detalle */
+(function(){
+if(window.__NVWANAME)return;window.__NVWANAME=true;
+var SRC='https://franherre-hub.github.io/nuverapro-dashboards/data/conversaciones.json';
+var MAP={};
+function dig(s){return String(s||'').replace(/[^0-9]/g,'');}
+function load(){try{fetch(SRC+'?v='+Date.now()).then(function(r){return r.json();}).then(function(d){var ch=(d&&d.chats)||[];ch.forEach(function(c){var k=dig(c.wa);var nm=String(c.nombre_whatsapp||'').trim();if(k&&nm)MAP[k]=nm;});try{if(typeof window.render==='function')window.render();}catch(e){}}).catch(function(){});}catch(e){}}
+function decorate(){try{
+ if(!document.body.classList.contains('chatopen'))return;
+ var c=null;try{c=window.chatById(window.SEL);}catch(e){}if(!c)return;
+ var cn=document.querySelector('.chead .cn');if(!cn)return;
+ if(cn.querySelector('.nvwaname'))return;
+ var nm=MAP[dig(c.wa)];if(!nm)return;
+ if(String(c.nombre||'').trim().toLowerCase()===nm.toLowerCase())return;
+ var s=document.createElement('span');s.className='nvwaname';s.style.cssText='color:#0b8a5a;font-size:12px;display:block;margin-top:1px';s.textContent='👤 '+nm+' (WhatsApp)';
+ cn.appendChild(s);
+}catch(e){}}
+if(typeof window.render==='function'){var _r=window.render;window.render=function(){var o=_r.apply(this,arguments);try{decorate();}catch(e){}return o;};}
+load();setInterval(load,300000);setTimeout(decorate,600);
+})();
+</script></body></html>
+<script>
+(function(){
+if(window.__NVHEADCOLLAPSE)return;window.__NVHEADCOLLAPSE=1;
+var KEY='nvHeadOpen';
+function isOpen(){try{return localStorage.getItem(KEY)==='1';}catch(e){return false;}}
+function setOpen(v){try{localStorage.setItem(KEY,v?'1':'0');}catch(e){}}
+function wrap(){
+  var inner=document.getElementById('chatinner');if(!inner)return;
+  var head=inner.querySelector('.chead');if(!head)return;
+  var thread=inner.querySelector('#thread');if(!thread)return;
+  if(document.getElementById('nvHeadBar'))return;
+  var nodes=[];var n=head.nextSibling;
+  while(n&&n!==thread){var nx=n.nextSibling;nodes.push(n);n=nx;}
+  if(!nodes.length)return;
+  var bar=document.createElement('div');bar.id='nvHeadBar';
+  bar.style.cssText='text-align:center;padding:6px;font-size:12px;color:#64748b;cursor:pointer;background:#f8fafc;border-bottom:1px solid #eef2f7;user-select:none';
+  var wrapDiv=document.createElement('div');wrapDiv.id='nvHeadWrap';
+  nodes.forEach(function(el){wrapDiv.appendChild(el);});
+  head.parentNode.insertBefore(bar,thread);
+  head.parentNode.insertBefore(wrapDiv,thread);
+  function paint(){var o=isOpen();wrapDiv.style.display=o?'':'none';bar.textContent=o?'▲ Ocultar detalles':'▼ Mostrar detalles';}
+  bar.onclick=function(){setOpen(!isOpen());paint();};
+  paint();
+}
+if(typeof window.render==='function'){var _r=window.render;window.render=function(){var o=_r.apply(this,arguments);try{wrap();}catch(e){}return o;};}
+setTimeout(wrap,600);
+})();
+
+</script>
