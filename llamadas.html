@@ -150,6 +150,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
   <main class="main">
     <div>
       <section class="view on" id="v-hoy">
+        <div class="pendbar"><input id="buscar" type="search" placeholder="Buscar nombre, teléfono o correo…" style="flex:1;min-width:220px;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:var(--surf2);color:var(--ink);font-size:13px"></div>
         <div class="pendbar"><button class="pendbtn" id="btnPend">✉️ Enviar correo de bienvenida a pendientes (<span id="nPend">0</span>)</button><span class="pendhint" id="pendHint"></span></div>
         <div class="group"><header><h2>Bienvenida · día 0</h2><span class="why">llamar hoy</span></header><div class="cards" data-bucket="d0"></div></div>
         <div class="group"><header><h2>Señal · atender primero</h2><span class="why">algo cambió</span></header><div class="cards" data-bucket="senal"></div></div>
@@ -361,7 +362,15 @@ function confirmarAg(){
 function load(){
   var urls=["data/seguimiento.json","seguimiento.json"];
   (function tryNext(i){if(i>=urls.length){$("gen").textContent="No se pudo cargar seguimiento.json";return}
-    fetch(urls[i]+"?v="+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){DATA=d;window._SEG_URL=urls[i];renderHoy();renderPend();renderBoard();renderCohorts()}).catch(function(){tryNext(i+1)})})(0);
+    fetch(urls[i]+"?v="+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){DATA=d;window._SEG_URL=urls[i];renderHoy();renderPend();renderBoard();renderCohorts();if(PENDING_LEAD){var pl=PENDING_LEAD;setTimeout(function(){if(!tryOpenLead(pl))toast("sin cuenta en prueba · no está en seguimiento 15 días")},50)}}).catch(function(){tryNext(i+1)})})(0);
 }
 load();
+// ---- buscador (vista Hoy)
+$("buscar").oninput=function(){var q=this.value.trim().toLowerCase();[].forEach.call(document.querySelectorAll("#v-hoy .card"),function(cd){cd.style.display=(!q||cd.textContent.toLowerCase().indexOf(q)>=0)?"":"none"});};
+// ---- puente Conversaciones → ficha ({type:'openLead', wa, pageId, nombre})
+var PENDING_LEAD=null;
+function tail8(v){var d=String(v||"").replace(/[^0-9]/g,"");return d.length>8?d.slice(-8):d}
+function findLead(d){if(!DATA||!DATA.cuentas)return null;var pid=String(d.pageId||"").replace(/-/g,"").toLowerCase();var t=tail8(d.wa);var byId=pid?DATA.cuentas.find(function(a){return String(a.id||"").replace(/-/g,"").toLowerCase()===pid}):null;if(byId)return byId;if(t.length>=8)return DATA.cuentas.find(function(a){return tail8(a.wa)===t||tail8(a.tel)===t})||null;return null}
+function tryOpenLead(d){var a=findLead(d);if(!a)return false;openFicha(a.id);PENDING_LEAD=null;return true}
+window.addEventListener("message",function(ev){var d=ev.data||{};if(d.type!=="openLead")return;if(!DATA){PENDING_LEAD=d;return}if(!tryOpenLead(d))toast((d.nombre?d.nombre+": ":"")+"sin cuenta en prueba · no está en seguimiento 15 días")});
 </script><!--NVP-AUTOREFRESH--><script>(function(){var l=null;setInterval(function(){var u=(window._SEG_URL||"data/seguimiento.json")+"?t=";fetch(u+Date.now()).then(function(r){return r.text();}).then(function(t){if(l!==null&&t!==l&&!document.getElementById("ficha").classList.contains("open")){location.reload();}l=t;}).catch(function(){});},20000);})();</script></body></html>
