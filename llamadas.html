@@ -191,6 +191,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
             <button class="chip ok" data-r="Interesado">Interesado</button>
             <button class="chip bad" data-r="No interesado">No interesado</button>
             <button class="chip ok" data-r="Pagó">Pagó</button>
+            <button class="chip bad" data-r="Teléfono inválido">Teléfono inválido</button>
           </div>
           <textarea id="fNote" placeholder="Nota corta: qué dijo, objeción, qué prometiste…" style="margin-top:8px"></textarea>
           <div class="save"><span class="next" id="fNext"></span><button id="fSave">Guardar toque</button></div>
@@ -287,6 +288,7 @@ function postToque(a,payload,cb){
   else if(res==="Reagendar")nt="anota la fecha en la nota";
   else if(res==="Pagó")nt="ninguno · sale de la cola";
   else if(res==="No interesado")nt="D14 último aviso";
+  else if(res==="Teléfono inválido")nt="pedir otro número por WhatsApp o correo";
   else{var n=null;for(var i=0;i<DATA.cadencia.length;i++){if(DATA.cadencia[i]>d){n=DATA.cadencia[i];break}}nt=n!=null?"D"+n+" · "+CADTXT[n]:"fin de prueba"}
   $("fNext").textContent="Próximo toque: "+nt;
 }});
