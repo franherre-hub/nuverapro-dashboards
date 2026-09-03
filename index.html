@@ -267,6 +267,7 @@ function renderChat(){
     if(c.notion)h+="<a class='act notion' href='"+esc(c.notion)+"' target='_blank' rel='noopener'>Contacto en Notion</a>";
     if(c.lead_notion)h+="<a class='act notion lead' href='"+esc(c.lead_notion)+"' target='_blank' rel='noopener'>Lead en Notion</a>";
     h+="</div>";
+    h+="<div class='actions' style='border-top:0;padding-top:0'><button class='act' id='segBtn' style='width:100%;background:#1b5e20;color:#fff;font-weight:700'>📞 Seguimiento 15 días · Agendar capacitación</button></div>";
   }
   if(c.cerrada){
     h+="<div class='act2'><button class='reopenbtn' id='reopenBtn'>↩ Reabrir conversación</button></div>";
@@ -291,6 +292,7 @@ function renderChat(){
   });
   th.innerHTML=mh;th.scrollTop=th.scrollHeight;
   var bb=document.getElementById("backBtn");if(bb)bb.addEventListener("click",function(){document.body.classList.remove("chatopen");SEL=null;render();});
+  var sb=document.getElementById("segBtn");if(sb)sb.addEventListener("click",function(){var pid=String(c.lead_notion||"").replace(/[?#].*$/,"").match(/([0-9a-f]{32})\s*$/i);try{window.parent.postMessage({type:"openLead",wa:String(c.wa||"").replace(/[^0-9]/g,""),pageId:pid?pid[1]:"",nombre:c.nombre||""},"*")}catch(e){}});
   var ib=document.getElementById("iaBtn");if(ib)ib.addEventListener("click",function(){analizarIA(c);});
   if(c.cerrada){
     document.getElementById("reopenBtn").addEventListener("click",function(){reabrirChat(c);});
@@ -741,3 +743,32 @@ if(typeof window.render==='function'){var _r=window.render;window.render=functio
 load();setInterval(load,300000);setTimeout(decorate,600);
 })();
 </script></body></html>
+<script>
+(function(){
+if(window.__NVHEADCOLLAPSE)return;window.__NVHEADCOLLAPSE=1;
+var KEY='nvHeadOpen';
+function isOpen(){try{return localStorage.getItem(KEY)==='1';}catch(e){return false;}}
+function setOpen(v){try{localStorage.setItem(KEY,v?'1':'0');}catch(e){}}
+function wrap(){
+  var inner=document.getElementById('chatinner');if(!inner)return;
+  var head=inner.querySelector('.chead');if(!head)return;
+  var thread=inner.querySelector('#thread');if(!thread)return;
+  if(document.getElementById('nvHeadBar'))return;
+  var nodes=[];var n=head.nextSibling;
+  while(n&&n!==thread){var nx=n.nextSibling;nodes.push(n);n=nx;}
+  if(!nodes.length)return;
+  var bar=document.createElement('div');bar.id='nvHeadBar';
+  bar.style.cssText='text-align:center;padding:6px;font-size:12px;color:#64748b;cursor:pointer;background:#f8fafc;border-bottom:1px solid #eef2f7;user-select:none';
+  var wrapDiv=document.createElement('div');wrapDiv.id='nvHeadWrap';
+  nodes.forEach(function(el){wrapDiv.appendChild(el);});
+  head.parentNode.insertBefore(bar,thread);
+  head.parentNode.insertBefore(wrapDiv,thread);
+  function paint(){var o=isOpen();wrapDiv.style.display=o?'':'none';bar.textContent=o?'▲ Ocultar detalles':'▼ Mostrar detalles';}
+  bar.onclick=function(){setOpen(!isOpen());paint();};
+  paint();
+}
+if(typeof window.render==='function'){var _r=window.render;window.render=function(){var o=_r.apply(this,arguments);try{wrap();}catch(e){}return o;};}
+setTimeout(wrap,600);
+})();
+
+</script>
