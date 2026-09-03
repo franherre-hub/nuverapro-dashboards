@@ -226,7 +226,7 @@ function card(a){
   (a.senal||[]).forEach(function(s){pills.push('<span class="pill bad">⚑ '+esc(s)+'</span>')});
   if(a.bucket==="done")pills.push('<span class="pill ok">✓ tocada hoy</span>');
   var m=a.marcas||{};
-  var marks='<span class="marks"><i class="'+(m.wa_bienv?"on":"")+'">WA bienv.</i><i class="'+(m.correo_bienv?"on":"")+'">Correo</i><i class="'+(m.voz_ok?"on":(m.no_contesto?"bad":""))+'">'+(m.voz_ok?"Voz ✓":(m.no_contesto?"No contestó ×"+m.no_contesto:"Sin llamada"))+'</i></span>';
+  var marks='<span class="marks"><i class="'+(m.wa_bienv?"on":"")+'">WA bienv.</i><i class="'+(m.correo_bienv?"on":"")+'">Correo</i><i class="'+(m.voz_ok?"on":((m.no_contesto||m.tel_invalido)?"bad":""))+'">'+(m.voz_ok?"Voz ✓":(m.tel_invalido?"☎ inválido":(m.no_contesto?"No contestó ×"+m.no_contesto:"Sin llamada")))+'</i></span>';
   return '<button class="card'+(a.bucket==="pago"||a.bucket==="done"?" dim":"")+'" data-id="'+esc(a.id)+'"><span class="dchip '+chip+'"><b>'+a.dia+'</b>día</span><span class="who"><span class="n">'+flag(a.cc)+' '+esc(a.n)+'</span><span class="s">'+pills.join("")+'</span>'+marks+'</span><span class="quick">'+(a.telH?'<a class="call" href="tel:'+esc(a.telH)+'" aria-label="Llamar" onclick="event.stopPropagation()">📞</a>':"")+(a.wa?'<a href="'+waHref(a)+'" target="_blank" rel="noopener" aria-label="WhatsApp" onclick="event.stopPropagation()">💬</a>':"")+'</span></button>';
 }
 function renderHoy(){
