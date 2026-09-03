@@ -93,6 +93,7 @@ h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;text-wrap:
 .act{display:grid;place-items:center;gap:4px;padding:12px 6px;border-radius:12px;background:var(--surf2);font-size:12.5px;font-weight:600;text-decoration:none;color:var(--ink);position:relative}
 .act.primary{background:var(--gold);color:#1B1A17}
 .act .ic{font-size:20px}
+.pendbar{display:flex;align-items:center;gap:10px;margin:0 2px 10px;flex-wrap:wrap}.pendbtn{padding:9px 14px;border-radius:10px;background:var(--surf2);color:var(--ink);font-weight:600;font-size:13px;border:1px solid rgba(255,255,255,.08)}.pendbtn:disabled{opacity:.5}.pendhint{font-size:12px;color:var(--mute)}
 .act.done::after{content:"✓";position:absolute;top:6px;right:8px;font-size:12px;color:var(--ok);font-weight:700}
 .sec{margin-top:16px}
 .sec h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-bottom:8px}
@@ -148,6 +149,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
   <main class="main">
     <div>
       <section class="view on" id="v-hoy">
+        <div class="pendbar"><button class="pendbtn" id="btnPend">✉️ Enviar correo de bienvenida a pendientes (<span id="nPend">0</span>)</button><span class="pendhint" id="pendHint"></span></div>
         <div class="group"><header><h2>Bienvenida · día 0</h2><span class="why">llamar hoy</span></header><div class="cards" data-bucket="d0"></div></div>
         <div class="group"><header><h2>Señal · atender primero</h2><span class="why">algo cambió</span></header><div class="cards" data-bucket="senal"></div></div>
         <div class="group"><header><h2>Toque programado</h2><span class="why">cadencia D2 · D5 · D8 · D12 · D14</span></header><div class="cards" data-bucket="cad"></div></div>
@@ -205,6 +207,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
 <script>
 var TOQUE_WEBHOOK="https://n8n.entrenemos.cl/webhook/registrar-toque";
 var CAL_WEBHOOK="https://n8n.entrenemos.cl/webhook/calendar-nuverapro";
+var MAIL_WEBHOOK="https://n8n.entrenemos.cl/webhook/correo-bienvenida";
 var DATA=null,cur=null,res=null,AG=null,AG_DIA=null,AG_SLOT=null;
 var $=function(id){return document.getElementById(id)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -302,7 +305,29 @@ function marca(tipo,lbl){if(!cur)return;var a=cur;if(a.marcas&&((tipo==="wa_bien
   a.toques=(a.toques||[]).concat([{fecha:new Date().toISOString(),dia:a.dia,tipo:tipo,resultado:"Enviado",nota:"",origen:"fran"}]);a.marcas=a.marcas||{};if(tipo==="wa_bienvenida")a.marcas.wa_bienv=true;else a.marcas.correo_bienv=true;
   postToque(a,{tipo:tipo,resultado:"Enviado"},function(ok){toast(ok?lbl+" marcado":"Guardado local · n8n no respondió")});renderHoy();openFicha(a.id);}
 $("aBienv").onclick=function(){marca("wa_bienvenida","WA de bienvenida")};
-$("aMail").onclick=function(){if(!cur)return;if(cur.correo)window.open("mailto:"+cur.correo+"?subject="+encodeURIComponent("Bienvenido a NuveraPRO")+"","_blank");marca("correo_bienvenida","Correo de bienvenida")};
+function enviarCorreo(a,cb){
+  if(!a.correo){cb&&cb(false,"sin correo");return}
+  fetch(MAIL_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({correo:a.correo,nombre:a.n,pageId:a.id,wa:a.wa||"",dia:a.dia})})
+  .then(function(r){return r.json().catch(function(){return {ok:r.ok}})}).then(function(j){
+    if(j&&j.ok){a.marcas=a.marcas||{};a.marcas.correo_bienv=true;a.toques=(a.toques||[]).concat([{fecha:new Date().toISOString(),dia:a.dia,tipo:"correo_bienvenida",resultado:"Enviado",nota:"",origen:"sistema"}]);cb&&cb(true)}
+    else cb&&cb(false,(j&&j.motivo)||"rechazado")
+  }).catch(function(){cb&&cb(false,"n8n no respondió")});
+}
+function pendientesCorreo(){return (DATA&&DATA.cuentas||[]).filter(function(a){return !a.pago&&a.correo&&!(a.marcas&&a.marcas.correo_bienv)})}
+function renderPend(){var p=pendientesCorreo();$("nPend").textContent=p.length;$("btnPend").disabled=!p.length;$("pendHint").textContent=p.length?"cuentas en prueba con correo y sin bienvenida enviada":"todas las cuentas en prueba ya recibieron el correo"}
+$("aMail").onclick=function(){if(!cur)return;var a=cur;
+  if(!a.correo){toast("Esta cuenta no tiene correo");return}
+  if(a.marcas&&a.marcas.correo_bienv&&!confirm("Ya se envió el correo de bienvenida a "+a.correo+". ¿Reenviar?"))return;
+  var b=$("aMail");b.disabled=true;
+  enviarCorreo(a,function(ok,m){b.disabled=false;toast(ok?"Correo enviado a "+a.correo:"No salió · "+m);if(ok){renderHoy();renderPend();openFicha(a.id)}});
+};
+$("btnPend").onclick=function(){var p=pendientesCorreo();if(!p.length)return;
+  if(!confirm("Enviar el correo de bienvenida a "+p.length+" cuenta(s) que no lo han recibido?"))return;
+  var b=$("btnPend");b.disabled=true;var i=0,okN=0,bad=[];
+  (function next(){if(i>=p.length){toast("Enviados "+okN+"/"+p.length+(bad.length?" · fallaron: "+bad.join(", "):""));renderHoy();renderPend();return}
+    var a=p[i++];b.textContent="Enviando "+i+"/"+p.length+"…";
+    enviarCorreo(a,function(ok){if(ok)okN++;else bad.push(a.n);setTimeout(next,600)})})();
+};
 $("aWa").onclick=function(){if(!cur)return;var d=cur.wa||"";try{window.parent.postMessage({type:"openConv",wa:d},"*")}catch(e){}if(window.parent===window&&d)window.open("https://wa.me/"+d,"_blank")};
 $("aVoz").onclick=function(){toast("Nota de voz: fase 2 (Whisper vía action-button-intake)")};
 $("aAgenda").onclick=function(){cargarDisp();var el=$("agBox");if(el)el.scrollIntoView({behavior:"smooth",block:"center"})};
@@ -332,7 +357,7 @@ function confirmarAg(){
 function load(){
   var urls=["data/seguimiento.json","seguimiento.json"];
   (function tryNext(i){if(i>=urls.length){$("gen").textContent="No se pudo cargar seguimiento.json";return}
-    fetch(urls[i]+"?v="+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){DATA=d;window._SEG_URL=urls[i];renderHoy();renderBoard();renderCohorts()}).catch(function(){tryNext(i+1)})})(0);
+    fetch(urls[i]+"?v="+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){DATA=d;window._SEG_URL=urls[i];renderHoy();renderPend();renderBoard();renderCohorts()}).catch(function(){tryNext(i+1)})})(0);
 }
 load();
 </script><!--NVP-AUTOREFRESH--><script>(function(){var l=null;setInterval(function(){var u=(window._SEG_URL||"data/seguimiento.json")+"?t=";fetch(u+Date.now()).then(function(r){return r.text();}).then(function(t){if(l!==null&&t!==l&&!document.getElementById("ficha").classList.contains("open")){location.reload();}l=t;}).catch(function(){});},20000);})();</script></body></html>
