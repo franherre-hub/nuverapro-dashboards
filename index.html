@@ -292,7 +292,7 @@ function renderChat(){
   });
   th.innerHTML=mh;th.scrollTop=th.scrollHeight;
   var bb=document.getElementById("backBtn");if(bb)bb.addEventListener("click",function(){document.body.classList.remove("chatopen");SEL=null;render();});
-  var sb=document.getElementById("segBtn");if(sb)sb.addEventListener("click",function(){var pid=String(c.lead_notion||"").replace(/[?#].*$/,"").match(/([0-9a-f]{32})\s*$/i);try{window.parent.postMessage({type:"openLead",wa:String(c.wa||"").replace(/[^0-9]/g,""),pageId:pid?pid[1]:"",nombre:c.nombre||""},"*")}catch(e){}});
+  var sb=document.getElementById("segBtn");if(sb)sb.addEventListener("click",function(){var pid=String(c.lead_notion||"").replace(/[?#].*$/,"").match(/([0-9a-f]{32})\s*$/i);var crm=c.crm||{};var el=document.querySelector(".chead .cn .nvwaname");var waNm=el?el.textContent.replace(/^\s*👤\s*/,"").replace(/\s*\(WhatsApp\)\s*$/,""):"";var digits=/^[\d\s+\-]+$/.test(String(c.nombre||"").trim());var nm=(c.empresa||"")||(digits?"":c.nombre)||waNm||c.nombre||"";try{window.parent.postMessage({type:"openLead",wa:String(c.wa||"").replace(/[^0-9]/g,""),pageId:pid?pid[1]:"",nombre:nm,correo:crm.correo||"",etapa:crm.etapa||"",estado:crm.estado||"",rut:crm.rut||"",pais:crm.pais||""},"*")}catch(e){}});
   var ib=document.getElementById("iaBtn");if(ib)ib.addEventListener("click",function(){analizarIA(c);});
   if(c.cerrada){
     document.getElementById("reopenBtn").addEventListener("click",function(){reabrirChat(c);});
