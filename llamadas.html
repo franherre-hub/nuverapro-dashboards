@@ -182,6 +182,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
           <button class="act" id="aAgenda"><span class="ic">📅</span>Agendar</button>
           <button class="act" id="aBienv"><span class="ic">👋</span>WA bienvenida</button>
           <button class="act" id="aMail"><span class="ic">✉️</span>Correo bienv.</button>
+          <button class="act" id="aVozBienv"><span class="ic">🗣️</span>Voz bienv.</button>
           <button class="act" id="aVoz"><span class="ic">🎤</span>Nota de voz</button>
         </div>
         <div class="sec"><h3>Uso de la cuenta</h3><div class="facts" id="fFacts"></div></div>
@@ -312,6 +313,30 @@ $("fSave").onclick=function(){
 function marca(tipo,lbl){if(!cur)return;var a=cur;if(a.marcas&&((tipo==="wa_bienvenida"&&a.marcas.wa_bienv)||(tipo==="correo_bienvenida"&&a.marcas.correo_bienv))){toast(lbl+" ya estaba marcado");return}
   a.toques=(a.toques||[]).concat([{fecha:new Date().toISOString(),dia:a.dia,tipo:tipo,resultado:"Enviado",nota:"",origen:"fran"}]);a.marcas=a.marcas||{};if(tipo==="wa_bienvenida")a.marcas.wa_bienv=true;else a.marcas.correo_bienv=true;
   postToque(a,{tipo:tipo,resultado:"Enviado"},function(ok){toast(ok?lbl+" marcado":"Guardado local · n8n no respondió")});renderHoy();openFicha(a.id);}
+
+var VOZ_WEBHOOK="https://n8n.entrenemos.cl/webhook/nota-voz";
+function textoVozBienvenida(n){var p=(n||"").trim().split(/\s+/)[0]||"";return "Hola "+(p?p+", ":"")+"soy Francisco de NuveraPRO. Felicitaciones por crear tu cuenta, bienvenido. Te llamé recién y no alcancé a ubicarte, así que te dejo este audio. Una vez ingreses al sistema vas a encontrar videos tutoriales que te van a dejar encaminado desde el primer día, y abajo a la derecha tienes el WhatsApp de soporte para cualquier duda. Y lo más importante: agenda tu Puesta en Marcha gratis. En veinte minutos dejamos tu cuenta lista y sacamos tu primera cotización juntos. Te dejo el link acá abajo. Aquí tienes un equipo que te acompaña. ¡Un abrazo!";}
+function enviarVozBienvenida(a,cb){
+  if(!a.wa){cb&&cb(false,"sin whatsapp");return}
+  fetch(VOZ_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({to:a.wa,pageId:a.id,nombre:a.n,dia:a.dia,etiqueta:"voz_bienvenida",texto:textoVozBienvenida(a.n)})})
+  .then(function(r){return r.json().catch(function(){return {ok:r.ok}})}).then(function(j){
+    if(j&&j.ok){a.marcas=a.marcas||{};a.marcas.voz_bienv=true;a.toques=(a.toques||[]).concat([{fecha:new Date().toISOString(),dia:a.dia,tipo:"wa",resultado:"voz_bienvenida (audio)",nota:"",origen:"sistema"}]);cb&&cb(true)}
+    else cb&&cb(false,(j&&j.motivo)||"rechazado")
+  }).catch(function(){cb&&cb(false,"n8n no respondió")});
+}
+document.addEventListener("DOMContentLoaded",function(){
+  var _bv=document.getElementById("aVozBienv");
+  if(_bv)_bv.addEventListener("click",function(){
+    if(!cur)return;var a=cur;
+    if(a.marcas&&a.marcas.voz_bienv){toast("Voz bienvenida ya estaba marcado");return}
+    toast("Enviando nota de voz…");
+    enviarVozBienvenida(a,function(ok,motivo){
+      toast(ok?"Voz bienvenida enviada":"Error: "+(motivo||"desconocido"));
+      if(ok){renderHoy();openFicha(a.id);}
+    });
+  });
+});
+
 $("aBienv").onclick=function(){marca("wa_bienvenida","WA de bienvenida")};
 function enviarCorreo(a,cb){
   if(!a.correo){cb&&cb(false,"sin correo");return}
