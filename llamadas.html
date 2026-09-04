@@ -185,6 +185,18 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
           <button class="act" id="aVozBienv"><span class="ic">🗣️</span>Voz bienv.</button>
           <button class="act" id="aVoz"><span class="ic">🎤</span>Nota de voz</button>
         </div>
+        <div class="sec" id="vozComposer" style="display:none">
+          <h3>Nota de voz</h3>
+          <select id="vozPreset" style="width:100%;margin-bottom:6px;padding:6px;border-radius:8px">
+            <option value="bienvenida">Bienvenida (no contestó)</option>
+            <option value="custom">Personalizado</option>
+          </select>
+          <textarea id="vozTexto" rows="5" style="width:100%;padding:8px;border-radius:8px;font:inherit;box-sizing:border-box"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="act primary" id="vozEnviarBtn" style="flex:1">Enviar audio</button>
+            <button class="act" id="vozCancelarBtn">Cancelar</button>
+          </div>
+        </div>
         <div class="sec"><h3>Uso de la cuenta</h3><div class="facts" id="fFacts"></div></div>
         <div class="sec"><h3>Capacitación</h3><div id="agBox"></div></div>
         <div class="sec"><h3>Resultado de la llamada</h3>
@@ -316,23 +328,53 @@ function marca(tipo,lbl){if(!cur)return;var a=cur;if(a.marcas&&((tipo==="wa_bien
 
 var VOZ_WEBHOOK="https://n8n.entrenemos.cl/webhook/nota-voz";
 function textoVozBienvenida(n){var p=(n||"").trim().split(/\s+/)[0]||"";return "Hola "+(p?p+", ":"")+"soy Francisco de NuveraPRO. Felicitaciones por crear tu cuenta, bienvenido. Te llamé recién y no alcancé a ubicarte, así que te dejo este audio. Una vez ingreses al sistema vas a encontrar videos tutoriales que te van a dejar encaminado desde el primer día, y abajo a la derecha tienes el WhatsApp de soporte para cualquier duda. Y lo más importante: agenda tu Puesta en Marcha gratis. En veinte minutos dejamos tu cuenta lista y sacamos tu primera cotización juntos. Te dejo el link acá abajo. Aquí tienes un equipo que te acompaña. ¡Un abrazo!";}
-function enviarVozBienvenida(a,cb){
+function enviarVozBienvenida(a,texto,etiqueta,cb){
   if(!a.wa){cb&&cb(false,"sin whatsapp");return}
-  fetch(VOZ_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({to:a.wa,pageId:a.id,nombre:a.n,dia:a.dia,etiqueta:"voz_bienvenida",texto:textoVozBienvenida(a.n)})})
+  if(!texto||!texto.trim()){cb&&cb(false,"sin texto");return}
+  fetch(VOZ_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({to:a.wa,pageId:a.id,nombre:a.n,dia:a.dia,etiqueta:etiqueta||"voz_manual",texto:texto})})
   .then(function(r){return r.json().catch(function(){return {ok:r.ok}})}).then(function(j){
-    if(j&&j.ok){a.marcas=a.marcas||{};a.marcas.voz_bienv=true;a.toques=(a.toques||[]).concat([{fecha:new Date().toISOString(),dia:a.dia,tipo:"wa",resultado:"voz_bienvenida (audio)",nota:"",origen:"sistema"}]);cb&&cb(true)}
+    if(j&&j.ok){a.marcas=a.marcas||{};if(etiqueta==="voz_bienvenida")a.marcas.voz_bienv=true;a.toques=(a.toques||[]).concat([{fecha:new Date().toISOString(),dia:a.dia,tipo:"wa",resultado:(etiqueta||"voz_manual")+" (audio)",nota:texto.slice(0,120),origen:"sistema"}]);cb&&cb(true)}
     else cb&&cb(false,(j&&j.motivo)||"rechazado")
   }).catch(function(){cb&&cb(false,"n8n no respondió")});
 }
+var PRESETS_VOZ={
+  bienvenida:{label:"Bienvenida (no contestó)",texto:function(a){return textoVozBienvenida(a.n)}},
+  custom:{label:"Personalizado",texto:function(a){return ""}}
+};
 document.addEventListener("DOMContentLoaded",function(){
   var _bv=document.getElementById("aVozBienv");
-  if(_bv)_bv.addEventListener("click",function(){
+  var _panel=document.getElementById("vozComposer");
+  var _sel=document.getElementById("vozPreset");
+  var _txt=document.getElementById("vozTexto");
+  var _send=document.getElementById("vozEnviarBtn");
+  var _cancel=document.getElementById("vozCancelarBtn");
+  if(!_bv||!_panel)return;
+  function aplicarPreset(){
+    if(!cur)return;var p=PRESETS_VOZ[_sel.value];
+    if(p)_txt.value=p.texto(cur);
+  }
+  _bv.addEventListener("click",function(){
+    if(!cur)return;
+    var abierto=_panel.style.display!=="none";
+    if(abierto){_panel.style.display="none";return}
+    _panel.style.display="";
+    _sel.value="bienvenida";
+    aplicarPreset();
+  });
+  if(_sel)_sel.addEventListener("change",aplicarPreset);
+  if(_cancel)_cancel.addEventListener("click",function(){_panel.style.display="none"});
+  if(_send)_send.addEventListener("click",function(){
     if(!cur)return;var a=cur;
-    if(a.marcas&&a.marcas.voz_bienv){toast("Voz bienvenida ya estaba marcado");return}
+    var etiqueta=_sel.value==="bienvenida"?"voz_bienvenida":"voz_manual";
+    var texto=(_txt.value||"").trim();
+    if(!texto){toast("Escribe o elige un texto");return}
+    if(etiqueta==="voz_bienvenida"&&a.marcas&&a.marcas.voz_bienv){
+      if(!confirm("Ya se envió la voz de bienvenida antes. ¿Enviar de nuevo?"))return;
+    }
     toast("Enviando nota de voz…");
-    enviarVozBienvenida(a,function(ok,motivo){
-      toast(ok?"Voz bienvenida enviada":"Error: "+(motivo||"desconocido"));
-      if(ok){renderHoy();openFicha(a.id);}
+    enviarVozBienvenida(a,texto,etiqueta,function(ok,motivo){
+      toast(ok?"Nota de voz enviada":"Error: "+(motivo||"desconocido"));
+      if(ok){_panel.style.display="none";renderHoy();openFicha(a.id);}
     });
   });
 });
