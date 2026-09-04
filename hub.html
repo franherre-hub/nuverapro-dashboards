@@ -62,6 +62,7 @@
     .tab.active span.t{display:inline}
     .tab{padding:0 13px}
   }
+#fichaDrawer{position:fixed;inset:0;z-index:9999;display:none}#fichaDrawer.on{display:block}#fichaDrawer .fd-scrim{position:absolute;inset:0;background:rgba(0,0,0,.45)}#fichaDrawer .fd-panel{position:absolute;top:0;right:0;bottom:0;width:min(560px,100%);background:#fff;box-shadow:-8px 0 30px rgba(0,0,0,.35);display:flex;flex-direction:column}#fichaDrawer .fd-close{position:absolute;top:8px;right:10px;z-index:2;width:34px;height:34px;border-radius:50%;border:0;background:#111;color:#fff;font-size:16px;cursor:pointer}#fichaDrawer .fd-frame{flex:1;width:100%;border:0}
 </style>
 </head>
 <body>
@@ -153,12 +154,16 @@ activate(start);
 window.addEventListener('message', function(ev){
   var d=ev.data||{};
   if(d && d.type==='openLead'){
-    activate('llamadas');
-    var fl=frames['llamadas'];
-    var send=function(){ try{ fl.contentWindow.postMessage({type:'openLead', wa:d.wa||'', pageId:d.pageId||'', nombre:d.nombre||''}, '*'); }catch(e){} };
-    if(fl && fl.contentWindow){ send(); setTimeout(send, 1500); }
+    var q='embed=1&pageId='+encodeURIComponent(d.pageId||'')+'&wa='+encodeURIComponent(d.wa||'')+'&nombre='+encodeURIComponent(d.nombre||'');
+    var dr=document.getElementById('fichaDrawer');
+    if(!dr){dr=document.createElement('div');dr.id='fichaDrawer';dr.innerHTML='<div class="fd-scrim"></div><div class="fd-panel"><button class="fd-close" aria-label="Cerrar">✕</button><iframe class="fd-frame" title="Ficha"></iframe></div>';document.body.appendChild(dr);
+      dr.querySelector('.fd-scrim').onclick=dr.querySelector('.fd-close').onclick=function(){dr.classList.remove('on');dr.querySelector('.fd-frame').src='about:blank';};}
+    dr.querySelector('.fd-frame').src='./llamadas.html?'+q+'&v='+Date.now();
+    dr.classList.add('on');
     return;
   }
+  if(d && d.type==='closeFicha'){var dr2=document.getElementById('fichaDrawer');if(dr2){dr2.classList.remove('on');dr2.querySelector('.fd-frame').src='about:blank';}return;}
+  if(d && d.type==='fichaNoLead'){var dr3=document.getElementById('fichaDrawer');if(dr3){dr3.classList.remove('on');dr3.querySelector('.fd-frame').src='about:blank';}return;}
   if(d && d.type==='openConv' && d.wa){
     activate('conversaciones');
     var f=frames['conversaciones'];
