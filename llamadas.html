@@ -95,6 +95,7 @@ h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;text-wrap:
 .act .ic{font-size:20px}
 .pendbar{display:flex;align-items:center;gap:10px;margin:0 2px 10px;flex-wrap:wrap}.pendbtn{padding:9px 14px;border-radius:10px;background:var(--surf2);color:var(--ink);font-weight:600;font-size:13px;border:1px solid rgba(255,255,255,.08)}.pendbtn:disabled{opacity:.5}.pendhint{font-size:12px;color:var(--mute)}
 .card.fraude{box-shadow:inset 5px 0 0 var(--bad);background:color-mix(in srgb,var(--bad) 6%,var(--surf))}.marks i.fr{color:#fff;background:var(--bad);border-color:var(--bad);font-weight:700}
+body.embed .top,body.embed .kpis,body.embed .view,body.embed .scrim,body.embed .ficha .grab{display:none!important}body.embed .app{grid-template-rows:1fr;min-height:0}body.embed .main{grid-template-columns:1fr;padding:0}body.embed .ficha{position:static;transform:none;opacity:1;width:100%;max-width:none;box-shadow:none;border-radius:0;height:auto}body.embed .ficha .close{display:inline-flex!important}
 .act.done::after{content:"✓";position:absolute;top:6px;right:8px;font-size:12px;color:var(--ok);font-weight:700}
 .sec{margin-top:16px}
 .sec h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-bottom:8px}
@@ -362,9 +363,14 @@ function confirmarAg(){
 function load(){
   var urls=["data/seguimiento.json","seguimiento.json"];
   (function tryNext(i){if(i>=urls.length){$("gen").textContent="No se pudo cargar seguimiento.json";return}
-    fetch(urls[i]+"?v="+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){DATA=d;window._SEG_URL=urls[i];renderHoy();renderPend();renderBoard();renderCohorts();if(PENDING_LEAD){var pl=PENDING_LEAD;setTimeout(function(){if(!tryOpenLead(pl)){toast("sin lead en Notion · no se puede abrir ficha");try{window.parent.postMessage({type:"openConv",wa:pl.wa||""},"*")}catch(e){}}},50)}}).catch(function(){tryNext(i+1)})})(0);
+    fetch(urls[i]+"?v="+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){DATA=d;window._SEG_URL=urls[i];renderHoy();renderPend();renderBoard();renderCohorts();if(PENDING_LEAD){var pl=PENDING_LEAD;setTimeout(function(){if(!tryOpenLead(pl)){toast("sin lead en Notion · no se puede abrir ficha");try{window.parent.postMessage(window.EMBED?{type:"fichaNoLead",wa:pl.wa||""}:{type:"openConv",wa:pl.wa||""},"*")}catch(e){}}},50)}}).catch(function(){tryNext(i+1)})})(0);
 }
 load();
+// ---- modo embed (ficha sola, abierta desde Conversaciones): ?embed=1&pageId=&wa=&nombre=
+(function(){var q={};location.search.replace(/^\?/,"").split("&").forEach(function(p){if(!p)return;var kv=p.split("=");q[decodeURIComponent(kv[0])]=decodeURIComponent((kv[1]||"").replace(/\+/g," "))});
+  if(q.embed==="1"){document.body.classList.add("embed");window.EMBED=true;PENDING_LEAD={type:"openLead",wa:q.wa||"",pageId:q.pageId||"",nombre:q.nombre||""};
+    var fc=$("fClose");if(fc)fc.addEventListener("click",function(){try{window.parent.postMessage({type:"closeFicha"},"*")}catch(e){}});}
+})();
 // ---- buscador (vista Hoy)
 $("buscar").oninput=function(){var q=this.value.trim().toLowerCase();[].forEach.call(document.querySelectorAll("#v-hoy .card"),function(cd){cd.style.display=(!q||cd.textContent.toLowerCase().indexOf(q)>=0)?"":"none"});};
 // ---- puente Conversaciones → ficha ({type:'openLead', wa, pageId, nombre})
