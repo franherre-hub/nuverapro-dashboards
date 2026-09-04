@@ -257,6 +257,7 @@ function renderCohorts(){
 function tipoLbl(t){return {llamada:"Llamada",wa:"WhatsApp",wa_bienvenida:"WA bienvenida",correo:"Correo",correo_bienvenida:"Correo bienvenida",capacitacion:"Capacitación",sistema:"Sistema",nota:"Nota"}[t]||t}
 function openFicha(id){
   cur=DATA.cuentas.filter(function(a){return a.id===id})[0];if(!cur)return;res=null;var a=cur;
+  var tr0=document.querySelector('.ficha .trial');if(tr0)tr0.style.display=a.sinCuenta?'none':'';
   [].forEach.call(document.querySelectorAll(".card"),function(c){c.classList.toggle("sel",c.getAttribute("data-id")===id)});
   $("fName").textContent=a.n;
   var m0=a.marcas||{};$("fSub").innerHTML=flag(a.cc)+" "+esc(a.tel||"sin teléfono")+" · "+esc(a.estado||"")+' · <span class="pill '+usoCls[a.uso]+'">'+usoTxt[a.uso]+'</span>';
@@ -368,7 +369,7 @@ function load(){
 load();
 // ---- modo embed (ficha sola, abierta desde Conversaciones): ?embed=1&pageId=&wa=&nombre=
 (function(){var q={};location.search.replace(/^\?/,"").split("&").forEach(function(p){if(!p)return;var kv=p.split("=");q[decodeURIComponent(kv[0])]=decodeURIComponent((kv[1]||"").replace(/\+/g," "))});
-  if(q.embed==="1"){document.body.classList.add("embed");window.EMBED=true;PENDING_LEAD={type:"openLead",wa:q.wa||"",pageId:q.pageId||"",nombre:q.nombre||""};
+  if(q.embed==="1"){document.body.classList.add("embed");window.EMBED=true;PENDING_LEAD={type:"openLead",wa:q.wa||"",pageId:q.pageId||"",nombre:q.nombre||"",correo:q.correo||"",etapa:q.etapa||"",estado:q.estado||"",pais:q.pais||""};
     var fc=$("fClose");if(fc)fc.addEventListener("click",function(){try{window.parent.postMessage({type:"closeFicha"},"*")}catch(e){}});}
 })();
 // ---- buscador (vista Hoy)
@@ -379,10 +380,10 @@ function tail8(v){var d=String(v||"").replace(/[^0-9]/g,"");return d.length>8?d.
 function findLead(d){if(!DATA||!DATA.cuentas)return null;var pid=String(d.pageId||"").replace(/-/g,"").toLowerCase();var t=tail8(d.wa);var byId=pid?DATA.cuentas.find(function(a){return String(a.id||"").replace(/-/g,"").toLowerCase()===pid}):null;if(byId)return byId;if(t.length>=8)return DATA.cuentas.find(function(a){return tail8(a.wa)===t||tail8(a.tel)===t})||null;return null}
 function tryOpenLead(d){var a=findLead(d);
   if(!a){var pid=String(d.pageId||"").replace(/-/g,"").toLowerCase();if(!pid)return false;
-    a={id:pid,n:d.nombre||("Lead "+(d.wa||"")),cc:"CL",tel:String(d.wa||""),telH:"",wa:String(d.wa||"").replace(/[^0-9]/g,""),dia:0,fAct:new Date().toISOString().slice(0,10),idExt:"",pais:"",correo:"",cotiCN:0,cotiSN:0,dSin:0,notas:"",capTxt:"",capEst:"",estado:"Lead sin cuenta",etapa:"Lead sin cuenta",bienv:false,uso:"sin",pago:false,senal:["Sin cuenta en prueba · agendar desde el lead"],bucket:"resto",proximo:null,proximoTxt:"",marcas:{},toques:[],notion:"https://www.notion.so/"+pid,sinCuenta:true};
+    a={id:pid,n:d.nombre||("Lead "+(d.wa||"")),cc:(d.pais==="Perú"||d.pais==="PE")?"PE":"CL",tel:String(d.wa||""),telH:"",wa:String(d.wa||"").replace(/[^0-9]/g,""),dia:0,fAct:new Date().toISOString().slice(0,10),idExt:"",pais:d.pais||"",correo:d.correo||"",cotiCN:0,cotiSN:0,dSin:0,notas:"",capTxt:"",capEst:"",estado:d.estado||"Sin cuenta",etapa:d.etapa||"Lead sin cuenta",bienv:false,uso:"sin",pago:false,senal:["Sin cuenta en prueba · agendar desde el lead"],bucket:"resto",proximo:null,proximoTxt:"",marcas:{},toques:[],notion:"https://www.notion.so/"+pid,sinCuenta:true};
     DATA.cuentas.push(a);}
   openFicha(a.id);PENDING_LEAD=null;
-  if(a.sinCuenta){var fs=$("fSub");if(fs)fs.innerHTML='<span style="color:var(--warn,#c77d00);font-weight:700">Lead sin cuenta en prueba</span> · '+fs.innerHTML;}
+  var tr=document.querySelector('.ficha .trial');if(tr)tr.style.display=a.sinCuenta?'none':'';if(a.sinCuenta){var fs=$("fSub");if(fs)fs.innerHTML='<span style="color:var(--warn,#c77d00);font-weight:700">Sin cuenta NuveraPRO</span> · '+(a.etapa?esc(a.etapa)+' · ':'')+esc(a.tel||'')+(a.correo?' · '+esc(a.correo):'');}
   return true}
 window.addEventListener("message",function(ev){var d=ev.data||{};if(d.type!=="openLead")return;if(!DATA){PENDING_LEAD=d;return}if(!tryOpenLead(d)){toast((d.nombre?d.nombre+": ":"")+"sin lead en Notion · no se puede abrir ficha");try{window.parent.postMessage({type:"openConv",wa:d.wa||""},"*")}catch(e){}}});
 </script><!--NVP-AUTOREFRESH--><script>(function(){var l=null;setInterval(function(){var u=(window._SEG_URL||"data/seguimiento.json")+"?t=";fetch(u+Date.now()).then(function(r){return r.text();}).then(function(t){if(l!==null&&t!==l&&!document.getElementById("ficha").classList.contains("open")){location.reload();}l=t;}).catch(function(){});},20000);})();</script></body></html>
