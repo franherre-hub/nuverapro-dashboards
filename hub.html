@@ -154,7 +154,7 @@ activate(start);
 window.addEventListener('message', function(ev){
   var d=ev.data||{};
   if(d && d.type==='openLead'){
-    var q='embed=1&pageId='+encodeURIComponent(d.pageId||'')+'&wa='+encodeURIComponent(d.wa||'')+'&nombre='+encodeURIComponent(d.nombre||'')+'&correo='+encodeURIComponent(d.correo||'')+'&etapa='+encodeURIComponent(d.etapa||'')+'&estado='+encodeURIComponent(d.estado||'')+'&pais='+encodeURIComponent(d.pais||'');
+    var q='embed=1&pageId='+encodeURIComponent(d.pageId||'')+'&wa='+encodeURIComponent(d.wa||'')+'&nombre='+encodeURIComponent(d.nombre||'')+'&correo='+encodeURIComponent(d.correo||'')+'&etapa='+encodeURIComponent(d.etapa||'')+'&estado='+encodeURIComponent(d.estado||'')+'&pais='+encodeURIComponent(d.pais||'')+'&fAct='+encodeURIComponent(d.fAct||'')+'&rut='+encodeURIComponent(d.rut||'')+'&cotiCN='+encodeURIComponent(d.cotiCN==null?'':d.cotiCN)+'&cotiSN='+encodeURIComponent(d.cotiSN==null?'':d.cotiSN)+'&dias='+encodeURIComponent(d.dias==null?'':d.dias);
     var dr=document.getElementById('fichaDrawer');
     if(!dr){dr=document.createElement('div');dr.id='fichaDrawer';dr.innerHTML='<div class="fd-scrim"></div><div class="fd-panel"><button class="fd-close" aria-label="Cerrar">✕</button><iframe class="fd-frame" title="Ficha"></iframe></div>';document.body.appendChild(dr);
       dr.querySelector('.fd-scrim').onclick=dr.querySelector('.fd-close').onclick=function(){dr.classList.remove('on');dr.querySelector('.fd-frame').src='about:blank';};}
