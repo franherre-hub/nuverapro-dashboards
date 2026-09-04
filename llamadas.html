@@ -152,6 +152,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
     <div>
       <section class="view on" id="v-hoy">
         <div class="pendbar"><input id="buscar" type="search" placeholder="Buscar nombre, teléfono o correo…" style="flex:1;min-width:220px;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:var(--surf2);color:var(--ink);font-size:13px"></div>
+        <div class="group" id="gFuera" style="display:none"><div class="gh"><h3>Fuera del seguimiento 15 días</h3><span class="ghs" id="gFueraN"></span></div><div class="cards" id="cFuera"></div></div>
         <div class="pendbar"><button class="pendbtn" id="btnPend">✉️ Enviar correo de bienvenida a pendientes (<span id="nPend">0</span>)</button><span class="pendhint" id="pendHint"></span></div>
         <div class="group"><header><h2>Bienvenida · día 0</h2><span class="why">llamar hoy</span></header><div class="cards" data-bucket="d0"></div></div>
         <div class="group"><header><h2>Señal · atender primero</h2><span class="why">algo cambió</span></header><div class="cards" data-bucket="senal"></div></div>
@@ -373,7 +374,21 @@ load();
     var fc=$("fClose");if(fc)fc.addEventListener("click",function(){try{window.parent.postMessage({type:"closeFicha"},"*")}catch(e){}});}
 })();
 // ---- buscador (vista Hoy)
-$("buscar").oninput=function(){var q=this.value.trim().toLowerCase();[].forEach.call(document.querySelectorAll("#v-hoy .card"),function(cd){cd.style.display=(!q||cd.textContent.toLowerCase().indexOf(q)>=0)?"":"none"});};
+function fichaDesdeTodas(t){var pid=String(t.id||"").replace(/-/g,"").toLowerCase();var ex=DATA.cuentas.filter(function(a){return String(a.id||"").replace(/-/g,"").toLowerCase()===pid})[0];
+  if(!ex){var d=t.fAct?new Date(String(t.fAct).slice(0,10)+"T12:00:00"):null;var dias=d?Math.floor((Date.now()-d.getTime())/864e5):0;
+    ex={id:pid,n:t.n,cc:"CL",tel:t.tel||"",telH:"",wa:String(t.tel||"").replace(/[^0-9]/g,""),dia:dias,fAct:t.fAct||"",idExt:t.idExt||"",pais:"",correo:t.correo||"",cotiCN:+t.cotiCN||0,cotiSN:+t.cotiSN||0,dSin:0,notas:"",capTxt:"",capEst:"",estado:t.estado||"",etapa:t.etapa||"",bienv:false,uso:(t.pago?"pago":(+t.cotiCN>0?"usa":(+t.cotiSN>0?"explora":"sin"))),fActRaw:t.fAct||"",registrada:true,pago:!!t.pago,senal:[],bucket:"resto",proximo:null,proximoTxt:"",marcas:{},toques:[],notion:"https://www.notion.so/"+pid,sinCuenta:true};
+    DATA.cuentas.push(ex);}
+  tryOpenLead({pageId:pid});}
+$("buscar").oninput=function(){var q=this.value.trim().toLowerCase();var qd=q.replace(/[^0-9]/g,"");
+  [].forEach.call(document.querySelectorAll("#v-hoy .group:not(#gFuera) .card"),function(cd){cd.style.display=(!q||cd.textContent.toLowerCase().indexOf(q)>=0)?"":"none"});
+  var g=$("gFuera"),box=$("cFuera");if(!g)return;
+  if(q.length<3||!DATA||!DATA.todas){g.style.display="none";box.innerHTML="";return}
+  var hits=DATA.todas.filter(function(t){var tel=String(t.tel||"").replace(/[^0-9]/g,"");return String(t.n||"").toLowerCase().indexOf(q)>=0||String(t.correo||"").toLowerCase().indexOf(q)>=0||(qd.length>=4&&tel.indexOf(qd)>=0)||String(t.idExt||"")===q}).slice(0,20);
+  if(!hits.length){g.style.display="none";box.innerHTML="";return}
+  g.style.display="";$("gFueraN").textContent=hits.length+(hits.length===20?"+":"")+" cuenta(s)";
+  box.innerHTML=hits.map(function(t){var fa=t.fAct?String(t.fAct).slice(0,10).split("-").reverse().join("-"):"sin fecha";return '<button class="card dim" data-tid="'+esc(t.id)+'"><span class="dayb"><b>'+(t.pago?"💳":"·")+'</b><small>'+(t.pago?"pagó":"prueba")+'</small></span><span class="body"><span class="nm">'+esc(t.n)+'</span><span class="sub">'+esc(t.estado||t.etapa||"")+' · activada '+fa+(t.tel?' · '+esc(t.tel):'')+(t.correo?' · '+esc(t.correo):'')+'</span></span></button>'}).join("");
+  [].forEach.call(box.querySelectorAll(".card"),function(b){b.onclick=function(){var tid=this.getAttribute("data-tid");var t=DATA.todas.filter(function(x){return x.id===tid})[0];if(t)fichaDesdeTodas(t)}});
+};
 // ---- puente Conversaciones → ficha ({type:'openLead', wa, pageId, nombre})
 var PENDING_LEAD=null;
 function tail8(v){var d=String(v||"").replace(/[^0-9]/g,"");return d.length>8?d.slice(-8):d}
