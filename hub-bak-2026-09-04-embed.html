@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NuveraPRO — Panel</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NuveraPRO">
+<meta name="theme-color" content="#0b1327">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAG3ElEQVR4nO3dW29UVRiA4W+mRyhQepopImgkBow2BBJFjXIBQohERCqHohdoAogi8Qd4yR8QFAl4iDHStIgiGiWEC4xEQkJQxBNqPCBKZ0pLoRZ6Hi/aUJj22zOd6V5rTff73JGs7vlm5e2aadltQyUVswUYSdj2AHAXcUBFHFARB1TEARVxQEUcUBEHVMQBFXFARRxQEQdUxAEVcUBFHFARB1TEARVxQEUcUBEHVMQBFXFARRxQEQdUxAEVcUBFHFDl2x5gUE3jGdsjuOXsmrm2R5CQ3R+kpomULFZiLQ6yGBUriViIgywyZjgR029IKSMbhnfP3Mnh/cRceP/lFBe2y1AcHk+VLDzY3TcTcWjPkCzSZGsD7XyfgyxGZWC7zL9d8/0N6fCnRBmZGb5vfufibxyUMbYM92H0S1nKyJ7JPfQxDr6lYYZ/+2zu5ODYGCvGdtKvODg2TPJptw2dHBwbY8vMfnKzD1S+xJF0ynFs+CFpV/14ZeHkgIo4oCIOqIgDKuKAijigIg6oiAMq4oCKOKAiDqiIAyrigMqVX8GQjYKK6Jw3j6S/vjt24ZdXnkz09WbwWJHaTdG1L6Vc1tMa//mFJRlc3ylBPDkKo7eXL15le4ocEMQ4RCRSuzlcVGx7CtcFNI78ssqKZettT+G6gMYhIlUrn8srmWx7CqeNhzekmckrmVK5YkOsfueYXC1evOnmf5bJ9jG5rF3BPTlEpPLxZ/JLK7K8SLx4U1IZInL5tlejhxZkeWXrAh1HuGhCpHZjNlcYnsXNcr2PQMchIuWPPV0YmZ7Zx3qXMSCn+wh6HKH8gsjqLRl8YDplDMjdPoIeh4iULVxePGOW7SlcRBwioXB03dZRfUT6x8aAHD08iENEZMr9iybeXWN7CucQx6Bo3TbbIziHOAZNuu+BSTUP2p7CLcQxpHo9h8ctiGPIhFn3TlmwOJ2Vkc49o7pybMXJjCayLFhxdMcueC+oXrc1FA7WnngI1kbEP9rrfQNY0fS7pi58Ip1LpX945OixIUGLozt+ofXoh95roqu3hPIL0rlaOn3kbhkStDhEJH5gb39Xp8eCgqpp5UtWp3k17z5yugwJYBy9bZdaPv/Ae01k1cZw8cQ0Lxjp3DM8kbJ/t+d6GRLMm32aD71bvnSNx21g+aXllcufjR8YxZckSX30SDzz+ZwRuJNDRPo62ps/ecd7TdWKDXmTSs3M46wgxiEiLV/s62275LEgPKGkauXzxuZxU0Dj6O/qTPmqUbGsrqA8YmYeNwU0DhFpPXrA+3ti4cKiSO1mY/M4KLhxJPp6Y427vNeULXqqsHqmmXkcFNw4RKTt+Bedf//msSCUlxdd+6KxeVwT6Dgk0Z/y51amPrys+A6bf9HdomDHIXL11LFrv37ntSIUqq572dQ4bgl6HCLQt8/nvS7gGvBRHtQrsPfBqTS3Ecl4iILrhP1w1n5s+P/eKmVMY5RE1cRR2XWM/1yqm+xxdZ+Xj/AWZgYh8Ab5Q0AAAAAElFTkSuQmCC">
+
+<style>
+  :root{
+    --bg:#0d1117; --bar:#12233f; --bar2:#0f1b2e; --line:#22314a;
+    --ink:#e6edf3; --muted:#9db0c7; --accent:#4f9dff; --live:#3fb950;
+    --tabh:52px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overscroll-behavior:none}
+  /* ---- top bar ---- */
+  #bar{position:fixed;top:0;left:0;right:0;height:var(--tabh);z-index:20;
+    display:flex;align-items:stretch;gap:0;
+    background:linear-gradient(180deg,var(--bar) 0%,var(--bar2) 100%);
+    border-bottom:1px solid var(--line);
+    padding-top:env(safe-area-inset-top);
+    box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  #brand{display:flex;align-items:center;gap:7px;padding:0 12px;font-weight:700;
+    font-size:14.5px;white-space:nowrap;border-right:1px solid var(--line)}
+  #brand .live{width:8px;height:8px;border-radius:50%;background:var(--live);
+    box-shadow:0 0 0 0 rgba(63,185,80,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,185,80,.5)}
+    70%{box-shadow:0 0 0 7px rgba(63,185,80,0)}100%{box-shadow:0 0 0 0 rgba(63,185,80,0)}}
+  #tabs{display:flex;align-items:stretch;overflow-x:auto;flex:1;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #tabs::-webkit-scrollbar{display:none}
+  .tab{display:flex;align-items:center;gap:7px;padding:0 15px;cursor:pointer;
+    color:var(--muted);font-size:13.5px;white-space:nowrap;border:none;background:none;
+    border-bottom:3px solid transparent;transition:.15s;position:relative}
+  .tab:hover{color:var(--ink)}
+  .tab.active{color:#fff;border-bottom-color:var(--accent)}
+  .tab .ic{font-size:16px;line-height:1}
+  .tab .dot{width:7px;height:7px;border-radius:50%;background:var(--live);margin-left:1px}
+  /* ---- panes ---- */
+  #stage{position:fixed;top:var(--tabh);left:0;right:0;bottom:0;
+    top:calc(var(--tabh) + env(safe-area-inset-top))}
+  .pane{position:absolute;inset:0;display:none;background:var(--bg)}
+  .pane.active{display:block}
+  .pane iframe{width:100%;height:100%;border:0;display:block;background:var(--bg)}
+  .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:14px;flex-direction:column;gap:10px}
+  .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);
+    border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  /* narrow: colapsar etiquetas a solo íconos (excepto la activa) */
+  @media(max-width:620px){
+    #brand span.t{display:none}
+    .tab span.t{display:none}
+    .tab.active span.t{display:inline}
+    .tab{padding:0 13px}
+  }
+</style>
+</head>
+<body>
+  <div id="bar">
+    <div id="brand"><span class="live"></span><span class="t">NuveraPRO</span></div>
+    <div id="tabs"></div>
+  </div>
+  <div id="stage"></div>
+
+<script>
+/* ====== CONFIG ====== */
+// Base de los dashboards que hornea n8n (GitHub Pages). Se siguen horneando allá;
+// acá solo se embeben. Cambiar si algún día migran de host.
+var GH = "https://franherre-hub.github.io/nuverapro-dashboards/";
+
+// Chat en vivo: hoy vive en la RAÍZ del panel (index.html con SSE). Este shell se
+// despliega como hub.html y lo embebe desde "/". Si algún día se promueve el shell a
+// la raíz, mover el chat a chat.html y cambiar CHAT_URL a "/chat.html".
+var CHAT_URL = "/";
+
+var TABS = [
+  // key,        label,           icon, url,                              eager (montar al abrir)
+  ["conversaciones","Conversaciones","💬", CHAT_URL,                          true ],
+  ["rendimiento-sem","Embudo",  "📅", "./rendimiento-semanal.html",     false],
+  ["conversion",   "Conversión",    "📈", GH+"conversion.html",               false],
+  ["trabajo",      "Trabajo",       "🗂️", GH+"vincular-capacitaciones.html",  false],
+  ["antifraude",   "Antifraude",    "🚩", "./duplicados.html",               false],
+  ["llamadas",     "Llamadas",      "📞", "./llamadas.html",                 false],
+  ["procesos",     "Procesos",      "🗺️", "./procesos.html",                  false],
+];
+
+var tabsEl = document.getElementById('tabs');
+var stage  = document.getElementById('stage');
+var frames = {};   // key -> iframe (una vez montado, se mantiene vivo)
+var panes  = {};   // key -> pane div
+var loaded = {};   // key -> bool
+
+function buildPane(key){
+  var pane = document.createElement('div');
+  pane.className='pane'; pane.dataset.key=key;
+  var load=document.createElement('div'); load.className='loading';
+  load.innerHTML='<div class="spin"></div><div>Cargando '+key+'…</div>';
+  pane.appendChild(load);
+  stage.appendChild(pane);
+  panes[key]=pane;
+  return pane;
+}
+
+function mount(key){
+  if(loaded[key]) return;
+  var def = TABS.find(function(t){return t[0]===key;});
+  var f=document.createElement('iframe');
+  f.setAttribute('title',def[1]);
+  f.setAttribute('loading','eager');
+  f.onload=function(){ var l=panes[key].querySelector('.loading'); if(l) l.remove(); };
+  f.src=def[3];
+  panes[key].appendChild(f);
+  frames[key]=f; loaded[key]=true;
+}
+
+function activate(key){
+  Object.keys(panes).forEach(function(k){ panes[k].classList.toggle('active', k===key); });
+  document.querySelectorAll('.tab').forEach(function(b){ b.classList.toggle('active', b.dataset.key===key); });
+  mount(key); // monta al primer uso; luego queda vivo (no se recarga al cambiar de pestaña)
+  try{ location.hash = key; }catch(e){}
+}
+
+/* construir barra + panes */
+TABS.forEach(function(t){
+  var key=t[0];
+  var b=document.createElement('button');
+  b.className='tab'; b.dataset.key=key;
+  b.innerHTML='<span class="ic">'+t[2]+'</span><span class="t">'+t[1]+'</span>'
+            + (key==='conversaciones' ? '<span class="dot" title="en vivo"></span>' : '');
+  b.onclick=function(){ activate(key); };
+  tabsEl.appendChild(b);
+  buildPane(key);
+  if(t[4]) mount(key);   // Conversaciones se monta YA → SSE conecta al instante y nunca se corta
+});
+
+/* pestaña inicial: hash válido o Conversaciones */
+var start = (location.hash||'').replace('#','');
+if(!TABS.find(function(t){return t[0]===start;})) start='conversaciones';
+activate(start);
+
+/* ===== Puente Llamadas → Conversaciones (postMessage, sin recargar el chat) =====
+   La ficha de Llamadas hace postMessage {type:'openConv', wa} al shell.
+   Reenviamos al iframe del chat (que ya escucha 'openConv') sin tocar su src → SSE intacto. */
+window.addEventListener('message', function(ev){
+  var d=ev.data||{};
+  if(d && d.type==='openLead'){
+    activate('llamadas');
+    var fl=frames['llamadas'];
+    var send=function(){ try{ fl.contentWindow.postMessage({type:'openLead', wa:d.wa||'', pageId:d.pageId||'', nombre:d.nombre||''}, '*'); }catch(e){} };
+    if(fl && fl.contentWindow){ send(); setTimeout(send, 1500); }
+    return;
+  }
+  if(d && d.type==='openConv' && d.wa){
+    activate('conversaciones');
+    var f=frames['conversaciones'];
+    if(f && f.contentWindow){
+      try{ f.contentWindow.postMessage({type:'openConv', wa:d.wa}, '*'); }catch(e){}
+    }
+  }
+});
+</script>
+</body>
+</html>
