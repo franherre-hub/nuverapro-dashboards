@@ -182,8 +182,8 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
           <button class="act" id="aAgenda"><span class="ic">📅</span>Agendar</button>
           <button class="act" id="aBienv"><span class="ic">👋</span>WA bienvenida</button>
           <button class="act" id="aMail"><span class="ic">✉️</span>Correo bienv.</button>
-          <button class="act" id="aVozBienv"><span class="ic">🗣️</span>Voz bienv.</button>
           <button class="act" id="aVoz"><span class="ic">🎤</span>Nota de voz</button>
+          <button class="act" id="aVozBienv"><span class="ic">🗣️</span>Mensaje de voz</button>
         </div>
         <div class="sec" id="vozComposer" style="display:none">
           <h3>Nota de voz</h3>
@@ -283,7 +283,7 @@ function openFicha(id){
   $("fDays").innerHTML=days;
   var end=new Date(a.fAct);end.setDate(end.getDate()+15);$("fEnds").textContent="vence "+fmtISO(end.toISOString());
   $("aCall").href=a.telH?"tel:"+a.telH:"#";
-  var m=a.marcas||{};$("aBienv").classList.toggle("done",!!m.wa_bienv);$("aMail").classList.toggle("done",!!m.correo_bienv);
+  var m=a.marcas||{};$("aBienv").classList.toggle("done",!!m.wa_bienv);$("aMail").classList.toggle("done",!!m.correo_bienv);$("aVoz").classList.toggle("done",!!m.voz_bienv);
   $("fFacts").innerHTML='<div><span>PDF con nombre</span><b class="mono">'+(a.cotiCN||0)+'</b></div><div><span>Cotizaciones sin nombre</span><b class="mono">'+(a.cotiSN||0)+'</b></div><div><span>Días sin cotizar</span>'+(a.dSin!=null?a.dSin:"—")+'</div><div><span>Capacitación</span>'+esc(a.capEst?a.capEst+(a.capTxt?" · "+a.capTxt:""):"—")+'</div><div><span>Correo</span>'+(a.correo?esc(a.correo):'<span class="pill warn">falta · pedir</span>')+'</div><div><span>ID cuenta</span><span class="mono">'+(a.idExt||"—")+'</span></div>';
   $("fLog").innerHTML=(a.toques||[]).slice().reverse().map(function(t){return '<li><span class="t">D'+(t.dia!=null?t.dia:"?")+' '+fmtISO(t.fecha)+'</span><span><span class="k '+esc(t.tipo)+'">'+tipoLbl(t.tipo)+'</span> · '+esc(t.resultado||"")+(t.nota?' · <em>'+esc(t.nota)+'</em>':"")+(t.origen==="sistema"?' <span class="pill mute">auto</span>':"")+'</span></li>'}).join("")||'<li><span class="t">—</span><span>Sin toques todavía.</span></li>';
   $("fNotes").textContent=a.notas||"Sin anotaciones.";
@@ -421,7 +421,17 @@ $("btnPend").onclick=function(){var p=pendientesCorreo();if(!p.length)return;
     enviarCorreo(a,function(ok){if(ok)okN++;else bad.push(a.n);setTimeout(next,600)})})();
 };
 $("aWa").onclick=function(){if(!cur)return;var d=cur.wa||"";try{window.parent.postMessage({type:"openConv",wa:d},"*")}catch(e){}if(window.parent===window&&d)window.open("https://wa.me/"+d,"_blank")};
-$("aVoz").onclick=function(){toast("Nota de voz: fase 2 (Whisper vía action-button-intake)")};
+$("aVoz").onclick=function(){
+  if(!cur)return;var a=cur;
+  var ya=a.marcas&&a.marcas.voz_bienv;
+  if(ya){if(!confirm("Ya se envió el mensaje de voz de bienvenida. ¿Enviar de nuevo?"))return;}
+  toast("Enviando nota de voz…");
+  var texto=textoVozBienvenida(a.n);
+  enviarVozBienvenida(a,texto,"voz_bienvenida",function(ok,motivo){
+    toast(ok?"Nota de voz enviada":"Error: "+(motivo||"desconocido"));
+    if(ok){renderHoy();openFicha(a.id);}
+  });
+};
 $("aAgenda").onclick=function(){cargarDisp();var el=$("agBox");if(el)el.scrollIntoView({behavior:"smooth",block:"center"})};
 function renderAg(){
   var box=$("agBox");if(!box)return;var it=cur;
