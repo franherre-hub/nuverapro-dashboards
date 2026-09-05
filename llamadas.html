@@ -192,6 +192,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
             <option value="custom">Personalizado</option>
           </select>
           <textarea id="vozTexto" rows="5" style="width:100%;padding:8px;border-radius:8px;font:inherit;box-sizing:border-box"></textarea>
+          <div id="vozAlerta" style="display:none;background:#fff3cd;color:#664d03;padding:8px 10px;border-radius:8px;margin-top:8px;font-size:13px"></div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <button class="act primary" id="vozEnviarBtn" style="flex:1">Enviar audio</button>
             <button class="act" id="vozCancelarBtn">Cancelar</button>
@@ -360,6 +361,14 @@ document.addEventListener("DOMContentLoaded",function(){
     _panel.style.display="";
     _sel.value="bienvenida";
     aplicarPreset();
+    var _al=document.getElementById("vozAlerta");
+    if(_al){
+      if(cur.marcas&&cur.marcas.riesgo_24h){
+        var hs=cur.marcas.horas_sin_msg;
+        _al.textContent="⚠️ Riesgo de no entrega: "+(hs==null?"el cliente nunca te ha escrito por WhatsApp":"han pasado "+hs+"h desde su último mensaje")+". WhatsApp exige contacto en las últimas 24h para recibir audios/textos libres.";
+        _al.style.display="";
+      } else {_al.style.display="none";}
+    }
   });
   if(_sel)_sel.addEventListener("change",aplicarPreset);
   if(_cancel)_cancel.addEventListener("click",function(){_panel.style.display="none"});
