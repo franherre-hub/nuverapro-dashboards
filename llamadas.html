@@ -354,7 +354,7 @@ document.addEventListener("DOMContentLoaded",function(){
     if(!cur)return;var p=PRESETS_VOZ[_sel.value];
     if(p)_txt.value=p.texto(cur);
   }
-  function ensureCurEmbed(){
+  window.ensureCurEmbed=function ensureCurEmbed(){
     if(cur)return cur;
     if(!window.EMBED)return cur;
     var q={};location.search.replace(/^\?/,"").split("&").forEach(function(p){if(!p)return;var kv=p.split("=");q[decodeURIComponent(kv[0])]=decodeURIComponent((kv[1]||"").replace(/\+/g," "))});
