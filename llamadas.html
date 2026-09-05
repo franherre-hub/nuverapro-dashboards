@@ -422,7 +422,9 @@ $("btnPend").onclick=function(){var p=pendientesCorreo();if(!p.length)return;
 };
 $("aWa").onclick=function(){if(!cur)return;var d=cur.wa||"";try{window.parent.postMessage({type:"openConv",wa:d},"*")}catch(e){}if(window.parent===window&&d)window.open("https://wa.me/"+d,"_blank")};
 $("aVoz").onclick=function(){
-  if(!cur)return;var a=cur;
+  if(!cur&&typeof ensureCurEmbed==="function")ensureCurEmbed();
+  if(!cur){toast("No se pudo cargar la ficha del cliente · reintenta abriendo de nuevo");return}
+  var a=cur;
   var ya=a.marcas&&a.marcas.voz_bienv;
   if(ya){if(!confirm("Ya se envió el mensaje de voz de bienvenida. ¿Enviar de nuevo?"))return;}
   toast("Enviando nota de voz…");
