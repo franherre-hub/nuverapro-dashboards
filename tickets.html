@@ -52,7 +52,7 @@ h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;text-wrap:
 .tile .n{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile .m{font-size:11px;color:var(--mute);display:flex;justify-content:space-between;gap:6px}
 .fab{position:fixed;right:18px;bottom:18px;z-index:15;background:var(--ink);color:var(--bg);border-radius:999px;padding:14px 20px;font-weight:700;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px}
-/* ficha / modal (bottom-sheet movil, panel lateral desktop) */
+/* ficha / modal (bottom-sheet móvil, panel lateral desktop) */
 .ficha{position:fixed;left:0;right:0;bottom:0;z-index:30;max-height:92vh;overflow:auto;background:var(--surf);border-radius:18px 18px 0 0;box-shadow:var(--sheet-shadow);transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);padding:8px 16px 28px}
 .ficha.open{transform:none}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:29;display:none}
@@ -100,7 +100,9 @@ label.f{display:block;font-size:12px;color:var(--mute);margin:10px 0 4px;font-we
   <main class="main">
     <div>
       <section class="view on" id="v-hoy">
-        <div class="group"><header><h2>Fran</h2></header><div class="cards" id="cFran"></div></div>
+        <div class="group"><header><h2>Francisco</h2></header><div class="cards" id="cFrancisco"></div></div>
+        <div class="group"><header><h2>Matías</h2></header><div class="cards" id="cMatias"></div></div>
+        <div class="group"><header><h2>Cristina</h2></header><div class="cards" id="cCristina"></div></div>
         <div class="group"><header><h2>Marcelo</h2></header><div class="cards" id="cMarcelo"></div></div>
         <div class="group"><header><h2>Sin asignar</h2></header><div class="cards" id="cSinAsignar"></div></div>
       </section>
@@ -123,7 +125,9 @@ label.f{display:block;font-size:12px;color:var(--mute);margin:10px 0 4px;font-we
     <button class="chip" data-e="resuelto">Resuelto</button>
   </div></div>
   <div class="sec"><h3>Asignado</h3><div class="chips" id="fAsigChips">
-    <button class="chip" data-a="fran">Fran</button>
+    <button class="chip" data-a="francisco">Francisco</button>
+    <button class="chip" data-a="matias">Matías</button>
+    <button class="chip" data-a="cristina">Cristina</button>
     <button class="chip" data-a="marcelo">Marcelo</button>
   </div></div>
   <div class="sec"><h3>Descripción / historial</h3><div class="notesbox" id="fDescripcion"></div>
@@ -143,7 +147,7 @@ label.f{display:block;font-size:12px;color:var(--mute);margin:10px 0 4px;font-we
   <label class="f">Teléfono</label>
   <input id="nTelefono" placeholder="+56 9 …">
   <label class="f">Asignado</label>
-  <select id="nAsignado"><option value="fran">Fran</option><option value="marcelo">Marcelo</option></select>
+  <select id="nAsignado"><option value="francisco">Francisco</option><option value="matias">Matías</option><option value="cristina">Cristina</option><option value="marcelo">Marcelo</option></select>
   <label class="f">Tarea</label>
   <input id="nTarea" placeholder="Qué hay que hacer, en pocas palabras">
   <label class="f">Descripción</label>
@@ -182,11 +186,13 @@ function tile(t){
     +'<span class="m"><span>'+(tenantPill[t.tenant]||esc(t.tenant))+' '+esc(t.asignado||"sin asignar")+'</span><span class="mono">'+fmtISO(t.fecha_actualizacion||t.fecha_creacion)+'</span></span></span></button>';
 }
 function renderHoy(){
-  var h=(DATA&&DATA.hoy)||{fran:[],marcelo:[],sin_asignar:[]};
-  $("cFran").innerHTML=h.fran.length?h.fran.map(card).join(""):'<div class="empty">Nada pendiente.</div>';
-  $("cMarcelo").innerHTML=h.marcelo.length?h.marcelo.map(card).join(""):'<div class="empty">Nada pendiente.</div>';
-  $("cSinAsignar").innerHTML=h.sin_asignar.length?h.sin_asignar.map(card).join(""):'<div class="empty">Nada pendiente.</div>';
-  $("nHoy").textContent=h.fran.length+h.marcelo.length+h.sin_asignar.length;
+  var h=(DATA&&DATA.hoy)||{francisco:[],matias:[],cristina:[],marcelo:[],sin_asignar:[]};
+  $("cFrancisco").innerHTML=(h.francisco||[]).length?h.francisco.map(card).join(""):'<div class="empty">Nada pendiente.</div>';
+  $("cMatias").innerHTML=(h.matias||[]).length?h.matias.map(card).join(""):'<div class="empty">Nada pendiente.</div>';
+  $("cCristina").innerHTML=(h.cristina||[]).length?h.cristina.map(card).join(""):'<div class="empty">Nada pendiente.</div>';
+  $("cMarcelo").innerHTML=(h.marcelo||[]).length?h.marcelo.map(card).join(""):'<div class="empty">Nada pendiente.</div>';
+  $("cSinAsignar").innerHTML=(h.sin_asignar||[]).length?h.sin_asignar.map(card).join(""):'<div class="empty">Nada pendiente.</div>';
+  $("nHoy").textContent=(h.francisco||[]).length+(h.matias||[]).length+(h.cristina||[]).length+(h.marcelo||[]).length+(h.sin_asignar||[]).length;
 }
 function renderTablero(){
   var t=(DATA&&DATA.tablero)||{nuevo:[],en_curso:[],resuelto:[]};
