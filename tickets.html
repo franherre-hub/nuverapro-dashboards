@@ -35,7 +35,7 @@ h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;text-wrap:
 .dchip{display:grid;place-items:center;width:44px;height:44px;border-radius:10px;background:var(--surf2);font-family:"IBM Plex Mono",monospace;font-size:10px;line-height:1.1;color:var(--mute);text-align:center;padding:2px}
 .who{min-width:0}
 .who .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.who .s{font-size:12.5px;color:var(--mute);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.who .s{font-size:12.5px;color:var(--mute);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .pill{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;line-height:1.5}
 .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.info{background:var(--info-soft);color:var(--info)} .pill.gold{background:var(--gold-soft);color:var(--gold)} .pill.mute{background:var(--surf2);color:var(--mute)}
 .quick{display:flex;gap:6px}
@@ -213,6 +213,21 @@ function renderKpis(){
   $("gen").textContent=DATA&&DATA.generated_at?"actualizado "+fmtISO(DATA.generated_at):"";
 }
 function renderAll(){renderKpis();renderHoy();renderTablero();}
+function regroup(){
+  var tickets=(DATA&&DATA.tickets)||[];
+  var hoy={francisco:[],matias:[],cristina:[],marcelo:[],sin_asignar:[]};
+  var tablero={nuevo:[],en_curso:[],resuelto:[]};
+  tickets.forEach(function(t){
+    var estadoKey=(t.estado==="en_curso")?"en_curso":(t.estado==="resuelto"?"resuelto":"nuevo");
+    tablero[estadoKey].push(t);
+    if(estadoKey!=="resuelto"){
+      var asig=(t.asignado||"").toLowerCase();
+      if(hoy[asig])hoy[asig].push(t);else hoy.sin_asignar.push(t);
+    }
+  });
+  DATA.hoy=hoy;DATA.tablero=tablero;
+  DATA.kpis={total:tickets.length,nuevo:tablero.nuevo.length,en_curso:tablero.en_curso.length,resuelto:tablero.resuelto.length};
+}
 
 function findTicket(numero){return (DATA&&DATA.tickets||[]).find(function(t){return t.numero===numero})}
 function openFicha(numero){
@@ -240,14 +255,14 @@ function actualizarTicket(payload,cb){
   if(!cur)return;var e=c.getAttribute("data-e");
   actualizarTicket({numero:cur.numero,estado:e},function(ok){
     toast(ok?"Estado actualizado":"No se pudo actualizar");
-    if(ok){cur.estado=e;[].forEach.call(document.querySelectorAll("#fEstadoChips .chip"),function(x){x.classList.toggle("on",x===c)});load(true);}
+    if(ok){cur.estado=e;[].forEach.call(document.querySelectorAll("#fEstadoChips .chip"),function(x){x.classList.toggle("on",x===c)});regroup();renderAll();}
   });
 };});
 [].forEach.call(document.querySelectorAll("#fAsigChips .chip"),function(c){c.onclick=function(){
   if(!cur)return;var a=c.getAttribute("data-a");
   actualizarTicket({numero:cur.numero,asignado:a},function(ok){
     toast(ok?"Asignado actualizado":"No se pudo actualizar");
-    if(ok){cur.asignado=a;[].forEach.call(document.querySelectorAll("#fAsigChips .chip"),function(x){x.classList.toggle("on",x===c)});load(true);}
+    if(ok){cur.asignado=a;[].forEach.call(document.querySelectorAll("#fAsigChips .chip"),function(x){x.classList.toggle("on",x===c)});regroup();renderAll();}
   });
 };});
 $("fGuardarNota").onclick=function(){
@@ -279,20 +294,19 @@ $("nGuardar").onclick=function(){
   var b=$("nGuardar");b.disabled=true;b.textContent="Creando…";
   fetch(CREAR_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(payload)})
   .then(function(r){return r.json().catch(function(){return {ok:r.ok}})})
-  .then(function(j){
-    b.disabled=false;b.textContent="Crear ticket";
+  .then(function(j){b.disabled=false;b.textContent="Crear ticket";
     if(j&&j.ok){toast("Ticket "+j.numero+" creado");closeModal();
       $("nCliente").value="";$("nTelefono").value="";$("nTarea").value="";$("nDescripcion").value="";$("nAdjunto").value="";
-      setTimeout(function(){load(true)},1200);
+      if(j.ticket){DATA.tickets=(DATA.tickets||[]).concat([j.ticket]);regroup();renderAll();}
+      setTimeout(function(){load(true)},1500);
     } else toast("Error: "+((j&&j.error)||"no se pudo crear"));
-  }).catch(function(){b.disabled=false;b.textContent="Crear ticket";toast("Error de red")});
+  }).catch(function(){b.disabled=false;b.textContent="Crear ticket";toast("Error de red");});
 };
 
 /* ---- pestañas ---- */
-[].forEach.call(document.querySelectorAll(".seg button"),function(b){b.onclick=function(){
+\/.forEach.call(document.querySelectorAll(".seg button"),function(b){b.onclick=function(){
   [].forEach.call(document.querySelectorAll(".seg button"),function(x){x.setAttribute("aria-selected",x===b)});
-  [].forEach.call(document.querySelectorAll(".view"),function(v){v.classList.toggle("on",v.id==="v-"+b.getAttribute("data-view"))});
-};});
+  [].forEach.call(document.querySelectorAll(".view"),function(v){v.classList.toggle("on",v.id==="v-"+b.getAttribute("data-view"))});};});
 
 /* ---- arrastrar y soltar: reasignar (Hoy) o cambiar estado (Tablero) ---- */
 var DRAGGED_ID=null;
@@ -316,10 +330,16 @@ document.addEventListener("drop",function(e){
   var id=DRAGGED_ID;DRAGGED_ID=null;
   if(dz.hasAttribute("data-asignado")){
     var asig=dz.getAttribute("data-asignado");
-    actualizarTicket({numero:id,asignado:asig},function(ok){toast(ok?"Reasignado":"No se pudo reasignar");if(ok)load(true);});
+    actualizarTicket({numero:id,asignado:asig},function(ok){
+      toast(ok?"Reasignado":"No se pudo reasignar");
+      if(ok){var t=findTicket(id);if(t){t.asignado=asig;regroup();renderAll();}}
+    });
   } else if(dz.hasAttribute("data-estado")){
     var est=dz.getAttribute("data-estado");
-    actualizarTicket({numero:id,estado:est},function(ok){toast(ok?"Estado actualizado":"No se pudo actualizar");if(ok)load(true);});
+    actualizarTicket({numero:id,estado:est},function(ok){
+      toast(ok?"Estado actualizado":"No se pudo actualizar");
+      if(ok){var t=findTicket(id);if(t){t.estado=est;regroup();renderAll();}}
+    });
   }
 });
 
