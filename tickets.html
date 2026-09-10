@@ -51,6 +51,9 @@ h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;text-wrap:
 .tile i.info{background:var(--info)} .tile i.warn{background:var(--warn)} .tile i.ok{background:var(--ok)}
 .tile .n{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile .m{font-size:11px;color:var(--mute);display:flex;justify-content:space-between;gap:6px}
+[draggable="true"]{cursor:grab}
+[draggable="true"].dragging{opacity:.4}
+.cards.dragover,.col.dragover{outline:2px dashed var(--gold);outline-offset:2px;background:var(--gold-soft)}
 .fab{position:fixed;right:18px;bottom:18px;z-index:15;background:var(--ink);color:var(--bg);border-radius:999px;padding:14px 20px;font-weight:700;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px}
 /* ficha / modal (bottom-sheet móvil, panel lateral desktop) */
 .ficha{position:fixed;left:0;right:0;bottom:0;z-index:30;max-height:92vh;overflow:auto;background:var(--surf);border-radius:18px 18px 0 0;box-shadow:var(--sheet-shadow);transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);padding:8px 16px 28px}
@@ -100,10 +103,10 @@ label.f{display:block;font-size:12px;color:var(--mute);margin:10px 0 4px;font-we
   <main class="main">
     <div>
       <section class="view on" id="v-hoy">
-        <div class="group"><header><h2>Francisco</h2></header><div class="cards" id="cFrancisco"></div></div>
-        <div class="group"><header><h2>Matías</h2></header><div class="cards" id="cMatias"></div></div>
-        <div class="group"><header><h2>Cristina</h2></header><div class="cards" id="cCristina"></div></div>
-        <div class="group"><header><h2>Marcelo</h2></header><div class="cards" id="cMarcelo"></div></div>
+        <div class="group"><header><h2>Francisco</h2></header><div class="cards" id="cFrancisco" data-asignado="francisco"></div></div>
+        <div class="group"><header><h2>Matías</h2></header><div class="cards" id="cMatias" data-asignado="matias"></div></div>
+        <div class="group"><header><h2>Cristina</h2></header><div class="cards" id="cCristina" data-asignado="cristina"></div></div>
+        <div class="group"><header><h2>Marcelo</h2></header><div class="cards" id="cMarcelo" data-asignado="marcelo"></div></div>
         <div class="group"><header><h2>Sin asignar</h2></header><div class="cards" id="cSinAsignar"></div></div>
       </section>
       <section class="view" id="v-tablero">
@@ -173,7 +176,7 @@ var estadoPill={nuevo:'<span class="pill info">Nuevo</span>',en_curso:'<span cla
 var estadoTile={nuevo:"info",en_curso:"warn",resuelto:"ok"};
 
 function card(t){
-  return '<button class="card" data-id="'+esc(t.numero)+'">'
+  return '<button class="card" data-id="'+esc(t.numero)+'" draggable="true">'
     +'<span class="dchip"><b>'+esc(t.numero)+'</b></span>'
     +'<span class="who"><span class="n">'+esc(t.tarea||t.cliente_nombre||"(sin tarea)")+'</span>'
     +'<span class="s">'+(tenantPill[t.tenant]||'<span class="pill mute">'+esc(t.tenant)+'</span>')+' '+(estadoPill[t.estado]||"")+(t.cliente_nombre?' <span class="pill mute">'+esc(t.cliente_nombre)+'</span>':'')+'</span></span>'
@@ -181,7 +184,7 @@ function card(t){
     +'</button>';
 }
 function tile(t){
-  return '<button class="tile" data-id="'+esc(t.numero)+'"><i class="'+(estadoTile[t.estado]||"")+'"></i>'
+  return '<button class="tile" data-id="'+esc(t.numero)+'" draggable="true"><i class="'+(estadoTile[t.estado]||"")+'"></i>'
     +'<span><span class="n">'+esc(t.numero)+' · '+esc(t.tarea||t.cliente_nombre||"")+'</span>'
     +'<span class="m"><span>'+(tenantPill[t.tenant]||esc(t.tenant))+' '+esc(t.asignado||"sin asignar")+'</span><span class="mono">'+fmtISO(t.fecha_actualizacion||t.fecha_creacion)+'</span></span></span></button>';
 }
@@ -198,7 +201,7 @@ function renderTablero(){
   var t=(DATA&&DATA.tablero)||{nuevo:[],en_curso:[],resuelto:[]};
   var cols=[["nuevo","Nuevo"],["en_curso","En curso"],["resuelto","Resuelto"]];
   $("board").innerHTML=cols.map(function(c){var items=t[c[0]]||[];
-    return '<div class="col"><h3>'+c[1]+' <small>'+items.length+'</small></h3>'+(items.length?items.map(tile).join(""):'<div class="empty">Vacío.</div>')+'</div>';
+    return '<div class="col" data-estado="'+c[0]+'"><h3>'+c[1]+' <small>'+items.length+'</small></h3>'+(items.length?items.map(tile).join(""):'<div class="empty">Vacío.</div>')+'</div>';
   }).join("");
 }
 function renderKpis(){
@@ -290,6 +293,35 @@ $("nGuardar").onclick=function(){
   [].forEach.call(document.querySelectorAll(".seg button"),function(x){x.setAttribute("aria-selected",x===b)});
   [].forEach.call(document.querySelectorAll(".view"),function(v){v.classList.toggle("on",v.id==="v-"+b.getAttribute("data-view"))});
 };});
+
+/* ---- arrastrar y soltar: reasignar (Hoy) o cambiar estado (Tablero) ---- */
+var DRAGGED_ID=null;
+document.addEventListener("dragstart",function(e){
+  var el=e.target.closest('[draggable="true"]');if(!el)return;
+  DRAGGED_ID=el.getAttribute("data-id");
+  try{e.dataTransfer.setData("text/plain",DRAGGED_ID);}catch(err){}
+  e.dataTransfer.effectAllowed="move";
+  el.classList.add("dragging");
+});
+document.addEventListener("dragend",function(e){
+  var el=e.target.closest('[draggable="true"]');if(el)el.classList.remove("dragging");
+  document.querySelectorAll(".dragover").forEach(function(z){z.classList.remove("dragover")});
+});
+function dropZoneOf(e){return e.target.closest('.cards[data-asignado], .col[data-estado]')}
+document.addEventListener("dragover",function(e){var dz=dropZoneOf(e);if(!dz)return;e.preventDefault();dz.classList.add("dragover")});
+document.addEventListener("dragleave",function(e){var dz=dropZoneOf(e);if(dz&&!dz.contains(e.relatedTarget))dz.classList.remove("dragover")});
+document.addEventListener("drop",function(e){
+  var dz=dropZoneOf(e);if(!dz||!DRAGGED_ID)return;
+  e.preventDefault();dz.classList.remove("dragover");
+  var id=DRAGGED_ID;DRAGGED_ID=null;
+  if(dz.hasAttribute("data-asignado")){
+    var asig=dz.getAttribute("data-asignado");
+    actualizarTicket({numero:id,asignado:asig},function(ok){toast(ok?"Reasignado":"No se pudo reasignar");if(ok)load(true);});
+  } else if(dz.hasAttribute("data-estado")){
+    var est=dz.getAttribute("data-estado");
+    actualizarTicket({numero:id,estado:est},function(ok){toast(ok?"Estado actualizado":"No se pudo actualizar");if(ok)load(true);});
+  }
+});
 
 /* ---- carga de datos ---- */
 function load(silent,cb){
