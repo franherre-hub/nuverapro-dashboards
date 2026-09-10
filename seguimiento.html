@@ -92,7 +92,10 @@ h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;text-wrap:
 .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 8px}
 .act{display:grid;place-items:center;gap:4px;padding:12px 6px;border-radius:12px;background:var(--surf2);font-size:12.5px;font-weight:600;text-decoration:none;color:var(--ink);position:relative}
 .act.primary{background:var(--gold);color:#1B1A17}
-.act .ic{font-size:20px}
+.act .ic {font-size:20px}
+.pendbar{display:flex;align-items:center;gap:10px;margin:0 2px 10px;flex-wrap:wrap}.pendbtn{padding:9px 14px;border-radius:10px;background:var(--surf2);color:var(--ink);font-weight:600;font-size:13px;border:1px solid rgba(255,255,255,.08)}.pendbtn:disabled{opacity:.5}.pendhint{font-size:12px;color:var(--mute)}
+.card.fraude{box-shadow:inset 5px 0 0 var(--bad);background:color-mix(in srgb,var(--bad) 6%,var(--surf))}.marks i.fr{color:#fff;background:var(--bad);border-color:var(--bad);font-weight:700}
+body.embed .top,body.embed .kpis,body.embed .view,body.embed .scrim,body.embed .ficha .grab{display:none!important}body.embed .app{grid-template-rows:1fr;min-height:0}body.embed .main{grid-template-columns:1fr;padding:0}body.embed .ficha{position:static;transform:none;opacity:1;width:100%;max-width:none;box-shadow:none;border-radius:0;height:auto}body.embed .ficha .close{display:inline-flex!important}
 .act.done::after{content:"✓";position:absolute;top:6px;right:8px;font-size:12px;color:var(--ok);font-weight:700}
 .sec{margin-top:16px}
 .sec h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-bottom:8px}
@@ -132,7 +135,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
 </style></head><body>
 <div class="app">
   <header class="top">
-    <div class="row"><div class="brand"><h1>Seguimiento 15 días</h1><span class="tag">NuveraPRO · borrador</span></div><span class="note mono" id="gen">cargando…</span></div>
+    <div class="row"><div class="brand"><h1>Seguimiento 15 días</h1><span class="tag">NuveraPRO</span></div><span class="note mono" id="gen">cargando…</span></div>
     <div class="seg" role="tablist">
       <button role="tab" aria-selected="true" data-view="hoy">Hoy <span class="n" id="nHoy">–</span></button>
       <button role="tab" aria-selected="false" data-view="tablero">Tablero</button>
@@ -148,13 +151,16 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
   <main class="main">
     <div>
       <section class="view on" id="v-hoy">
+        <div class="pendbar"><input id="buscar" type="search" placeholder="Buscar nombre, teléfono o correo…" style="flex:1;min-width:220px;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:var(--surf2);color:var(--ink);font-size:13px"></div>
+        <div class="group" id="gFuera" style="display:none"><div class="gh"><h3>Fuera del seguimiento 15 días</h3><span class="ghs" id="gFueraN"></span></div><div class="cards" id="cFuera"></div></div>
+        <div class="pendbar"><button class="pendbtn" id="btnPend">✉️ Enviar correo de bienvenida a pendientes (<span id="nPend">0</span>)</button><span class="pendhint" id="pendHint"></span></div>
         <div class="group"><header><h2>Bienvenida · día 0</h2><span class="why">llamar hoy</span></header><div class="cards" data-bucket="d0"></div></div>
         <div class="group"><header><h2>Señal · atender primero</h2><span class="why">algo cambió</span></header><div class="cards" data-bucket="senal"></div></div>
         <div class="group"><header><h2>Toque programado</h2><span class="why">cadencia D2 · D5 · D8 · D12 · D14</span></header><div class="cards" data-bucket="cad"></div></div>
         <div class="group"><header><h2>Sin toque hoy</h2><span class="why">en prueba, al día</span></header><div class="cards" data-bucket="resto"></div></div>
         <div class="group"><header><h2>Listas hoy</h2><span class="why">ya tocadas</span></header><div class="cards" data-bucket="done"></div></div>
         <div class="group"><header><h2>Pagaron</h2><span class="why">salen de la cola</span></header><div class="cards" data-bucket="pago"></div></div>
-        <p class="foot">Tocá una tarjeta para abrir su ficha. Los toques se guardan en n8n (<span class="mono">onboarding_toques</span>) y en Notion. Esta pestaña es un borrador: <span class="mono">llamadas.html</span> sigue intacta.</p>
+        <p class="foot">Tocá una tarjeta para abrir su ficha. Los toques se guardan en n8n (<span class="mono">onboarding_toques</span>) y en Notion. Los toques automáticos (WA de bienvenida, capacitación, pago) aparecen marcados "auto".</p>
       </section>
       <section class="view" id="v-tablero">
         <div class="board" id="board"></div>
@@ -174,12 +180,24 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
           <a class="act primary" id="aCall" href="#"><span class="ic">📞</span>Llamar</a>
           <button class="act" id="aWa"><span class="ic">💬</span>WhatsApp</button>
           <button class="act" id="aAgenda"><span class="ic">📅</span>Agendar</button>
-          <button class="act" id="aBienv"><span class="ic">👋</span>WA bienvenida</button>
+          <button class="act" id="aBienv"><span class="ic">👋<//span>WA bienvenida</button>
           <button class="act" id="aMail"><span class="ic">✉️</span>Correo bienv.</button>
           <button class="act" id="aVoz"><span class="ic">🎤</span>Nota de voz</button>
-          <button class="act" id="aSimDia" style="display:none"><span class="ic">🧪</span>Simular día</button>
+          <button class="act" id="aVozBienv"><span class="ic">🗣ￏ(/span>Mensaje de voz</button>
         </div>
-        <div class="sec" id="simSec" style="display:none"><h3>Simular día de cadencia (solo prueba)</h3><div class="agchips" id="simChips"></div></div>
+        <div class="sec" id="vozComposer" style="display:none">
+          <h3>Nota de voz</h3>
+          <select id="vozPreset" style="width:100%;margin-bottom:6px;padding:6px;border-radius:8px">
+            <option value="bienvenida">Bienvenida (no contestó)</option>
+            <option value="custom">Personalizado</option>
+          </select>
+          <textarea id="vozTexto" rows="5" style="width:100%;padding:8px;border-radius:8px;font:inherit;box-sizing:border-box"></textarea>
+          <div id="vozAlerta" style="display:none;background:#fff3cd;color:#664d03;padding:8px 10px;border-radius:8px;margin-top:8px;font-size:13px"></div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="act primary" id="vozEnviarBtn" style="flex:1">Enviar audio</button>
+            <button class="act" id="vozCancelarBtn">Cancelar</button>
+          </div>
+        </div>
         <div class="sec"><h3>Uso de la cuenta</h3><div class="facts" id="fFacts"></div></div>
         <div class="sec"><h3>Capacitación</h3><div id="agBox"></div></div>
         <div class="sec"><h3>Resultado de la llamada</h3>
@@ -191,6 +209,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
             <button class="chip ok" data-r="Interesado">Interesado</button>
             <button class="chip bad" data-r="No interesado">No interesado</button>
             <button class="chip ok" data-r="Pagó">Pagó</button>
+            <button class="chip bad" data-r="Teléfono inválido">Teléfono inválido</button>
           </div>
           <textarea id="fNote" placeholder="Nota corta: qué dijo, objeción, qué prometiste…" style="margin-top:8px"></textarea>
           <div class="save"><span class="next" id="fNext"></span><button id="fSave">Guardar toque</button></div>
@@ -207,9 +226,7 @@ textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:1
 <script>
 var TOQUE_WEBHOOK="https://n8n.entrenemos.cl/webhook/registrar-toque";
 var CAL_WEBHOOK="https://n8n.entrenemos.cl/webhook/calendar-nuverapro";
-var CADENCIA_WEBHOOK="https://n8n.entrenemos.cl/webhook/cadencia-run";
-var NOTAVOZ_WEBHOOK="https://n8n.entrenemos.cl/webhook/nota-voz";
-var SIM_WHITELIST=["56974403735","5492996302300","56988089538"];
+var MAIL_WEBHOOK="https://n8n.entrenemos.cl/webhook/correo-bienvenida";
 var DATA=null,cur=null,res=null,AG=null,AG_DIA=null,AG_SLOT=null;
 var $=function(id){return document.getElementById(id)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -224,16 +241,16 @@ function card(a){
   var chip=a.dia===0?"gold":(a.senal&&a.senal.length?"hot":"");
   var pills=['<span class="pill '+usoCls[a.uso]+'">'+usoTxt[a.uso]+'</span>'];
   if(a.capEst)pills.push('<span class="pill '+(a.capEst==="Capacitado"?"ok":(a.capEst==="No se presentó"||a.capEst==="Vencida")?"bad":"info")+'">'+esc(a.capEst==="Agendada"?"capacitación "+a.capTxt:a.capEst)+'</span>');
-  (a.senal||[]).forEach(function(s){pills.push('<span class="pill bad">⚑ '+esc(s)+'</span>')});
+  (a.senal||[]).forEach(function(s){pills.push('<span class="pill bad">⚔ '+esc(s)+'</span>')});
   if(a.bucket==="done")pills.push('<span class="pill ok">✓ tocada hoy</span>');
   var m=a.marcas||{};
-  var marks='<span class="marks"><i class="'+(m.wa_bienv?"on":"")+'">WA bienv.</i><i class="'+(m.correo_bienv?"on":"")+'">Correo</i><i class="'+(m.voz_ok?"on":(m.no_contesto?"bad":""))+'">'+(m.voz_ok?"Voz ✓":(m.no_contesto?"No contestó ×"+m.no_contesto:"Sin llamada"))+'</i></span>';
-  return '<button class="card'+(a.bucket==="pago"||a.bucket==="done"?" dim":"")+'" data-id="'+esc(a.id)+'"><span class="dchip '+chip+'"><b>'+a.dia+'</b>día</span><span class="who"><span class="n">'+flag(a.cc)+' '+esc(a.n)+'</span><span class="s">'+pills.join("")+'</span>'+marks+'</span><span class="quick">'+(a.telH?'<a class="call" href="tel:'+esc(a.telH)+'" aria-label="Llamar" onclick="event.stopPropagation()">📞</a>':"")+(a.wa?'<a href="'+waHref(a)+'" target="_blank" rel="noopener" aria-label="WhatsApp" onclick="event.stopPropagation()">💬</a>':"")+'</span></button>';
+  var marks='<span class="marks">'+(m.fraude?'<i class="fr">🚨 Fraude '+esc(m.fraude)+'</i>':'')+'<i class="'+(m.wa_bienv?"on":"")+'">WA bienv.</i><i class="'+(m.correo_bienv?"on":"")+'">Correo</i><i class="'+(m.voz_ok?"on":((m.no_contesto||m.tel_invalido)?"bad":""))+'">'+(m.voz_ok?"Voz ✓":(m.tel_invalido?"☎ inválido":(m.no_contesto?"No contestó ×"+m.no_contesto:"Sin llamada")))+'</i></span>';
+  return '<button class="card'+(a.bucket==="pago"||a.bucket==="done"?" dim":"")+(m.fraude?" fraude":"")+'" data-id="'+esc(a.id)+'"><span class="dchip '+chip+'"><b>'+a.dia+'</b>día</span><span class="who"><span class="n">'+flag(a.cc)+' '+esc(a.n)+'</span><span class="s">'+pills.join("")+'</span>'+marks+'</span><span class="quick">'+(a.telH?'<a class="call" href="tel:'+esc(a.telH)+'" aria-label="Llamar" onclick="event.stopPropagation()">📞</a>':"")+(a.wa?'<a href="'+waHref(a)+'" target="_blank" rel="noopener" aria-label="WhatsApp" onclick="event.stopPropagation()">💬</a>':"")+'</span></button>';
 }
 function renderHoy(){
   var B={d0:[],senal:[],cad:[],resto:[],done:[],pago:[]};
   DATA.cuentas.forEach(function(a){if(B[a.bucket])B[a.bucket].push(a)});
-  Object.keys(B).forEach(function(k){var el=document.querySelector('[data-bucket="'+k+'"]');if(!el)return;el.innerHTML=B[k].length?B[k].map(card).join(""):'<div class="empty">Nada acá.</div>';});
+  Object.keys(B).forEach(function(k){var el=document.querySelector('[data-bucket="'+k'� '"]');if(!el)return;el.innerHTML=B[k].length?B[k].map(card).join(""):'<div class="empty">Nada acá.</div>';});
   var k=DATA.kpis||{};
   $("nHoy").textContent=k.pendientes_hoy!=null?k.pendientes_hoy:(B.d0.length+B.senal.length+B.cad.length);
   $("kTrial").textContent=k.en_prueba!=null?k.en_prueba:"–";
@@ -246,7 +263,7 @@ function renderBoard(){
   var cols=[{l:"Día 0–1",h:"bienvenida",f:function(d){return d<=1}},{l:"Día 2–4",h:"¿entró y cotizó?",f:function(d){return d>=2&&d<=4}},{l:"Día 5–8",h:"capacitación · primer PDF",f:function(d){return d>=5&&d<=8}},{l:"Día 9–12",h:"oferta de cierre",f:function(d){return d>=9&&d<=12}},{l:"Día 13–15",h:"último aviso",f:function(d){return d>=13&&d<=15}},{l:"Pagaron",h:"clientes",f:function(d,a){return a.pago}}];
   $("board").innerHTML=cols.map(function(c){
     var items=DATA.cuentas.filter(function(a){return c.l==="Pagaron"?a.pago:(!a.pago&&c.f(a.dia,a))}).sort(function(x,y){return y.dia-x.dia});
-    return '<div class="col"><h3>'+c.l+' <small>'+items.length+'</small></h3><div class="hint">'+c.h+'</div>'+items.map(function(a){var cls=a.pago?"gold":((a.senal&&a.senal.length)?"bad":usoCls[a.uso]);return '<button class="tile" data-id="'+esc(a.id)+'"><i class="'+cls+'"></i><span><span class="n">'+esc(a.n)+'</span><span class="m"><span>día '+a.dia+' · '+esc(a.capEst||"sin capacit.")+'</span><span class="mono">'+(a.cotiCN||0)+'/'+(a.cotiSN||0)+'</span></span></span></button>'}).join("")+'</div>';
+    return '<div class="col" data-estado="' + c.l + '"><h3>'+c.l+' <small>'+items.length+'</small></h3><div class="hint">'+c.h+'</div>'+items.map(function(a){var cls=a.pago?"gold":((a.senal&&a.senal.length)?"bad":usoCls[a.uso]);return '<button class="tile" data-id="'+esc(a.id)+'"><i class="'+cls+'"></i><span><span class="n">'+esc(a.n)+'</span><span class="m"><span>día '+a.dia+' · '+esc(a.capEst||"sin capacit.")+'</span><span class="mono">'+(a.cotiCN||0)+'/'+(a.cotiSN||0)+'</span></span></span></button>'}).join("")+'</div>';
   }).join("");
 }
 function renderCohorts(){
@@ -255,18 +272,18 @@ function renderCohorts(){
 function tipoLbl(t){return {llamada:"Llamada",wa:"WhatsApp",wa_bienvenida:"WA bienvenida",correo:"Correo",correo_bienvenida:"Correo bienvenida",capacitacion:"Capacitación",sistema:"Sistema",nota:"Nota"}[t]||t}
 function openFicha(id){
   cur=DATA.cuentas.filter(function(a){return a.id===id})[0];if(!cur)return;res=null;var a=cur;
+  var tr0=document.querySelector('.ficha .trial');if(tr0)tr0.style.display=a.sinCuenta?'none':'';
   [].forEach.call(document.querySelectorAll(".card"),function(c){c.classList.toggle("sel",c.getAttribute("data-id")===id)});
   $("fName").textContent=a.n;
-  $("fSub").innerHTML=flag(a.cc)+" "+esc(a.tel||"sin teléfono")+" · "+esc(a.estado||"")+' · <span class="pill '+usoCls[a.uso]+'">'+usoTxt[a.uso]+'</span>';
+  var m0=a.marcas||{};$("fSub").innerHTML=flag(a.cc)+" "+esc(a.tel||"sin teléfono")+" · "+esc(a.estado||"")+' · <span class="pill '+usoCls[a.uso]+'">'+usoTxt[a.uso]+'</span>';
   $("fDay").textContent=a.dia;
+  if(m0.fraude)$("fSub").innerHTML+=' · <a href="'+esc(m0.fraude_caso||"#")+'" target="_blank" rel="noopener" style="color:var(--bad);font-weight:700">🚨 Caso de fraude ('+esc(m0.fraude)+') ↗</a>';
   var touched={};(a.toques||[]).forEach(function(t){if(t.tipo!=="sistema"&&t.dia!=null)touched[t.dia]=1});
   var days="";for(var i=0;i<16;i++){days+='<i class="'+(i===a.dia?"now":"")+(touched[i]?" touch":(DATA.cadencia.indexOf(i)>=0&&i>a.dia?" plan":""))+'">'+i+'</i>'}
   $("fDays").innerHTML=days;
   var end=new Date(a.fAct);end.setDate(end.getDate()+15);$("fEnds").textContent="vence "+fmtISO(end.toISOString());
   $("aCall").href=a.telH?"tel:"+a.telH:"#";
-  var m=a.marcas||{};$("aBienv").classList.toggle("done",!!m.wa_bienv);$("aMail").classList.toggle("done",!!m.correo_bienv);
-  var esTest=SIM_WHITELIST.indexOf(String(a.wa||"").replace(/\D/g,""))>=0;
-  $("aSimDia").style.display=esTest?"":"none";$("simSec").style.display="none";$("simChips").innerHTML="";
+  var m=a.marcas||{};$("aBienv").classList.toggle("done",!!m.wa_bienv);$("aMail").classList.toggle("done",!!m.correo_bienv);$("aVoz").classList.toggle("done",!!m.voz_bienv);
   $("fFacts").innerHTML='<div><span>PDF con nombre</span><b class="mono">'+(a.cotiCN||0)+'</b></div><div><span>Cotizaciones sin nombre</span><b class="mono">'+(a.cotiSN||0)+'</b></div><div><span>Días sin cotizar</span>'+(a.dSin!=null?a.dSin:"—")+'</div><div><span>Capacitación</span>'+esc(a.capEst?a.capEst+(a.capTxt?" · "+a.capTxt:""):"—")+'</div><div><span>Correo</span>'+(a.correo?esc(a.correo):'<span class="pill warn">falta · pedir</span>')+'</div><div><span>ID cuenta</span><span class="mono">'+(a.idExt||"—")+'</span></div>';
   $("fLog").innerHTML=(a.toques||[]).slice().reverse().map(function(t){return '<li><span class="t">D'+(t.dia!=null?t.dia:"?")+' '+fmtISO(t.fecha)+'</span><span><span class="k '+esc(t.tipo)+'">'+tipoLbl(t.tipo)+'</span> · '+esc(t.resultado||"")+(t.nota?' · <em>'+esc(t.nota)+'</em>':"")+(t.origen==="sistema"?' <span class="pill mute">auto</span>':"")+'</span></li>'}).join("")||'<li><span class="t">—</span><span>Sin toques todavía.</span></li>';
   $("fNotes").textContent=a.notas||"Sin anotaciones.";
@@ -280,7 +297,7 @@ function closeFicha(){$("ficha").classList.remove("open");$("scrim").classList.r
 document.addEventListener("click",function(e){var b=e.target.closest("[data-id]");if(b)openFicha(b.getAttribute("data-id"))});
 $("fClose").onclick=closeFicha;$("scrim").onclick=closeFicha;
 [].forEach.call(document.querySelectorAll(".seg button"),function(b){b.onclick=function(){[].forEach.call(document.querySelectorAll(".seg button"),function(x){x.setAttribute("aria-selected",x===b)});[].forEach.call(document.querySelectorAll(".view"),function(v){v.classList.toggle("on",v.id==="v-"+b.getAttribute("data-view"))})}});
-function notaStamp(){try{return new Date().toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(","," ");}catch(e){var d=new Date();return d.getDate()+"-"+(d.getMonth()+1)+" "+d.getHours()+":"+("0"+d.getMinutes()).slice(-2);}}
+function notaStamp(){try{return new Date().toLocaleString("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).replace(",","");}catch(e){var d=new Date();return d.getDate()+"-"+(d.getMonth()+1)+" "+d.getHours()+":"+("0"+d.getMinutes()).slice(-2);}}
 function postToque(a,payload,cb){
   payload.pageId=a.id;payload.wa=a.wa||"";payload.nombre=a.n;payload.idlead=a.idExt||"";payload.dia=a.dia;
   fetch(TOQUE_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(payload)}).then(function(r){return r.ok}).then(function(ok){cb&&cb(ok)}).catch(function(){cb&&cb(false)});
@@ -291,6 +308,7 @@ function postToque(a,payload,cb){
   else if(res==="Reagendar")nt="anota la fecha en la nota";
   else if(res==="Pagó")nt="ninguno · sale de la cola";
   else if(res==="No interesado")nt="D14 último aviso";
+  else if(res==="Teléfono inválido")nt="pedir otro número por WhatsApp o correo";
   else{var n=null;for(var i=0;i<DATA.cadencia.length;i++){if(DATA.cadencia[i]>d){n=DATA.cadencia[i];break}}nt=n!=null?"D"+n+" · "+CADTXT[n]:"fin de prueba"}
   $("fNext").textContent="Próximo toque: "+nt;
 }});
@@ -308,39 +326,115 @@ $("fSave").onclick=function(){
 function marca(tipo,lbl){if(!cur)return;var a=cur;if(a.marcas&&((tipo==="wa_bienvenida"&&a.marcas.wa_bienv)||(tipo==="correo_bienvenida"&&a.marcas.correo_bienv))){toast(lbl+" ya estaba marcado");return}
   a.toques=(a.toques||[]).concat([{fecha:new Date().toISOString(),dia:a.dia,tipo:tipo,resultado:"Enviado",nota:"",origen:"fran"}]);a.marcas=a.marcas||{};if(tipo==="wa_bienvenida")a.marcas.wa_bienv=true;else a.marcas.correo_bienv=true;
   postToque(a,{tipo:tipo,resultado:"Enviado"},function(ok){toast(ok?lbl+" marcado":"Guardado local · n8n no respondió")});renderHoy();openFicha(a.id);}
+
+var VOZ_WEBHOOK="https://n8n.entrenemos.cl/webhook/nota-voz";
+function textoVozBienvenida(n){var p=(n||"").trim().split(/\s+/)[0]||"";return "Hola "+(p?p+", ":"")+"soy Francisco de NuveraPRO. Felicitaciones por crear tu cuenta, bienvenido. Te llamé recién y no alcancé a ubicarte, así que te dejo este audio. Una vez ingreses al sistema vas a encontrar videos tutoriales que te van a dejar encaminado desde el primer día, y abajo a la derecha tienes el WhatsApp de soporte para cualquier duda. Y lo más importante: agenda tu Puesta en Marcha gratis. En veinte minutos dejamos tu cuenta lista y sacamos tu primera cotización juntos. Te dejo el link acá abajo. Aquí tienes un equipo que te acompaña. ¡Un abrazo!";}
+function enviarVozBienvenida(a,texto,etiqueta,cb){
+  if(!a.wa){cb&&cb(false,"sin whatsapp");return}
+  if(!texto||!texto.trim()){cb&&cb(false,"sin texto");return}
+  fetch(VOZ_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({to:a.wa,pageId:a.id,nombre:a.n,dia:a.dia,etiqueta:etiqueta||"voz_manual",texto:texto})})
+  .then(function(r){return r.json().catch(function(){return {ok:r.ok}})}).then(function(j){
+    if(j&&j.ok){a.marcas=a.marcas||{};if(etiqueta==="voz_bienvenida")a.marcas.voz_bienv=true;a.toques=(a.toques||[]).concat([{fecha:new Date().toISOString(),dia:a.dia,tipo:"wa",resultado:(etiqueta||"voz_manual")+" (audio)",nota:texto.slice(0,120),origen:"sistema"}]);cb&&cb(true)}
+    else cb&&cb(false,(j&&j.motivo)||"rechazado")
+  }).catch(function(){cb&&cb(false,"n8n no respondió");});
+}
+var PRESETS_VOZ={
+  bienvenida:{label:"Bienvenida (no contestó)",texto:function(a){return textoVozBienvenida(a.n)}},
+  custom:{label:"Personalizado",texto:function(a){return ""}}
+};
+document.addEventListener("DOMContentLoaded",function(){
+  var _bv=document.getElementById("aVozBienv");
+  var _panel=document.getElementById("vozComposer");
+  var _sel=document.getElementById("vozPreset");
+  var _txt=document.getElementById("vozTexto");
+  var _send=document.getElementById("vozEnviarBtn");
+  var _cancel=document.getElementById("vozCancelarBtn");
+  if(!_bv||!_panel)return;
+  function aplicarPreset(){
+    if(!cur)return;var p=PRESETS_VOZ[_sel.value];
+    if(p)_txt.value=p.texto(cur);
+  }
+  window.ensureCurEmbed=function ensureCurEmbed(){
+    if(cur)return cur;
+    if(!window.EMBED)return cur;
+    var q={};location.search.replace(/^\?/,"").split("&").forEach(function(p){if(!p)return;var kv=p.split("=");q[decodeURIComponent(kv[0])]=decodeURIComponent((kv[1]||"").replace(/\+/g," "))});
+    if(q.pageId||q.wa){try{tryOpenLead({wa:q.wa||"",pageId:q.pageId||"",nombre:q.nombre||"",correo:q.correo||"",etapa:q.etapa||"",estado:q.estado||"",pais:q.pais||"",fAct:q.fAct||"",rut:q.rut||"",cotiCN:q.cotiCN,cotiSN:q.cotiSN,dias:q.dias});}catch(e){}}
+    return cur;
+  }
+  _bv.addEventListener("click",function(){
+    if(!cur)ensureCurEmbed();
+    if(!cur){toast("No se pudo cargar la ficha del cliente · reintenta abriendo de nuevo");return}
+    var abierto=_panel.style.display!=="none";
+    if(abierto){_panel.style.display="none";return}
+    _panel.style.display="";
+    _sel.value="bienvenida";
+    aplicarPreset();
+    var _al=document.getElementById("vozAlerta");
+    if(_al){
+      if(cur.marcas&&cur.marcas.riesgo_24h){
+        var hs=cur.marcas.horas_sin_msg;
+        _al.textContent="⚠️ Riesgo de no entrega: "+(hs==null?"el cliente nunca te ha escrito por WhatsApp":"han pasado "+hs+"h desde su último mensaje")+". WhatsApp exige contacto en las últimas 24h para recibir audios/textos libres.";
+        _al.style.display="";
+      } else {_al.style.display="none";}
+    }
+  });
+  if(_sel)_sel.addEventListener("change",aplicarPreset);
+  if(_cancel)_cancel.addEventListener("click",function(){_panel.style.display="none"});
+  if(_send)_send.addEventListener("click",function(){
+    if(!cur)return;var a=cur;
+    var etiqueta=_sel.value==="bienvenida"?"voz_bienvenida":"voz_manual";
+    var texto=(_txt.value||"").trim();
+    if(!texto){toast("Escribe o elige un texto");return}
+    if(etiqueta==="voz_bienvenida"&&a.marcas&&a.marcas.voz_bienv){
+      if(!confirm("Ya se envió la voz de bienvenida antes. ¿Enviar de nuevo?"))return;
+    }
+    toast("Enviando nota de voz…");
+    enviarVozBienvenida(a,texto,etiqueta,function(ok,motivo){
+      toast(ok?"Nota de voz enviada":"Error: "+(motivo||"desconocido"));
+      if(ok){_panel.style.display="none";renderHoy();openFicha(a.id);}
+    });
+  });
+});
+
 $("aBienv").onclick=function(){marca("wa_bienvenida","WA de bienvenida")};
-$("aMail").onclick=function(){if(!cur)return;if(cur.correo)window.open("mailto:"+cur.correo+"?subject="+encodeURIComponent("Bienvenido a NuveraPRO")+"","_blank");marca("correo_bienvenida","Correo de bienvenida")};
+function enviarCorreo(a,cb){
+  if(!a.correo){cb&&cb(false,"sin correo");return}
+  fetch(MAIL_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({correo:a.correo,nombre:a.n,pageId:a.id,wa:a.wa||"",dia:a.dia})})
+  .then(function(r){return r.json().catch(function(){return {ok:r.ok}})}).then(function(j){
+    if(j&&j.ok){a.marcas=a.marcas||{};a.marcas.correo_bienv=true;a.toques=(a.toques||[]).concat([{fecha:new Date().toISOString(),dia:a.dia,tipo:"correo_bienvenida",resultado:"Enviado",nota:"",origen:"sistema"}]);cb&&cb(true)}
+    else cb&&cb(false,(j&&j.motivo)||"rechazado")
+  }).catch(function(){cb&&cb(false,"n8n no respondió")});
+}
+function pendientesCorreo(){return (DATA&&DATA.cuentas||[]).filter(function(a){return !a.pago&&a.correo&&!(a.marcas&&a.marcas.correo_bienv)})}
+function renderPend(){var p=pendientesCorreo();$("nPend").textContent=p.length;$("btnPend").disabled=!p.length;$("pendHint").textContent=p.length?"cuentas en prueba con correo y sin bienvenida enviada":"todas las cuentas en prueba ya recibieron el correo"}
+$("aMail").onclick=function(){if(!cur)return;var a=cur;
+  if(!a.correo){toast("Esta cuenta no tiene correo");return}
+  if(!confirm((a.marcas&&a.marcas.correo_bienv?"Ya se envió el correo de bienvenida a "+a.n+". ¿Reenviar":"¿Enviar el correo de bienvenida a "+a.n)+" ("+a.correo+")?"))return;
+  var b=$("aMail");b.disabled=true;
+  enviarCorreo(a,function(ok,m){b.disabled=false;toast(ok?"Correo enviado a "+a.correo:"No salió · "+m);if(ok){renderHoy();renderPend();openFicha(a.id)}});
+};
+$("btnPend").onclick=function(){var p=pendientesCorreo();if(!p.length)return;
+  if(!confirm("Enviar el correo de bienvenida a "+p.length+" cuenta(s) que no lo han recibido?"))return;
+  var b=$("btnPend");b.disabled=true;var i=0,okN=0,bad=[];
+  (function next(){if(i>=p.length){toast("Enviados "+okN+"/"+p.length+(bad.length?" · fallaron: "+bad.join(", "):""));renderHoy();renderPend();return}
+    var a=p[i++];b.textContent="Enviando "+i+"/"+p.length+"…";
+    enviarCorreo(a,function(ok){if(ok)okN++;else bad.push(a.n);setTimeout(next,600)})})();
+};
 $("aWa").onclick=function(){if(!cur)return;var d=cur.wa||"";try{window.parent.postMessage({type:"openConv",wa:d},"*")}catch(e){}if(window.parent===window&&d)window.open("https://wa.me/"+d,"_blank")};
 $("aVoz").onclick=function(){
-  if(!cur)return;
-  var texto='Hola '+cur.n+'! Soy Francisco de NuveraPRO. Te llamé recién pero no logré ubicarte. Te escribo porque quiero coordinar contigo tu reunión de puesta en marcha — ahí te muestro los atajos para que le saques el máximo provecho a tu cuenta desde el primer día. Cuando puedas, respóndeme por acá y agendamos un horario que te acomode. ¡Hablamos pronto!';
-  if(!cur.wa){toast('Este cliente no tiene WhatsApp registrado');return}
-  if(!confirm('¿Enviar esta nota de voz a '+cur.n+' ('+cur.wa+')?\n\n"'+texto+'"'))return;
-  var b=$('aVoz');var prevHtml=b.innerHTML;b.innerHTML='<span class="ic">🎤</span>Enviando…';
-  fetch(NOTAVOZ_WEBHOOK,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({to:cur.wa,texto:texto,pageId:cur.id})}).then(function(r){return r.ok}).then(function(ok){
-    b.innerHTML=prevHtml;
-    toast(ok?'Nota de voz enviada':'No se pudo enviar (revisa modo prueba/lista blanca)');
-    if(ok){
-      cur.toques=(cur.toques||[]).concat([{fecha:new Date().toISOString(),dia:cur.dia,tipo:'nota',resultado:'Nota de voz enviada (no contestó)',nota:'',origen:'fran'}]);
-      postToque(cur,{tipo:'nota',resultado:'Nota de voz enviada (no contestó)',nota:''});
-      openFicha(cur.id);
-    }
-  }).catch(function(){b.innerHTML=prevHtml;toast('Error de red al enviar')});
+  if(!cur&&typeof ensureCurEmbed==="function")ensureCurEmbed();
+  if(!cur){toast("No se pudo cargar la ficha del cliente · reintenta abriendo de nuevo");return}
+  var a=cur;
+  var ya=a.marcas&&a.marcas.voz_bienv;
+  if(ya){if(!confirm("Ya se envió el mensaje de voz de bienvenida. ¿Enviar de nuevo?"))return;}
+  toast("Enviando nota de voz…");
+  var texto=textoVozBienvenida(a.n);
+  enviarVozBienvenida(a,texto,"voz_bienvenida",function(ok,motivo){
+    toast(ok?"Nota de voz enviada":"Error: "+(motivo||"desconocido"));
+    if(ok){renderHoy();openFicha(a.id);}
+  });
 };
 $("aAgenda").onclick=function(){cargarDisp();var el=$("agBox");if(el)el.scrollIntoView({behavior:"smooth",block:"center"})};
-$("aSimDia").onclick=function(){
-  var box=$("simSec");var open=box.style.display!=="none";box.style.display=open?"none":"";
-  if(!open&&!$("simChips").childElementCount){
-    [2,5,8,12,14].forEach(function(d){
-      var b=document.createElement("button");b.className="agchip";b.textContent="D"+d+" · "+(CADTXT[d]||"");
-      b.onclick=function(){
-        b.disabled=true;var prev=b.textContent;b.textContent="Enviando…";
-        fetch(CADENCIA_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({dia_forzar:d,wa:cur.wa})}).then(function(r){return r.ok}).then(function(ok){toast(ok?"Cadencia D"+d+" simulada":"No se pudo simular");b.disabled=false;b.textContent=prev}).catch(function(){toast("Error de red al simular");b.disabled=false;b.textContent=prev});
-      };
-      $("simChips").appendChild(b);
-    });
-  }
-};
 function renderAg(){
   var box=$("agBox");if(!box)return;var it=cur;
   if(it&&it.capEst==="Capacitado"){box.innerHTML='<div class="aghint">Cliente ya capacitado.</div>';return}
@@ -351,7 +445,7 @@ function renderAg(){
   AG.forEach(function(d){var c=document.createElement("button");c.className="agchip"+(AG_DIA===d.fecha?" on":"");c.textContent=d.dia_label;c.onclick=function(){AG_DIA=d.fecha;AG_SLOT=null;renderAg()};dias.appendChild(c)});
   if(AG_DIA){var dobj=AG.filter(function(d){return d.fecha===AG_DIA})[0];$("agHoras").innerHTML='<div class="aghint">Elegí hora:</div><div class="agchips" id="agHrs"></div>';var hrs=$("agHrs");
     dobj.slots.forEach(function(s){var c=document.createElement("button");c.className="agchip"+(AG_SLOT&&AG_SLOT.start===s.start?" on":"");c.textContent=s.hora;c.onclick=function(){AG_SLOT=s;renderAg()};hrs.appendChild(c)});
-    if(AG_SLOT){var b=document.createElement("button");b.className="agok";b.id="agConfirm";b.textContent="✅ Confirmar "+AG_SLOT.label;$("agHoras").appendChild(b);b.onclick=confirmarAg}}
+    if(AG_SLOT){var b=document.createElement("button");b.className="agok";b.id="agConfirm";b.textContent="✅ Confirmar "+AG_SLOT.label;$("agHoras").appendChild(b);b.onclick=confirmarAg}
 }
 function cargarDisp(){AG="loading";renderAg();fetch(CAL_WEBHOOK,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"disponibilidad"})}).then(function(r){return r.json()}).then(function(d){AG=(d&&d.slots_todos&&d.slots_todos.length)?d.slots_todos:"error";renderAg()}).catch(function(){AG="error";renderAg()})}
 function confirmarAg(){
@@ -367,7 +461,92 @@ function confirmarAg(){
 function load(){
   var urls=["data/seguimiento.json","seguimiento.json"];
   (function tryNext(i){if(i>=urls.length){$("gen").textContent="No se pudo cargar seguimiento.json";return}
-    fetch(urls[i]+"?v="+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){DATA=d;window._SEG_URL=urls[i];renderHoy();renderBoard();renderCohorts()}).catch(function(){tryNext(i+1)})})(0);
+    fetch(urls[i]+"?v="+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){DATA=d;window._SEG_URL=urls[i];renderHoy();renderPend();renderBoard();renderCohorts();if(PENDING_LEAD){var pl=PENDING_LEAD;setTimeout(function(){if(!tryOpenLead(pl)){toast("sin lead en Notion · no se puede abrir ficha");try{window.parent.postMessage(window.EMBED?{type:"fichaNoLead",wa:pl.wa||""}:{type:"openConv",wa:pl.wa||""},"*")}catch(e){}}},50)}}).catch(function(){tryNext(i+1)})})(0);
 }
 load();
+// ---- modo embed (ficha sola, abierta desde Conversaciones): ?embed=1&pageId=&wa=&nombre=
+(function(){var q={};location.search.replace(/^\?/,"").split("&").forEach(function(p){if(!p)return;var kv=p.split("=");q[decodeURIComponent(kv[0])]=decodeURIComponent((kv[1]||"").replace(/\+/g," "))});
+  if(q.embed==="1"){document.body.classList.add("embed");window.EMBED=true;PENDING_LEAD={type:"openLead",wa:q.wa||"",pageId:q.pageId||"",nombre:q.nombre||"",correo:q.correo||"",etapa:q.etapa||"",estado:q.estado||"",pais:q.pais||"",fAct:q.fAct||"",rut:q.rut||"",cotiCN:q.cotiCN,cotiSN:q.cotiSN,dias:q.dias};
+    var fc=$("fClose");if(fc)fc.addEventListener("click",function(){try{window.parent.postMessage({type:"closeFicha"},"*")}catch(e){}});}
+})();
+// ---- buscador (vista Hoy)
+function fichaDesdeTodas(t){var pid=String(t.id||"").replace(/-/g,"").toLowerCase();var ex=DATA.cuentas.filter(function(a){return String(a.id||"").replace(/-/g,"").toLowerCase()===pid})[0];
+  if(!ex){var d=t.fAct?new Date(String(t.fAct).slice(0,10)+"T12:00:00"):null;var dias=d?Math.floor((Date.now()-d.getTime())/864e5):0;
+    ex={id:pid,n:t.n,cc:"CL",tel:t.tel||"",telH:"",wa:String(t.tel||"").replace(/[^0-9]/g,""),dia:dias,fAct:t.fAct||"",idExt:t.idExt||"",pais:"",correo:t.correo||"",cotiCN:+t.cotiCN||0,cotiSN:+t.cotiSN||0,dSin:0,notas:"",capTxt:"",capEst:"",estado:t.estado||"",etapa:t.etapa||"",bienv:false,uso:(t.pago?"pago":(+t.cotiCN>0?"usa":(+t.cotiSN>0?"explora":"sin"))),fActRaw:t.fAct||"",registrada:true,pago:!!t.pago,senal:[],bucket:"resto",proximo:null,proximoTxt:"",marcas:{},toques:[],notion:"https://www.notion.so/"+pid,sinCuenta:true};
+    DATA.cuentas.push(ex);}
+  tryOpenLead({pageId:pid});}
+$("buscar").oninput=function(){var q=this.value.trim().toLowerCase();var qd=q.replace(/[^0-9]/g,"");
+  [].forEach.call(document.querySelectorAll("#v-hoy .group:not(#gFuera) .card"),function(cd){cd.style.display=(!q||cd.textContent.toLowerCase().indexOf(q)>=0)?"":"none"});
+  var g=$("gFuera"),box=$("cFuera");if(!g)return;
+  if(q.length<3||!DATA||!DATA.todas){g.style.display="none";box.innerHTML="";return}
+  var hits=DATA.todas.filter(function(t){var tel=String(t.tel||"").replace(/[^0-9]/g,"");return String(t.n||"").toLowerCase().indexOf(q)>=0||String(t.correo||"").toLowerCase().indexOf(q)>=0||(qd.length>=4&&tel.indexOf(qd)>=0)||String(t.idExt||"")===q}).slice(0,20);
+  if(!hits.length){g.style.display="none";box.innerHTML="";return}
+  g.style.display="";$("gFueraN").textContent=hits.length+(hits.length===20?"+":"")+" cuenta(s)";
+  box.innerHTML=hits.map(function(t){var fa=t.fAct?String(t.fAct).slice(0,10).split("-").reverse().join("-"):"sin fecha";var d=t.fAct?Math.floor((Date.now()-new Date(String(t.fAct).slice(0,10)+"T12:00:00").getTime())/864e5):"";var uso=t.pago?"pago":(+t.cotiCN>0?"usa":(+t.cotiSN>0?"explora":"sin"));return '<button class="card dim" data-tid="'+esc(t.id)+'"><span class="dchip"><b>'+d+'</b>día</span><span class="who"><span class="n">'+esc(t.n)+'</span><span class="s"><span class="pill '+usoCls[uso]+'">'+usoTxt[uso]+'</span>'+(t.estado?'<span class="pill info">'+esc(t.estado)+'</span>':'')+'</span><span class="marks"><i>activada '+fa+'</i>'+(t.tel?'<i>'+esc(t.tel)+'</i>':'')+(t.correo?'<i>'+esc(t.correo)+'</i>':'')+'</span></span></button>'}).join("");
+  [].forEach.call(box.querySelectorAll(".card"),function(b){b.onclick=function(){var tid=this.getAttribute("data-tid");var t=DATA.todas.filter(function(x){return x.id===tid})[0];if(t)fichaDesdeTodas(t)}});
+};
+// ---- puente Conversaciones → ficha ({type:'openLead', wa, pageId, nombre})
+var PENDING_LEAD=null;
+function tail8(v){var d=String(v||"").replace(/[^0-9]/g,"");return d.length>8?d.slice(-8):d}
+function findLead(d){if(!DATA||!DATA.cuentas)return null;var pid=String(d.pageId||"").replace(/-/g,"").toLowerCase();var t=tail8(d.wa);var byId=pid?DATA.cuentas.find(function(a){return String(a.id||"").replace(/-/g,"").toLowerCase()===pid}):null;if(byId)return byId;if(t.length>=8)return DATA.cuentas.find(function(a){return tail8(a.wa)===t||tail8(a.tel)===t})||null;return null}
+function tryOpenLead(d){var a=findLead(d);
+  if(!a){var pid=String(d.pageId||"").replace(/-/g,"").toLowerCase();if(!pid)return false;
+    a={id:pid,n:d.nombre||("Lead "+(d.wa||"")),cc:(d.pais==="Perú"||d.pais==="PE")?"PE":"CL",tel:String(d.wa||""),telH:"",wa:String(d.wa||"").replace(/[^0-9]/g,""),dia:0,fAct:new Date().toISOString().slice(0,10),idExt:"",pais:d.pais||"",correo:d.correo||"",cotiCN:+d.cotiCN||0,cotiSN:+d.cotiSN||0,dSin:+d.dias||0,notas:"",capTxt:"",capEst:"",estado:d.estado||"",etapa:d.etapa||"",bienv:false,uso:(+d.cotiCN>0?"usa":(+d.cotiSN>0?"explora":"sin")),fActRaw:d.fAct||"",registrada:!!(d.fAct||/cuenta creada|registrad|activ|capacitar|7d|15d/i.test((d.etapa||"")+" "+(d.estado||""))),pago:false,senal:["Sin cuenta en prueba · agendar desde el lead"],bucket:"resto",proximo:null,proximoTxt:"",marcas:{},toques:[],notion:"https://www.notion.so/"+pid,sinCuenta:true};
+    DATA.cuentas.push(a);}
+  openFicha(a.id);PENDING_LEAD=null;
+  var tr=document.querySelector('.ficha .trial');if(tr)tr.style.display=a.sinCuenta?'none':'';if(a.sinCuenta){var fs=$("fSub");var fa=a.fActRaw?String(a.fActRaw).slice(0,10).split('-').reverse().join('-'):'';var lab=a.registrada?('<span style="color:var(--ok,#0b8a5a);font-weight:700">Cuenta registrada</span> · fuera del seguimiento 15 días'+(fa?' · activada '+fa:'')):'<span style="color:var(--warn,#c77d00);font-weight:700">Sin cuenta NuveraPRO</span>';if(fs)fs.innerHTML=lab+' · '+(a.etapa?esc(a.etapa)+' · ':'')+(a.estado?esc(a.estado)+' · ':'')+esc(a.tel||'')+(a.correo?' · '+esc(a.correo):'');}
+  return true}
+window.addEventListener("message",function(ev){var d=ev.data||{};if(d.type!=="openLead")return;if(!DATA){PENDING_LEAD=d;return}if(!tryOpenLead(d)){toast((d.nombre?d.nombre+": ":"")+"sin lead en Notion · no se puede abrir ficha");try{window.parent.postMessage({type:"openConv",wa:d.wa||""},"*")}catch(e){}}});
 </script><!--NVP-AUTOREFRESH--><script>(function(){var l=null;setInterval(function(){var u=(window._SEG_URL||"data/seguimiento.json")+"?t=";fetch(u+Date.now()).then(function(r){return r.text();}).then(function(t){if(l!==null&&t!==l&&!document.getElementById("ficha").classList.contains("open")){location.reload();}l=t;}).catch(function(){});},20000);})();</script></body></html>
+<script>/* NVDRAG v1 - arrastrar y soltar en Tablero: soltar sobre "Pagaron" marca la cuenta como pagada (aditivo, no toca nada existente) */
+(function(){
+if(window.__NVDRAG)return;window.__NVDRAG=true;
+var DRAGGED_ID=null;
+
+var st=document.createElement('style');
+st.textContent='.tile[draggable="true"]{cursor:grab}.tile.dragging{opacity:.4}#board .col.dragover{outline:2px dashed var(--gold);outline-offset:2px;background:var(--gold-soft)}';
+document.head.appendChild(st);
+
+function patchBoard(){
+  var board=document.getElementById('board');if(!board)return;
+  [].forEach.call(board.querySelectorAll('.tile[data-id]'),function(t){t.setAttribute('draggable','true');});
+  [].forEach.call(board.querySelectorAll('.col'),function(col){
+    var h3=col.querySelector('h3');
+    if(h3 && h3.textContent.indexOf('Pagaron')===0){col.setAttribute('data-accion','pagar');}
+  });
+}
+
+document.addEventListener('dragstart',function(e){
+  var el=e.target.closest('.tile[data-id]');if(!el)return;
+  DRAGGED_ID=el.getAttribute('data-id');
+  try{e.dataTransfer.setData('text/plain',DRAGGED_ID);}catch(err){}
+  e.dataTransfer.effectAllowed='move';
+  el.classList.add('dragging');
+});
+document.addEventListener('dragend',function(e){
+  var el=e.target.closest('.tile[data-id]');if(el)el.classList.remove('dragging');
+  [].forEach.call(document.querySelectorAll('.dragover'),function(z){z.classList.remove('dragover')});
+});
+function dropZoneOf(e){return e.target.closest('#board .col[data-accion="pagar"]')}
+document.addEventListener('dragover',function(e){var dz=dropZoneOf(e);if(!dz)return;e.preventDefault();dz.classList.add('dragover')});
+document.addEventListener('dragleave',function(e){var dz=dropZoneOf(e);if(dz&&!dz.contains(e.relatedTarget))dz.classList.remove('dragover')});
+document.addEventListener('drop',function(e){
+  var dz=dropZoneOf(e);if(!dz||!DRAGGED_ID)return;
+  e.preventDefault();dz.classList.remove('dragover');
+  var id=DRAGGED_ID;DRAGGED_ID=null;
+  var a=(DATA&&DATA.cuentas||[]).filter(function(x){return x.id===id})[0];
+  if(!a)return;
+  if(a.pago){toast('Ya estaba marcada como pagada');return;}
+  var fecha=new Date().toISOString();
+  a.toques=(a.toques||[]).concat([{fecha:fecha,dia:a.dia,tipo:'llamada',resultado:'Pagó',nota:'',origen:'fran'}]);
+  a.marcas=a.marcas||{};a.marcas.voz_ok=true;
+  a.pago=true;a.bucket='pago';a.senal=[];
+  postToque(a,{tipo:'llamada',resultado:'Pagó',nota:''},function(ok){toast(ok?'Marcado como pagado':'Guardado local · n8n no respondió')});
+  renderHoy();renderBoard();
+});
+
+var _rb=window.renderBoard;
+window.renderBoard=function(){var r=(typeof _rb==='function')?_rb.apply(this,arguments):undefined;try{patchBoard();}catch(e){}return r;};
+try{patchBoard();}catch(e){}
+})();
+</script>
