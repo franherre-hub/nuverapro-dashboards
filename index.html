@@ -150,6 +150,8 @@ var PAUSAR="https://n8n.entrenemos.cl/webhook/conversacion-pausar";
 var RESPONDER="https://n8n.entrenemos.cl/webhook/conversacion-responder";
 var CERRAR="https://n8n.entrenemos.cl/webhook/conversacion-eliminar";
 var ANALIZAR="https://n8n.entrenemos.cl/webhook/analizar-conversacion";
+var VINCULAR="https://n8n.entrenemos.cl/webhook/vincular-telefono-cuenta";
+var BUSCAR_CUENTAS="https://n8n.entrenemos.cl/webhook/buscar-cuentas-nuvera";
 var DATA=null, SEL=null, Q="", FILTER="abiertas", CONFIRMROW=null, CLICKT=null, PENDING_WA=null;
 var LIVE=false, OUTBOX=[];
 var OPS_DEF=[{k:"francisco",n:"Francisco"},{k:"matias",n:"Matías"},{k:"cristina",n:"Cristina"},{k:"marcelo",n:"Marcelo"}];
@@ -250,6 +252,48 @@ function crmCard(c){
   h+=ia+"</div>";
   return h;
 }
+function openVincular(c){
+  var wa=String(c.wa||"").replace(/[^0-9]/g,"");
+  if(!wa){alert("Esta conversación no tiene número");return;}
+  var ov=document.createElement("div");
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
+  var box=document.createElement("div");
+  box.style.cssText="background:#fff;border-radius:12px;max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:16px";
+  box.innerHTML="<h3 style=\'margin:0 0 10px\'>Vincular "+esc(wa)+" a una cuenta</h3><input id=\'vincQ\' placeholder=\'Buscar por nombre, RUT o ID externo\u2026\' style=\'width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;margin-bottom:10px\'><div id=\'vincRes\' style=\'font-size:14px\'></div><button id=\'vincClose\' style=\'margin-top:12px;width:100%;padding:8px;border:none;border-radius:6px;background:#e5e7eb\'>Cerrar</button>";
+  ov.appendChild(box);document.body.appendChild(ov);
+  document.getElementById("vincClose").onclick=function(){document.body.removeChild(ov);};
+  var q=document.getElementById("vincQ");var res=document.getElementById("vincRes");
+  var t=null;
+  q.addEventListener("input",function(){
+    clearTimeout(t);
+    var val=q.value.trim();
+    if(val.length<2){res.innerHTML="";return;}
+    t=setTimeout(function(){
+      res.innerHTML="<div style=\'color:#64748b\'>Buscando\u2026</div>";
+      fetch(BUSCAR_CUENTAS+"?q="+encodeURIComponent(val)).then(function(r){return r.json();}).then(function(d){
+        var items=(d&&d.results)||[];
+        if(!items.length){res.innerHTML="<div style=\'color:#64748b\'>Sin resultados</div>";return;}
+        res.innerHTML=items.map(function(it){
+          var libre=!it.tel1?" \u00b7 tel1 libre":(!it.tel2?" \u00b7 tel2 libre":" \u00b7 SIN CAMPO LIBRE");
+          return "<div class=\'vincItem\' data-pid=\'"+esc(it.pageId)+"\' style=\'padding:8px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:6px;cursor:pointer\'><b>"+esc(it.nombre)+"</b><br><span style=\'color:#64748b;font-size:12px\'>"+esc(it.idExterno)+(it.rut?" \u00b7 "+esc(it.rut):"")+esc(libre)+"</span></div>";
+        }).join("");
+        var els=res.querySelectorAll(".vincItem");
+        for(var i=0;i<els.length;i++){
+          els[i].addEventListener("click",function(){
+            var pid=this.getAttribute("data-pid");
+            var nombre=this.querySelector("b").textContent;
+            if(!confirm("¿Vincular el número "+wa+" a "+nombre+"?"))return;
+            fetch(VINCULAR,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pageId:pid,telefono:wa})}).then(function(r){return r.json();}).then(function(j){
+              alert(j&&j.mensaje?j.mensaje:"Listo");
+              if(j&&j.success)document.body.removeChild(ov);
+            }).catch(function(){alert("Error de red al vincular");});
+          });
+        }
+      }).catch(function(){res.innerHTML="<div style=\'color:#dc2626\'>Error de red</div>";});
+    },350);
+  });
+  q.focus();
+}
 function renderChat(){
   var inner=document.getElementById("chatinner");
   var c=chatById(SEL);
@@ -262,6 +306,7 @@ function renderChat(){
   h+="<a class='act call' href='tel:"+esc(tel)+"'>📞 Llamar</a>";
   h+="<a class='act wa' href='https://wa.me/"+esc(String(c.wa||'').replace(/[^0-9]/g,''))+"' target='_blank' rel='noopener'>💬 WhatsApp</a>";
   h+="</div>";
+  h+="<div class='actions' style='border-top:0;padding-top:0'><button class='act' id='vincBtn' style='width:100%;background:#7c3aed;color:#fff;font-weight:700'>🔗 Vincular a cuenta</button></div>";
   if(c.notion||c.lead_notion){
     h+="<div class='actions' style='border-top:0;padding-top:0'>";
     if(c.notion)h+="<a class='act notion' href='"+esc(c.notion)+"' target='_blank' rel='noopener'>Contacto en Notion</a>";
@@ -292,6 +337,7 @@ function renderChat(){
   });
   th.innerHTML=mh;th.scrollTop=th.scrollHeight;
   var bb=document.getElementById("backBtn");if(bb)bb.addEventListener("click",function(){document.body.classList.remove("chatopen");SEL=null;render();});
+  var vb=document.getElementById("vincBtn");if(vb)vb.addEventListener("click",function(){openVincular(c);});
   var sb=document.getElementById("segBtn");if(sb)sb.addEventListener("click",function(){var pid=String(c.lead_notion||"").replace(/[?#].*$/,"").match(/([0-9a-f]{32})\s*$/i);var crm=c.crm||{};var el=document.querySelector(".chead .cn .nvwaname");var waNm=el?el.textContent.replace(/^\s*👤\s*/,"").replace(/\s*\(WhatsApp\)\s*$/,""):"";var digits=/^[\d\s+\-]+$/.test(String(c.nombre||"").trim());var nm=(c.empresa||"")||(digits?"":c.nombre)||waNm||c.nombre||"";try{window.parent.postMessage({type:"openLead",wa:String(c.wa||"").replace(/[^0-9]/g,""),pageId:pid?pid[1]:"",nombre:nm,correo:crm.correo||"",etapa:crm.etapa||"",estado:crm.estado||"",rut:crm.rut||"",pais:crm.pais||"",fAct:crm.fAct||"",cotiCN:crm.cotiCN,cotiSN:crm.cotiSN,dias:crm.dias},"*")}catch(e){}});
   var ib=document.getElementById("iaBtn");if(ib)ib.addEventListener("click",function(){analizarIA(c);});
   if(c.cerrada){
