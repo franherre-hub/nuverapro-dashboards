@@ -18,6 +18,7 @@ input[type=search]{background:#1e293b;border:1px solid #334155;color:#e2e8f0;bor
 .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:6px}
 .tag.rut{background:#7c2d12;color:#fed7aa} .tag.correo{background:#134e4a;color:#99f6e4}
 .tag.telefono{background:#3730a3;color:#c7d2fe} .tag.nombre{background:#4c1d95;color:#ddd6fe}
+.tag.multi{background:#7f1d1d;color:#fecaca} .card.multi{border-color:#b91c1c;box-shadow:0 0 0 1px #7f1d1d inset}
 .tval{font-size:13px;color:#e2e8f0;font-weight:600} .tval.warn{color:#fca5a5}
 .accts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 @media(max-width:640px){.accts{grid-template-columns:1fr}}
@@ -63,16 +64,17 @@ function toast(m){var t=document.getElementById("toast");t.textContent=m;t.class
 function ntUrl(pid){return "https://www.notion.so/"+String(pid||"").split("-").join("")}
 function pendientes(){var r=reviewed();return CASOS.filter(function(c){return !r[c.id]})}
 function matchFiltro(c,q){
-  if(FILTRO_TIPO!=="todos" && c.tipo!==FILTRO_TIPO) return false;
+  if(FILTRO_TIPO==="multi"){if(!c.multiSenal)return false;}
+  else if(FILTRO_TIPO!=="todos" && (c.tipos||[]).indexOf(FILTRO_TIPO)<0) return false;
   if(!q) return true;
-  var hay=c.val+" ";
-  c.cuentas.forEach(function(a){hay+=(a.n||"")+" "+(a.c||"")+" "+(a.rut||"")+" "+(a.tel||"")+" "+(a.i||"")+" "});
+  var hay=(c.tipos||[]).join(" ")+" ";
+  c.cuentas.forEach(function(a){hay+=(a.n||"")+" "+(a.c||"")+" "+(a.rut||"")+" "+(a.tel||"")+" "+(a.tel2||"")+" "+(a.i||"")+" "});
   return hay.toLowerCase().indexOf(q)>=0;
 }
 function renderChips(){
-  var counts={todos:0,rut:0,correo:0,telefono:0,nombre:0}, pend=pendientes();
-  pend.forEach(function(c){counts.todos++;counts[c.tipo]=(counts[c.tipo]||0)+1});
-  var defs=[["todos","Todos"],["rut","RUT"],["correo","Correo"],["telefono","Tel&eacute;fono"],["nombre","Nombre"]];
+  var counts={todos:0,multi:0,rut:0,correo:0,telefono:0,nombre:0}, pend=pendientes();
+  pend.forEach(function(c){counts.todos++;if(c.multiSenal)counts.multi++;(c.tipos||[]).forEach(function(t){counts[t]=(counts[t]||0)+1})});
+  var defs=[["todos","Todos"],["multi","\u26a0\ufe0f Red confirmada"],["rut","RUT"],["correo","Correo"],["telefono","Tel&eacute;fono"],["nombre","Nombre"]];
   var h="";
   defs.forEach(function(d){var on=FILTRO_TIPO===d[0]?" on":"";h+="<span class='chip"+on+"' data-t='"+d[0]+"'>"+d[1]+" ("+(counts[d[0]]||0)+")</span>"});
   var chips=document.getElementById("chips");chips.innerHTML=h;
@@ -86,16 +88,17 @@ function render(){
   document.getElementById("empty").style.display=pendientes().length?"none":"block";
   var list=document.getElementById("list");list.innerHTML="";
   rows.forEach(function(c){
-    var card=document.createElement("div");card.className="card";
-    var warn=(c.tipo==="rut"||c.tipo==="correo")?" warn":"";
-    var head="<div class='chead'><span class='tag "+c.tipo+"'>"+TIPOS[c.tipo]+"</span>";
-    if(c.val) head+="<span class='tval"+warn+"'>"+esc(c.val)+"</span>";
+    var card=document.createElement("div");card.className="card"+(c.multiSenal?" multi":"");
+    var head="<div class='chead'>";
+    (c.tipos||[]).forEach(function(t){head+="<span class='tag "+t+"'>"+(TIPOS[t]||t)+"</span>"});
+    if(c.multiSenal) head+="<span class='tag multi'>\u26a0\ufe0f RED CONFIRMADA</span>";
     head+="<span class='pill' style='margin-left:auto'>"+c.cuentas.length+" cuentas</span></div>";
     var accts="<div class='accts'>";
     c.cuentas.forEach(function(a){
       var meta=[];
       if(a.c) meta.push(esc(a.c));
       if(a.tel) meta.push(esc(a.tel));
+      if(a.tel2) meta.push("Tel2 "+esc(a.tel2));
       if(a.rut) meta.push("RUT "+esc(a.rut));
       if(a.i) meta.push("ID "+esc(a.i));
       accts+="<div class='acct'><div class='nom'>"+esc(a.n||"(sin nombre)")+"</div>"+
