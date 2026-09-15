@@ -27,6 +27,7 @@ input[type=search]{background:#1e293b;border:1px solid #334155;color:#e2e8f0;bor
 .acct .m{color:#94a3b8;font-size:12px;line-height:1.5;word-break:break-word}
 .acct a.nt{display:inline-block;margin-top:5px;color:#38bdf8;font-size:12px;text-decoration:none}
 .acct a.nt:hover{text-decoration:underline}
+.xcl{display:inline-block;margin-top:5px;margin-left:8px;color:#f87171;font-size:12px;cursor:pointer;text-decoration:underline}
 .acts{display:flex;gap:8px;flex-wrap:wrap}
 button{border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:600}
 .bad{background:#b91c1c;color:#fff} .bad:hover{background:#991b1b}
@@ -54,6 +55,7 @@ button{border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:poin
 <div class="toast" id="toast"></div>
 <script>
 var LSKEY="nvp_reviewed_dups";
+var EXCLUIR="https://n8n.entrenemos.cl/webhook/excluir-red-antifraude";
 var CASOS=[], FILTRO_TIPO="todos";
 var TIPOS={rut:"RUT repetido",correo:"Correo repetido",telefono:"Tel&eacute;fono repetido",nombre:"Nombre parecido"};
 function reviewed(){try{return JSON.parse(localStorage.getItem(LSKEY)||"{}")}catch(e){return{}}}
@@ -103,7 +105,8 @@ function render(){
       if(a.i) meta.push("ID "+esc(a.i));
       accts+="<div class='acct'><div class='nom'>"+esc(a.n||"(sin nombre)")+"</div>"+
         "<div class='m'>"+meta.join("<br>")+"</div>"+
-        (a.p?"<a class='nt' href='"+ntUrl(a.p)+"' target='_blank' rel='noopener'>Abrir en Notion &#8599;</a>":"")+"</div>";
+        (a.p?"<a class='nt' href='"+ntUrl(a.p)+"' target='_blank' rel='noopener'>Abrir en Notion &#8599;</a>":"")+
+        " <span class='xcl' data-p='"+esc(a.p)+"'>Quitar de esta red</span></div>";
     });
     accts+="</div>";
     var acts="<div class='acts'><button class='bad'>Mismo carpintero (fraude)</button><button class='ok'>Cuentas distintas</button></div>";
@@ -111,6 +114,19 @@ function render(){
     var btns=card.querySelectorAll("button");
     btns[0].addEventListener("click",function(){decide(c,"fraude",card)});
     btns[1].addEventListener("click",function(){decide(c,"distintas",card)});
+    var xcls=card.querySelectorAll(".xcl");
+    for(var xi=0;xi<xcls.length;xi++){
+      xcls[xi].addEventListener("click",function(){
+        var pid=this.getAttribute("data-p");
+        var acc=null; for(var k=0;k<c.cuentas.length;k++){if(c.cuentas[k].p===pid){acc=c.cuentas[k];break;}}
+        if(!acc)return;
+        if(!confirm("Quitar '"+acc.n+"' de esta red? No se van a volver a juntar."))return;
+        var otros=[]; for(var k2=0;k2<c.cuentas.length;k2++){if(c.cuentas[k2].p!==pid)otros.push({pageId:c.cuentas[k2].p,nombre:c.cuentas[k2].n});}
+        fetch(EXCLUIR,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pageId:pid,nombre:acc.n,otros:otros})}).then(function(r){return r.json();}).then(function(j){
+          toast(j&&j.mensaje?j.mensaje:"Listo");
+        }).catch(function(){toast("Error de red al excluir");});
+      });
+    }
     list.appendChild(card);
   });
 }
