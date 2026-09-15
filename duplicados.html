@@ -103,6 +103,10 @@ function render(){
       if(a.tel2) meta.push("Tel2 "+esc(a.tel2));
       if(a.rut) meta.push("RUT "+esc(a.rut));
       if(a.i) meta.push("ID "+esc(a.i));
+      if(a.crm) meta.push("CRM: "+esc(a.crm));
+      if(a.cn!=null||a.sn!=null) meta.push("Cotiz: "+(a.cn||0)+" c/n · "+(a.sn||0)+" s/n");
+      if(a.uc) meta.push("Última cotiz: "+esc(a.uc));
+      if(a.ua) meta.push("Última actividad: "+esc(a.ua));
       accts+="<div class='acct'><div class='nom'>"+esc(a.n||"(sin nombre)")+"</div>"+
         "<div class='m'>"+meta.join("<br>")+"</div>"+
         (a.p?"<a class='nt' href='"+ntUrl(a.p)+"' target='_blank' rel='noopener'>Abrir en Notion &#8599;</a>":"")+
